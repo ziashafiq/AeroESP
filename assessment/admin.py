@@ -2,7 +2,73 @@ from django.contrib import admin
 from django.db.models import Q
 
 from accounts.models import CustomUser, TeacherProfile
-from .models import Question
+from .models import (
+    AerospaceDomain,
+    AerospaceTopic,
+    Question,
+)
+
+
+@admin.register(AerospaceDomain)
+class AerospaceDomainAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "code",
+        "name",
+        "order",
+        "is_active",
+    )
+
+    list_editable = (
+        "order",
+        "is_active",
+    )
+
+    search_fields = (
+        "code",
+        "name",
+        "description",
+    )
+
+    ordering = (
+        "order",
+        "name",
+    )
+
+
+@admin.register(AerospaceTopic)
+class AerospaceTopicAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "code",
+        "name",
+        "domain",
+        "order",
+        "is_active",
+    )
+
+    list_filter = (
+        "domain",
+        "is_active",
+    )
+
+    list_editable = (
+        "order",
+        "is_active",
+    )
+
+    search_fields = (
+        "code",
+        "name",
+        "description",
+        "domain__name",
+    )
+
+    ordering = (
+        "domain__order",
+        "order",
+        "name",
+    )
 
 
 @admin.register(Question)
@@ -11,8 +77,9 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "short_question",
+        "domain_ref",
+        "topic_ref",
         "skill",
-        "aerospace_domain",
         "difficulty",
         "status",
         "visibility",
@@ -22,8 +89,9 @@ class QuestionAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
+        "domain_ref",
+        "topic_ref",
         "skill",
-        "aerospace_domain",
         "difficulty",
         "question_language",
         "status",
@@ -34,6 +102,8 @@ class QuestionAdmin(admin.ModelAdmin):
     search_fields = (
         "question_text",
         "topic",
+        "topic_ref__name",
+        "domain_ref__name",
         "source_reference",
         "owner__username",
     )
@@ -67,8 +137,13 @@ class QuestionAdmin(admin.ModelAdmin):
                     "question_language",
                     "options_language",
                     "skill",
+
+                    "domain_ref",
+                    "topic_ref",
+
                     "aerospace_domain",
                     "topic",
+
                     "difficulty",
                 )
             },
@@ -107,15 +182,12 @@ class QuestionAdmin(admin.ModelAdmin):
     def short_question(self, obj):
         return obj.question_text[:70]
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        Limit Question.owner to:
-        1. Superusers/Admins
-        2. Approved teachers
-
-        Students, pending teachers, and rejected teachers
-        must not appear in the Owner selector.
-        """
+    def formfield_for_foreignkey(
+        self,
+        db_field,
+        request,
+        **kwargs,
+    ):
 
         if db_field.name == "owner":
             kwargs["queryset"] = (

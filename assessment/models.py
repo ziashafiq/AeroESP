@@ -1,12 +1,101 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+
+
+class AerospaceDomain(models.Model):
+    """
+    Top-level aerospace taxonomy domain.
+    Examples:
+    Aerodynamics, Flight Dynamics & Control, Propulsion.
+    """
+
+    code = models.CharField(
+        max_length=30,
+        unique=True,
+    )
+
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    order = models.PositiveIntegerField(
+        default=0,
+    )
+
+    class Meta:
+        ordering = ("order", "name")
+
+    def __str__(self):
+        return self.name
+
+
+class AerospaceTopic(models.Model):
+    """
+    Second level of the aerospace taxonomy.
+    Each topic belongs to one AerospaceDomain.
+    """
+
+    domain = models.ForeignKey(
+        AerospaceDomain,
+        on_delete=models.CASCADE,
+        related_name="topics",
+    )
+
+    code = models.CharField(
+        max_length=50,
+    )
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    order = models.PositiveIntegerField(
+        default=0,
+    )
+
+    class Meta:
+        ordering = (
+            "domain__order",
+            "order",
+            "name",
+        )
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=("domain", "code"),
+                name="unique_topic_code_per_domain",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.domain.name} → {self.name}"
 
 
 class Question(models.Model):
 
     # -------------------------------------------------
-    # Existing AeroESP classifications
+    # Legacy classifications
+    # Kept temporarily so the existing quiz continues
+    # working while we migrate to the new taxonomy.
     # -------------------------------------------------
 
     class Skill(models.TextChoices):
@@ -25,7 +114,7 @@ class Question(models.Model):
         ADVANCED = "ADVANCED", "Advanced"
 
     # -------------------------------------------------
-    # New Question Architecture v2
+    # Question Architecture v2
     # -------------------------------------------------
 
     class QuestionType(models.TextChoices):
@@ -116,7 +205,7 @@ class Question(models.Model):
     )
 
     # -------------------------------------------------
-    # Educational / Aerospace classification
+    # Legacy educational classification
     # -------------------------------------------------
 
     skill = models.CharField(
@@ -138,6 +227,26 @@ class Question(models.Model):
         max_length=20,
         choices=Difficulty.choices,
         default=Difficulty.BASIC,
+    )
+
+    # -------------------------------------------------
+    # New research-ready aerospace taxonomy
+    # -------------------------------------------------
+
+    domain_ref = models.ForeignKey(
+        AerospaceDomain,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="questions",
+    )
+
+    topic_ref = models.ForeignKey(
+        AerospaceTopic,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="questions",
     )
 
     # -------------------------------------------------
@@ -187,6 +296,19 @@ class Question(models.Model):
     updated_at = models.DateTimeField(
         default=timezone.now,
     )
+
+    def clean(self):
+        super().clean()
+
+        if self.topic_ref and self.domain_ref:
+            if self.topic_ref.domain_id != self.domain_ref_id:
+                raise ValidationError(
+                    {
+                        "topic_ref":
+                            "Selected topic does not belong "
+                            "to the selected aerospace domain."
+                    }
+                )
 
     def save(self, *args, **kwargs):
         self.updated_at = timezone.now()
