@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Dashboard</title>
+</head>
+
+<body>
+
+    <h1>AeroESP Teacher Dashboard</h1>
+
+    <p>
+        Welcome {{ request.user.username }}
+    </p>
+
+    <p>
+        Status:
+        {{ request.user.teacher_profile.get_approval_status_display }}
+    </p>
+
+    <form
+        method="post"
+        action="{% url 'accounts:logout' %}"
+    >
+        {% csrf_token %}
+        <button type="submit">
+            Logout
+        </button>
+    </form>
+
+</body>
+</html>

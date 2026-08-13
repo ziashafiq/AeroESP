@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Approval Pending</title>
+</head>
+
+<body>
+
+    <h1>Teacher Account</h1>
+
+    <p>
+        Your teacher account is awaiting administrator approval.
+    </p>
+
+    <form
+        method="post"
+        action="{% url 'accounts:logout' %}"
+    >
+        {% csrf_token %}
+        <button type="submit">
+            Logout
+        </button>
+    </form>
+
+</body>
+</html>
