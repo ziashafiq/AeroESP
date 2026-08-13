@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Teacher Dashboard</title>
+    <title>AeroESP Teacher Dashboard</title>
 </head>
 
 <body>
@@ -18,11 +18,24 @@
         {{ request.user.teacher_profile.get_approval_status_display }}
     </p>
 
+    <hr>
+
+    <h2>Question Management</h2>
+
+    <p>
+        <a href="{% url 'teacher_questions:list' %}">
+            Open My Question Bank
+        </a>
+    </p>
+
+    <hr>
+
     <form
         method="post"
         action="{% url 'accounts:logout' %}"
     >
         {% csrf_token %}
+
         <button type="submit">
             Logout
         </button>

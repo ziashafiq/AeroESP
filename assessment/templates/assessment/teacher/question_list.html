@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Question Bank</title>
+</head>
+
+<body>
+
+    <h1>AeroESP Teacher Question Bank</h1>
+
+    <p>
+        Teacher:
+        {{ request.user.username }}
+    </p>
+
+    <p>
+        <a href="{% url 'teacher_questions:create' %}">
+            Create New Question
+        </a>
+    </p>
+
+    <hr>
+
+    {% if questions %}
+
+        <table border="1" cellpadding="8">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Question</th>
+                    <th>Domain</th>
+                    <th>Topic</th>
+                    <th>Skill</th>
+                    <th>Difficulty</th>
+                    <th>Status</th>
+                    <th>Visibility</th>
+                    <th>Version</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for question in questions %}
+
+                    <tr>
+
+                        <td>
+                            {{ question.id }}
+                        </td>
+
+                        <td>
+                            {{ question.question_text|truncatechars:80 }}
+                        </td>
+
+                        <td>
+                            {{ question.domain_ref }}
+                        </td>
+
+                        <td>
+                            {% if question.topic_ref %}
+                                {{ question.topic_ref.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ question.get_skill_display }}
+                        </td>
+
+                        <td>
+                            {{ question.get_difficulty_display }}
+                        </td>
+
+                        <td>
+                            {{ question.get_status_display }}
+                        </td>
+
+                        <td>
+                            {{ question.get_visibility_display }}
+                        </td>
+
+                        <td>
+                            {{ question.version }}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'teacher_questions:edit' question.pk %}">
+                                Edit
+                            </a>
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>
+            You have not created any questions yet.
+        </p>
+
+    {% endif %}
+
+    <hr>
+
+    <p>
+        <a href="/accounts/teacher/dashboard/">
+            Back to Teacher Dashboard
+        </a>
+    </p>
+
+</body>
+</html>
