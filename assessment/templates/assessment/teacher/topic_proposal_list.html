@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My Topic Proposals</title>
+</head>
+
+<body>
+
+    <h1>My Aerospace Topic Proposals</h1>
+
+    <p>
+        Teacher:
+        <strong>{{ request.user.username }}</strong>
+    </p>
+
+    <hr>
+
+    <p>
+        <a href="{% url 'teacher_questions:topic_propose' %}">
+            Propose New Topic
+        </a>
+    </p>
+
+    <hr>
+
+    <h2>Search Proposals</h2>
+
+    <form method="get">
+
+        <input
+            type="text"
+            name="q"
+            value="{{ search_query }}"
+            placeholder="Search topic, domain or description..."
+        >
+
+        <button type="submit">
+            Search
+        </button>
+
+        {% if search_query %}
+            <a href="{% url 'teacher_questions:topic_proposals' %}">
+                Clear Search
+            </a>
+        {% endif %}
+
+    </form>
+
+    <hr>
+
+    {% if proposals %}
+
+        <table
+            border="1"
+            cellpadding="8"
+        >
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Domain</th>
+                    <th>Parent Topic</th>
+                    <th>Proposed Topic</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for proposal in proposals %}
+
+                    <tr>
+
+                        <td>
+                            {{ proposal.id }}
+                        </td>
+
+                        <td>
+                            {{ proposal.domain.name }}
+                        </td>
+
+                        <td>
+                            {% if proposal.parent %}
+                                {{ proposal.parent.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ proposal.name }}
+                        </td>
+
+                        <td>
+                            {% if proposal.description %}
+                                {{ proposal.description }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ proposal.get_approval_status_display }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        {% if search_query %}
+
+            <p>
+                No proposals matched
+                "{{ search_query }}".
+            </p>
+
+        {% else %}
+
+            <p>
+                You have not proposed any topics yet.
+            </p>
+
+        {% endif %}
+
+    {% endif %}
+
+    <hr>
+
+    <p>
+        <a href="{% url 'teacher_questions:list' %}">
+            Back to Question Bank
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'accounts:account_center' %}">
+            Account Center
+        </a>
+    </p>
+
+</body>
+
+</html>

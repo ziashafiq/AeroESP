@@ -21,6 +21,18 @@
         </a>
     </p>
 
+    <p>
+        <a href="{% url 'teacher_questions:topic_propose' %}">
+            Propose Missing Aerospace Topic
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'teacher_questions:topic_proposals' %}">
+            View My Topic Proposals
+        </a>
+    </p>
+
     <hr>
 
     {% if questions %}
@@ -57,7 +69,11 @@
                         </td>
 
                         <td>
-                            {{ question.domain_ref }}
+                            {% if question.domain_ref %}
+                                {{ question.domain_ref.name }}
+                            {% else %}
+                                -
+                            {% endif %}
                         </td>
 
                         <td>
@@ -112,11 +128,9 @@
 
     <hr>
 
-    <p>
-        <a href="/accounts/teacher/dashboard/">
-            Back to Teacher Dashboard
-        </a>
-    </p>
+    <a href="/accounts/teacher/dashboard/">
+        Back to Teacher Dashboard
+    </a>
 
 </body>
 </html>

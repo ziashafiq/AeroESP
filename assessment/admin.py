@@ -1,7 +1,11 @@
 from django.contrib import admin
 from django.db.models import Q
 
-from accounts.models import CustomUser, TeacherProfile
+from accounts.models import (
+    CustomUser,
+    TeacherProfile,
+)
+
 from .models import (
     AerospaceDomain,
     AerospaceTopic,
@@ -43,17 +47,16 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
         "code",
         "name",
         "domain",
+        "parent",
+        "approval_status",
+        "created_by",
         "order",
         "is_active",
     )
 
     list_filter = (
         "domain",
-        "is_active",
-    )
-
-    list_editable = (
-        "order",
+        "approval_status",
         "is_active",
     )
 
@@ -62,6 +65,7 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
         "name",
         "description",
         "domain__name",
+        "created_by__username",
     )
 
     ordering = (
@@ -69,6 +73,49 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
         "order",
         "name",
     )
+
+    actions = (
+        "approve_topics",
+        "reject_topics",
+    )
+
+    @admin.action(
+        description="Approve selected topic proposals"
+    )
+    def approve_topics(self, request, queryset):
+
+        updated = queryset.update(
+            approval_status=(
+                AerospaceTopic
+                .ApprovalStatus
+                .APPROVED
+            ),
+            is_active=True,
+        )
+
+        self.message_user(
+            request,
+            f"{updated} topic(s) approved.",
+        )
+
+    @admin.action(
+        description="Reject selected topic proposals"
+    )
+    def reject_topics(self, request, queryset):
+
+        updated = queryset.update(
+            approval_status=(
+                AerospaceTopic
+                .ApprovalStatus
+                .REJECTED
+            ),
+            is_active=False,
+        )
+
+        self.message_user(
+            request,
+            f"{updated} topic(s) rejected.",
+        )
 
 
 @admin.register(Question)
@@ -137,13 +184,10 @@ class QuestionAdmin(admin.ModelAdmin):
                     "question_language",
                     "options_language",
                     "skill",
-
                     "domain_ref",
                     "topic_ref",
-
                     "aerospace_domain",
                     "topic",
-
                     "difficulty",
                 )
             },
@@ -190,12 +234,16 @@ class QuestionAdmin(admin.ModelAdmin):
     ):
 
         if db_field.name == "owner":
+
             kwargs["queryset"] = (
                 CustomUser.objects.filter(
                     Q(is_superuser=True)
                     | Q(
-                        teacher_profile__approval_status=
-                        TeacherProfile.ApprovalStatus.APPROVED
+                        teacher_profile__approval_status=(
+                            TeacherProfile
+                            .ApprovalStatus
+                            .APPROVED
+                        )
                     )
                 )
                 .distinct()

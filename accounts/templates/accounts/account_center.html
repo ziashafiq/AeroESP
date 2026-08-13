@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AeroESP Account</title>
+</head>
+
+<body>
+
+    <h1>AeroESP Account Center</h1>
+
+    <p>
+        Username:
+        <strong>{{ request.user.username }}</strong>
+    </p>
+
+    <p>
+        Role:
+        <strong>{{ role }}</strong>
+    </p>
+
+    <hr>
+
+    {% if request.user.is_superuser %}
+
+        <h2>Administrator</h2>
+
+        <p>
+            <a href="/admin/">
+                Open AeroESP Administration
+            </a>
+        </p>
+
+    {% elif request.user.teacher_profile %}
+
+        <h2>Teacher</h2>
+
+        <p>
+            <a href="{% url 'accounts:teacher_dashboard' %}">
+                Open Teacher Dashboard
+            </a>
+        </p>
+
+    {% elif request.user.student_profile %}
+
+        <h2>Student</h2>
+
+        <p>
+            <a href="{% url 'accounts:student_dashboard' %}">
+                Open Student Dashboard
+            </a>
+        </p>
+
+    {% endif %}
+
+    <hr>
+
+    <h2>Switch Account</h2>
+
+    <p>
+        Logout first, then login using another AeroESP account.
+    </p>
+
+    <form
+        method="post"
+        action="{% url 'accounts:logout' %}"
+    >
+        {% csrf_token %}
+
+        <button type="submit">
+            Logout / Switch Account
+        </button>
+    </form>
+
+</body>
+
+</html>

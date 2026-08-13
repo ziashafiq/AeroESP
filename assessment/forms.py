@@ -7,16 +7,16 @@ from .models import (
 )
 
 
+# =========================================================
+# Teacher Question Form
+# =========================================================
+
 class TeacherQuestionForm(forms.ModelForm):
     """
     Form used by approved teachers to create and edit questions.
 
-    Important:
-    - Question owner is NOT exposed in this form.
-    - Owner is assigned automatically in the view.
-    - Only active aerospace domains are displayed.
-    - Only CORE or APPROVED topics are available.
-    - Pending/Rejected topics are not available for normal use.
+    Owner is assigned automatically by the server.
+    Only active domains and approved/core topics are available.
     """
 
     class Meta:
@@ -30,15 +30,12 @@ class TeacherQuestionForm(forms.ModelForm):
             "option_d",
             "correct_answer",
             "explanation",
-
             "question_language",
             "options_language",
-
             "skill",
             "domain_ref",
             "topic_ref",
             "difficulty",
-
             "source_reference",
             "visibility",
         )
@@ -51,15 +48,12 @@ class TeacherQuestionForm(forms.ModelForm):
             "option_d": "Option D",
             "correct_answer": "Correct Answer",
             "explanation": "Explanation",
-
             "question_language": "Question Language",
             "options_language": "Options Language",
-
             "skill": "Language Skill",
             "domain_ref": "Aerospace Domain",
             "topic_ref": "Aerospace Topic",
             "difficulty": "Difficulty",
-
             "source_reference": "Source / Reference",
             "visibility": "Question Visibility",
         }
@@ -69,21 +63,13 @@ class TeacherQuestionForm(forms.ModelForm):
                 "Select the main aerospace field related "
                 "to this question."
             ),
-
             "topic_ref": (
                 "Select the most appropriate topic. "
-                "If the required topic is not available, "
-                "a new topic can be proposed separately."
+                "If it is missing, use Propose New Topic."
             ),
-
             "source_reference": (
-                "Optional. Enter the source used to prepare "
-                "the question, such as a book, paper, standard, "
-                "course material, or corpus."
-            ),
-
-            "visibility": (
-                "Controls where this question may be used."
+                "Optional source: book, paper, standard, "
+                "course material, corpus, etc."
             ),
         }
 
@@ -91,8 +77,7 @@ class TeacherQuestionForm(forms.ModelForm):
             "question_text": forms.Textarea(
                 attrs={
                     "rows": 4,
-                    "placeholder":
-                        "Enter the complete question here...",
+                    "placeholder": "Enter the complete question...",
                 }
             ),
 
@@ -123,15 +108,17 @@ class TeacherQuestionForm(forms.ModelForm):
             "explanation": forms.Textarea(
                 attrs={
                     "rows": 3,
-                    "placeholder":
-                        "Optional explanation for the correct answer...",
+                    "placeholder": (
+                        "Optional explanation for the correct answer..."
+                    ),
                 }
             ),
 
             "source_reference": forms.TextInput(
                 attrs={
-                    "placeholder":
-                        "Book, paper, standard, corpus, course material, etc.",
+                    "placeholder": (
+                        "Book, paper, standard, corpus, etc."
+                    ),
                 }
             ),
         }
@@ -139,9 +126,9 @@ class TeacherQuestionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # =================================================
-        # Aerospace Domains
-        # =================================================
+        # -------------------------------------------------
+        # Domains
+        # -------------------------------------------------
 
         self.fields["domain_ref"].queryset = (
             AerospaceDomain.objects.filter(
@@ -155,14 +142,13 @@ class TeacherQuestionForm(forms.ModelForm):
 
         self.fields["domain_ref"].required = True
 
-        # =================================================
-        # Aerospace Topics
-        # =================================================
+        # -------------------------------------------------
+        # Topics
+        # -------------------------------------------------
 
-        self.fields["topic_ref"].queryset = (
+        topic_queryset = (
             AerospaceTopic.objects.filter(
                 is_active=True,
-                domain__is_active=True,
                 approval_status__in=[
                     AerospaceTopic.ApprovalStatus.CORE,
                     AerospaceTopic.ApprovalStatus.APPROVED,
@@ -172,9 +158,39 @@ class TeacherQuestionForm(forms.ModelForm):
                 "domain",
                 "parent",
             )
-            .order_by(
-                "domain__order",
-                "domain__name",
+        )
+
+        # If form is submitted, restrict topics to
+        # the selected domain.
+        if self.is_bound:
+
+            domain_id = self.data.get(
+                "domain_ref"
+            )
+
+            if domain_id:
+                topic_queryset = topic_queryset.filter(
+                    domain_id=domain_id
+                )
+            else:
+                topic_queryset = topic_queryset.none()
+
+        # If editing an existing question,
+        # restrict topics to its current domain.
+        elif self.instance and self.instance.pk:
+
+            if self.instance.domain_ref_id:
+                topic_queryset = topic_queryset.filter(
+                    domain_id=self.instance.domain_ref_id
+                )
+            else:
+                topic_queryset = topic_queryset.none()
+
+        else:
+            topic_queryset = topic_queryset.none()
+
+        self.fields["topic_ref"].queryset = (
+            topic_queryset.order_by(
                 "order",
                 "name",
             )
@@ -182,16 +198,9 @@ class TeacherQuestionForm(forms.ModelForm):
 
         self.fields["topic_ref"].required = False
 
-        # =================================================
+        # -------------------------------------------------
         # Visibility
-        # =================================================
-        #
-        # Teachers are NOT allowed to directly publish
-        # questions into the official AeroESP Bank.
-        #
-        # Official-bank publication will later require
-        # review / approval.
-        # =================================================
+        # -------------------------------------------------
 
         self.fields["visibility"].choices = [
             (
@@ -223,40 +232,246 @@ class TeacherQuestionForm(forms.ModelForm):
             "topic_ref"
         )
 
-        # =================================================
-        # Topic / Domain consistency
-        # =================================================
-
         if topic and not domain:
+
             self.add_error(
                 "domain_ref",
-                "Please select an aerospace domain "
-                "before selecting a topic.",
+                "Please select an aerospace domain first.",
             )
 
         if topic and domain:
+
             if topic.domain_id != domain.id:
+
                 self.add_error(
                     "topic_ref",
                     "The selected topic does not belong "
                     "to the selected aerospace domain.",
                 )
 
-        # =================================================
-        # Topic approval validation
-        # =================================================
-
         if topic:
+
             allowed_statuses = {
                 AerospaceTopic.ApprovalStatus.CORE,
                 AerospaceTopic.ApprovalStatus.APPROVED,
             }
 
             if topic.approval_status not in allowed_statuses:
+
                 self.add_error(
                     "topic_ref",
-                    "This topic has not yet been approved "
-                    "for use in AeroESP.",
+                    "This topic has not been approved for use.",
+                )
+
+        return cleaned_data
+
+
+# =========================================================
+# Teacher Topic Proposal Form
+# =========================================================
+
+class TeacherTopicProposalForm(forms.ModelForm):
+    """
+    Allows an approved teacher to propose a missing topic.
+
+    Parent topics are dynamically restricted to the
+    selected aerospace domain.
+    """
+
+    class Meta:
+        model = AerospaceTopic
+
+        fields = (
+            "domain",
+            "parent",
+            "name",
+            "description",
+        )
+
+        labels = {
+            "domain": "Aerospace Domain",
+            "parent": "Parent Topic (Optional)",
+            "name": "Proposed Topic Name",
+            "description": "Description / Reason",
+        }
+
+        help_texts = {
+            "domain": (
+                "Select the main aerospace domain."
+            ),
+
+            "parent": (
+                "Optional. Search and select a broader topic "
+                "inside the selected aerospace domain."
+            ),
+
+            "name": (
+                "Enter the missing aerospace topic."
+            ),
+
+            "description": (
+                "Briefly describe the topic or explain why "
+                "it should be added."
+            ),
+        }
+
+        widgets = {
+            "name": forms.TextInput(
+                attrs={
+                    "placeholder": (
+                        "Example: Hypersonic Boundary-Layer Transition"
+                    ),
+                }
+            ),
+
+            "description": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": (
+                        "Optional explanation or scope..."
+                    ),
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # -------------------------------------------------
+        # Domains
+        # -------------------------------------------------
+
+        self.fields["domain"].queryset = (
+            AerospaceDomain.objects.filter(
+                is_active=True,
+            )
+            .order_by(
+                "order",
+                "name",
+            )
+        )
+
+        # -------------------------------------------------
+        # Parent Topic
+        # -------------------------------------------------
+
+        parent_queryset = (
+            AerospaceTopic.objects.filter(
+                is_active=True,
+                approval_status__in=[
+                    AerospaceTopic.ApprovalStatus.CORE,
+                    AerospaceTopic.ApprovalStatus.APPROVED,
+                ],
+            )
+            .select_related(
+                "domain",
+                "parent",
+            )
+        )
+
+        # Bound form / POST request
+        if self.is_bound:
+
+            domain_id = self.data.get(
+                "domain"
+            )
+
+            if domain_id:
+
+                parent_queryset = (
+                    parent_queryset.filter(
+                        domain_id=domain_id
+                    )
+                )
+
+            else:
+
+                parent_queryset = (
+                    parent_queryset.none()
+                )
+
+        # Editing existing proposal, if needed later
+        elif self.instance and self.instance.pk:
+
+            if self.instance.domain_id:
+
+                parent_queryset = (
+                    parent_queryset.filter(
+                        domain_id=self.instance.domain_id
+                    )
+                )
+
+            else:
+
+                parent_queryset = (
+                    parent_queryset.none()
+                )
+
+        # New empty form
+        else:
+
+            parent_queryset = (
+                parent_queryset.none()
+            )
+
+        self.fields["parent"].queryset = (
+            parent_queryset.order_by(
+                "order",
+                "name",
+            )
+        )
+
+        self.fields["parent"].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        domain = cleaned_data.get(
+            "domain"
+        )
+
+        parent = cleaned_data.get(
+            "parent"
+        )
+
+        name = cleaned_data.get(
+            "name"
+        )
+
+        # -------------------------------------------------
+        # Parent must belong to same Domain
+        # -------------------------------------------------
+
+        if parent and domain:
+
+            if parent.domain_id != domain.id:
+
+                self.add_error(
+                    "parent",
+                    "Parent topic must belong to "
+                    "the selected aerospace domain.",
+                )
+
+        # -------------------------------------------------
+        # Prevent duplicate Topic names
+        # -------------------------------------------------
+
+        if domain and name:
+
+            existing = (
+                AerospaceTopic.objects.filter(
+                    domain=domain,
+                    name__iexact=name.strip(),
+                )
+                .exists()
+            )
+
+            if existing:
+
+                self.add_error(
+                    "name",
+                    "A topic with this name already exists "
+                    "in the selected domain.",
                 )
 
         return cleaned_data

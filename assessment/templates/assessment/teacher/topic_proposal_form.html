@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        Propose Aerospace Topic
+    </title>
+</head>
+
+<body>
+
+    <h1>
+        Propose New Aerospace Topic
+    </h1>
+
+    <p>
+        Logged in as:
+        <strong>
+            {{ request.user.username }}
+        </strong>
+    </p>
+
+    <p>
+        If the aerospace topic you need is not currently
+        available in AeroESP, propose it here.
+    </p>
+
+    <hr>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+
+            <div>
+                {{ form.non_field_errors }}
+            </div>
+
+        {% endif %}
+
+
+        <!-- ========================================= -->
+        <!-- DOMAIN -->
+        <!-- ========================================= -->
+
+        <h3>
+            1. Select Aerospace Domain
+        </h3>
+
+        <p>
+
+            {{ form.domain.label_tag }}
+
+            <br>
+
+            {{ form.domain }}
+
+            {{ form.domain.errors }}
+
+        </p>
+
+
+        <!-- ========================================= -->
+        <!-- PARENT TOPIC SEARCH -->
+        <!-- ========================================= -->
+
+        <h3>
+            2. Select Parent Topic
+        </h3>
+
+        <p>
+            Only topics belonging to the selected
+            aerospace domain will be shown.
+        </p>
+
+        <p>
+
+            <label for="parent-topic-search">
+                Search Parent Topic:
+            </label>
+
+            <br>
+
+            <input
+                id="parent-topic-search"
+                type="text"
+                placeholder="Search inside selected domain..."
+                autocomplete="off"
+            >
+
+        </p>
+
+        <p>
+
+            {{ form.parent.label_tag }}
+
+            <br>
+
+            {{ form.parent }}
+
+            {{ form.parent.errors }}
+
+        </p>
+
+        <p>
+            <small>
+                Parent Topic is optional.
+                Leave it empty if the proposed topic
+                is directly under the main domain.
+            </small>
+        </p>
+
+
+        <!-- ========================================= -->
+        <!-- PROPOSED TOPIC -->
+        <!-- ========================================= -->
+
+        <hr>
+
+        <h3>
+            3. Proposed Topic
+        </h3>
+
+        <p>
+
+            {{ form.name.label_tag }}
+
+            <br>
+
+            {{ form.name }}
+
+            {{ form.name.errors }}
+
+        </p>
+
+
+        <!-- ========================================= -->
+        <!-- DESCRIPTION -->
+        <!-- ========================================= -->
+
+        <p>
+
+            {{ form.description.label_tag }}
+
+            <br>
+
+            {{ form.description }}
+
+            {{ form.description.errors }}
+
+        </p>
+
+
+        <hr>
+
+        <button type="submit">
+            Submit Topic Proposal
+        </button>
+
+    </form>
+
+
+    <hr>
+
+
+    <p>
+
+        <a href="{% url 'teacher_questions:topic_proposals' %}">
+            View My Topic Proposals
+        </a>
+
+    </p>
+
+
+    <p>
+
+        <a href="{% url 'teacher_questions:list' %}">
+            Back to Question Bank
+        </a>
+
+    </p>
+
+
+    <p>
+
+        <a href="{% url 'accounts:account_center' %}">
+            Account Center
+        </a>
+
+    </p>
+
+
+    <!-- ============================================= -->
+    <!-- Dynamic Parent Topic Search -->
+    <!-- ============================================= -->
+
+    <script>
+
+        const topicSearchUrl =
+            "{% url 'teacher_questions:topic_search' %}";
+
+
+        const domainSelect =
+            document.getElementById(
+                "id_domain"
+            );
+
+
+        const parentSelect =
+            document.getElementById(
+                "id_parent"
+            );
+
+
+        const parentSearch =
+            document.getElementById(
+                "parent-topic-search"
+            );
+
+
+        const initialParentId =
+            parentSelect.value;
+
+
+        let searchTimer = null;
+
+
+        // ---------------------------------------------
+        // Load topics from selected domain
+        // ---------------------------------------------
+
+        async function loadParentTopics(
+            preserveSelected = false
+        ) {
+
+            const domainId =
+                domainSelect.value;
+
+
+            const searchText =
+                parentSearch.value.trim();
+
+
+            // No domain selected
+            if (!domainId) {
+
+                parentSelect.innerHTML =
+                    '<option value="">Select an aerospace domain first</option>';
+
+                parentSelect.disabled = true;
+
+                parentSearch.disabled = true;
+
+                return;
+            }
+
+
+            parentSelect.disabled = false;
+            parentSearch.disabled = false;
+
+
+            const parameters =
+                new URLSearchParams();
+
+
+            parameters.set(
+                "domain",
+                domainId
+            );
+
+
+            if (searchText) {
+
+                parameters.set(
+                    "q",
+                    searchText
+                );
+
+            }
+
+
+            const response =
+                await fetch(
+                    `${topicSearchUrl}?${parameters.toString()}`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            const selectedValue =
+                preserveSelected
+                    ? initialParentId
+                    : parentSelect.value;
+
+
+            parentSelect.innerHTML =
+                '<option value="">---------</option>';
+
+
+            for (
+                const topic
+                of data.results
+            ) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    topic.id;
+
+
+                option.textContent =
+                    topic.label;
+
+
+                if (
+                    String(topic.id)
+                    === String(selectedValue)
+                ) {
+
+                    option.selected = true;
+
+                }
+
+
+                parentSelect.appendChild(
+                    option
+                );
+
+            }
+
+        }
+
+
+        // ---------------------------------------------
+        // Domain changed
+        // ---------------------------------------------
+
+        domainSelect.addEventListener(
+            "change",
+            function () {
+
+                parentSearch.value = "";
+
+                loadParentTopics(
+                    false
+                );
+
+            }
+        );
+
+
+        // ---------------------------------------------
+        // Search with small debounce
+        // ---------------------------------------------
+
+        parentSearch.addEventListener(
+            "input",
+            function () {
+
+                clearTimeout(
+                    searchTimer
+                );
+
+
+                searchTimer = setTimeout(
+                    function () {
+
+                        loadParentTopics(
+                            false
+                        );
+
+                    },
+                    250
+                );
+
+            }
+        );
+
+
+        // ---------------------------------------------
+        // Initial page load
+        // ---------------------------------------------
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                loadParentTopics(
+                    true
+                );
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
