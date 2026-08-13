@@ -1,5 +1,7 @@
+from django import forms
 from django.contrib import admin
 from django.db.models import Q
+from django.utils import timezone
 
 from accounts.models import (
     CustomUser,
@@ -12,6 +14,48 @@ from .models import (
     Question,
 )
 
+
+# =========================================================
+# Topic Review Form
+# =========================================================
+
+class AerospaceTopicAdminForm(forms.ModelForm):
+
+    class Meta:
+        model = AerospaceTopic
+        fields = "__all__"
+
+    def clean(self):
+
+        cleaned_data = super().clean()
+
+        status = cleaned_data.get(
+            "approval_status"
+        )
+
+        note = cleaned_data.get(
+            "review_note",
+            "",
+        )
+
+        if (
+            status
+            == AerospaceTopic.ApprovalStatus.REJECTED
+            and not note.strip()
+        ):
+
+            self.add_error(
+                "review_note",
+                "Enter a rejection reason before "
+                "rejecting this topic proposal.",
+            )
+
+        return cleaned_data
+
+
+# =========================================================
+# Aerospace Domains
+# =========================================================
 
 @admin.register(AerospaceDomain)
 class AerospaceDomainAdmin(admin.ModelAdmin):
@@ -39,9 +83,17 @@ class AerospaceDomainAdmin(admin.ModelAdmin):
         "name",
     )
 
+    list_per_page = 50
+
+
+# =========================================================
+# Aerospace Topics
+# =========================================================
 
 @admin.register(AerospaceTopic)
 class AerospaceTopicAdmin(admin.ModelAdmin):
+
+    form = AerospaceTopicAdminForm
 
     list_display = (
         "code",
@@ -50,7 +102,8 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
         "parent",
         "approval_status",
         "created_by",
-        "order",
+        "reviewed_by",
+        "reviewed_at",
         "is_active",
     )
 
@@ -58,6 +111,7 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
         "domain",
         "approval_status",
         "is_active",
+        "reviewed_by",
     )
 
     search_fields = (
@@ -65,7 +119,56 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
         "name",
         "description",
         "domain__name",
+        "parent__name",
         "created_by__username",
+        "reviewed_by__username",
+        "review_note",
+    )
+
+    autocomplete_fields = (
+        "parent",
+    )
+
+    readonly_fields = (
+        "created_by",
+        "reviewed_by",
+        "reviewed_at",
+    )
+
+    fieldsets = (
+        (
+            "Topic",
+            {
+                "fields": (
+                    "domain",
+                    "parent",
+                    "code",
+                    "name",
+                    "description",
+                    "order",
+                )
+            },
+        ),
+        (
+            "Proposal",
+            {
+                "fields": (
+                    "created_by",
+                    "approval_status",
+                    "is_active",
+                )
+            },
+        ),
+        (
+            "Review",
+            {
+                "fields": (
+                    "review_note",
+                    "reviewed_by",
+                    "reviewed_at",
+                )
+            },
+        ),
     )
 
     ordering = (
@@ -74,49 +177,121 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
         "name",
     )
 
+    list_per_page = 50
+
     actions = (
         "approve_topics",
-        "reject_topics",
     )
 
     @admin.action(
         description="Approve selected topic proposals"
     )
-    def approve_topics(self, request, queryset):
+    def approve_topics(
+        self,
+        request,
+        queryset,
+    ):
 
-        updated = queryset.update(
-            approval_status=(
-                AerospaceTopic
-                .ApprovalStatus
-                .APPROVED
-            ),
-            is_active=True,
+        updated = (
+            queryset
+            .exclude(
+                approval_status=(
+                    AerospaceTopic
+                    .ApprovalStatus
+                    .CORE
+                )
+            )
+            .update(
+                approval_status=(
+                    AerospaceTopic
+                    .ApprovalStatus
+                    .APPROVED
+                ),
+                is_active=True,
+                reviewed_by=request.user,
+                reviewed_at=timezone.now(),
+                review_note="",
+            )
         )
 
         self.message_user(
             request,
-            f"{updated} topic(s) approved.",
+            f"{updated} topic proposal(s) approved.",
         )
 
-    @admin.action(
-        description="Reject selected topic proposals"
-    )
-    def reject_topics(self, request, queryset):
+    def save_model(
+        self,
+        request,
+        obj,
+        form,
+        change,
+    ):
 
-        updated = queryset.update(
-            approval_status=(
-                AerospaceTopic
-                .ApprovalStatus
-                .REJECTED
-            ),
-            is_active=False,
-        )
+        status = obj.approval_status
 
-        self.message_user(
+        if (
+            status
+            == AerospaceTopic
+            .ApprovalStatus
+            .APPROVED
+        ):
+
+            obj.is_active = True
+
+            obj.reviewed_by = (
+                request.user
+            )
+
+            obj.reviewed_at = (
+                timezone.now()
+            )
+
+        elif (
+            status
+            == AerospaceTopic
+            .ApprovalStatus
+            .REJECTED
+        ):
+
+            obj.is_active = False
+
+            obj.reviewed_by = (
+                request.user
+            )
+
+            obj.reviewed_at = (
+                timezone.now()
+            )
+
+        elif (
+            status
+            == AerospaceTopic
+            .ApprovalStatus
+            .PENDING
+        ):
+
+            obj.is_active = False
+
+        elif (
+            status
+            == AerospaceTopic
+            .ApprovalStatus
+            .CORE
+        ):
+
+            obj.is_active = True
+
+        super().save_model(
             request,
-            f"{updated} topic(s) rejected.",
+            obj,
+            form,
+            change,
         )
 
+
+# =========================================================
+# Questions
+# =========================================================
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
@@ -137,7 +312,6 @@ class QuestionAdmin(admin.ModelAdmin):
 
     list_filter = (
         "domain_ref",
-        "topic_ref",
         "skill",
         "difficulty",
         "question_language",
@@ -148,17 +322,28 @@ class QuestionAdmin(admin.ModelAdmin):
 
     search_fields = (
         "question_text",
+        "explanation",
         "topic",
         "topic_ref__name",
+        "topic_ref__code",
         "domain_ref__name",
+        "domain_ref__code",
         "source_reference",
         "owner__username",
+        "owner__first_name",
+        "owner__last_name",
+    )
+
+    autocomplete_fields = (
+        "topic_ref",
     )
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
+
+    list_per_page = 50
 
     fieldsets = (
         (
@@ -177,6 +362,7 @@ class QuestionAdmin(admin.ModelAdmin):
                 )
             },
         ),
+
         (
             "Classification",
             {
@@ -192,6 +378,7 @@ class QuestionAdmin(admin.ModelAdmin):
                 )
             },
         ),
+
         (
             "Research provenance",
             {
@@ -201,6 +388,7 @@ class QuestionAdmin(admin.ModelAdmin):
                 )
             },
         ),
+
         (
             "Publication",
             {
@@ -211,6 +399,7 @@ class QuestionAdmin(admin.ModelAdmin):
                 )
             },
         ),
+
         (
             "Audit",
             {
@@ -222,8 +411,14 @@ class QuestionAdmin(admin.ModelAdmin):
         ),
     )
 
-    @admin.display(description="Question")
-    def short_question(self, obj):
+    @admin.display(
+        description="Question"
+    )
+    def short_question(
+        self,
+        obj,
+    ):
+
         return obj.question_text[:70]
 
     def formfield_for_foreignkey(
@@ -247,7 +442,9 @@ class QuestionAdmin(admin.ModelAdmin):
                     )
                 )
                 .distinct()
-                .order_by("username")
+                .order_by(
+                    "username"
+                )
             )
 
         return super().formfield_for_foreignkey(

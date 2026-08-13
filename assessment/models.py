@@ -9,15 +9,6 @@ from django.utils import timezone
 # =========================================================
 
 class AerospaceDomain(models.Model):
-    """
-    Top-level aerospace taxonomy domain.
-
-    Examples:
-    - Aerodynamics & Fluid Mechanics
-    - Flight Mechanics, Dynamics & Control
-    - Propulsion & Power Systems
-    - Space Engineering & Astronautics
-    """
 
     code = models.CharField(
         max_length=30,
@@ -52,18 +43,6 @@ class AerospaceDomain(models.Model):
 
 
 class AerospaceTopic(models.Model):
-    """
-    Flexible hierarchical aerospace topic.
-
-    A topic belongs to one AerospaceDomain and may
-    optionally have another topic as its parent.
-
-    Example:
-
-    Flight Dynamics & Control
-        └── Guidance
-            └── Missile Guidance
-    """
 
     class ApprovalStatus(models.TextChoices):
         CORE = "CORE", "Core AeroESP Topic"
@@ -111,6 +90,29 @@ class AerospaceTopic(models.Model):
         default=ApprovalStatus.CORE,
     )
 
+    # -----------------------------------------------------
+    # Review workflow
+    # -----------------------------------------------------
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_aerospace_topics",
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    review_note = models.TextField(
+        blank=True,
+    )
+
+    # -----------------------------------------------------
+
     is_active = models.BooleanField(
         default=True,
     )
@@ -120,6 +122,7 @@ class AerospaceTopic(models.Model):
     )
 
     class Meta:
+
         ordering = (
             "domain__order",
             "order",
@@ -139,8 +142,8 @@ class AerospaceTopic(models.Model):
     def clean(self):
         super().clean()
 
-        # Parent topic must belong to the same domain.
         if self.parent:
+
             if self.parent.domain_id != self.domain_id:
                 raise ValidationError(
                     {
@@ -150,7 +153,6 @@ class AerospaceTopic(models.Model):
                     }
                 )
 
-        # A topic cannot be its own parent.
         if self.pk and self.parent_id == self.pk:
             raise ValidationError(
                 {
@@ -159,15 +161,34 @@ class AerospaceTopic(models.Model):
                 }
             )
 
+        # Rejected proposals must contain a reason.
+        if (
+            self.approval_status
+            == self.ApprovalStatus.REJECTED
+            and not self.review_note.strip()
+        ):
+            raise ValidationError(
+                {
+                    "review_note":
+                        "A rejection reason is required "
+                        "when rejecting a topic proposal."
+                }
+            )
+
     def __str__(self):
+
         if self.parent:
+
             return (
                 f"{self.domain.name} → "
                 f"{self.parent.name} → "
                 f"{self.name}"
             )
 
-        return f"{self.domain.name} → {self.name}"
+        return (
+            f"{self.domain.name} → "
+            f"{self.name}"
+        )
 
 
 # =========================================================
@@ -176,11 +197,8 @@ class AerospaceTopic(models.Model):
 
 class Question(models.Model):
 
-    # -----------------------------------------------------
-    # Language Skill
-    # -----------------------------------------------------
-
     class Skill(models.TextChoices):
+
         VOCABULARY = (
             "VOCAB",
             "Technical Vocabulary",
@@ -196,15 +214,8 @@ class Question(models.Model):
             "Technical Reading",
         )
 
-    # -----------------------------------------------------
-    # Legacy Domain Codes
-    #
-    # Temporary compatibility layer for the old quiz.
-    # We now include all major AeroESP domains so new
-    # questions can safely use the expanded taxonomy.
-    # -----------------------------------------------------
-
     class Domain(models.TextChoices):
+
         GENERAL = (
             "GENERAL",
             "General Aerospace & Fundamentals",
@@ -265,15 +276,9 @@ class Question(models.Model):
             "Experimental, Computational & Data Methods",
         )
 
-    # -----------------------------------------------------
-    # Difficulty
-    # -----------------------------------------------------
-
     class Difficulty(models.TextChoices):
-        BASIC = (
-            "BASIC",
-            "Basic",
-        )
+
+        BASIC = "BASIC", "Basic"
 
         INTERMEDIATE = (
             "INTERMEDIATE",
@@ -285,21 +290,15 @@ class Question(models.Model):
             "Advanced",
         )
 
-    # -----------------------------------------------------
-    # Question Type
-    # -----------------------------------------------------
-
     class QuestionType(models.TextChoices):
+
         SINGLE_MCQ = (
             "SINGLE_MCQ",
             "Single-answer MCQ",
         )
 
-    # -----------------------------------------------------
-    # Language
-    # -----------------------------------------------------
-
     class Language(models.TextChoices):
+
         ENGLISH = (
             "EN",
             "English",
@@ -310,11 +309,8 @@ class Question(models.Model):
             "Persian",
         )
 
-    # -----------------------------------------------------
-    # Provenance
-    # -----------------------------------------------------
-
     class SourceType(models.TextChoices):
+
         MANUAL = (
             "MANUAL",
             "Teacher / Human Authored",
@@ -340,11 +336,8 @@ class Question(models.Model):
             "AI Generated",
         )
 
-    # -----------------------------------------------------
-    # Review Status
-    # -----------------------------------------------------
-
     class Status(models.TextChoices):
+
         DRAFT = (
             "DRAFT",
             "Draft",
@@ -370,11 +363,8 @@ class Question(models.Model):
             "Retired",
         )
 
-    # -----------------------------------------------------
-    # Visibility
-    # -----------------------------------------------------
-
     class Visibility(models.TextChoices):
+
         PRIVATE = (
             "PRIVATE",
             "Teacher Private",
@@ -480,11 +470,7 @@ class Question(models.Model):
     )
 
     # -----------------------------------------------------
-    # Legacy fields
-    #
-    # Temporarily retained for compatibility.
-    # They will be removed after Quiz Engine v2 fully
-    # replaces the original quiz.
+    # Legacy compatibility fields
     # -----------------------------------------------------
 
     aerospace_domain = models.CharField(
@@ -498,7 +484,7 @@ class Question(models.Model):
     )
 
     # -----------------------------------------------------
-    # Research-ready taxonomy
+    # Research-ready Taxonomy
     # -----------------------------------------------------
 
     domain_ref = models.ForeignKey(
@@ -539,7 +525,7 @@ class Question(models.Model):
     )
 
     # =====================================================
-    # Review / Publication State
+    # Review / Publication
     # =====================================================
 
     status = models.CharField(
@@ -578,8 +564,8 @@ class Question(models.Model):
     def clean(self):
         super().clean()
 
-        # A Topic cannot be selected without a Domain.
         if self.topic_ref and not self.domain_ref:
+
             raise ValidationError(
                 {
                     "domain_ref":
@@ -588,9 +574,13 @@ class Question(models.Model):
                 }
             )
 
-        # Topic must belong to selected Domain.
         if self.topic_ref and self.domain_ref:
-            if self.topic_ref.domain_id != self.domain_ref_id:
+
+            if (
+                self.topic_ref.domain_id
+                != self.domain_ref_id
+            ):
+
                 raise ValidationError(
                     {
                         "topic_ref":
@@ -604,21 +594,24 @@ class Question(models.Model):
     # =====================================================
 
     def save(self, *args, **kwargs):
+
         self.updated_at = timezone.now()
 
-        # Keep legacy fields synchronized automatically
-        # while the old quiz still exists.
+        # Temporary synchronization for old quiz engine.
         if self.domain_ref:
-            self.aerospace_domain = self.domain_ref.code
+            self.aerospace_domain = (
+                self.domain_ref.code
+            )
 
         if self.topic_ref:
-            self.topic = self.topic_ref.name
+            self.topic = (
+                self.topic_ref.name
+            )
 
-        super().save(*args, **kwargs)
-
-    # =====================================================
-    # Display
-    # =====================================================
+        super().save(
+            *args,
+            **kwargs,
+        )
 
     def __str__(self):
         return self.question_text[:80]

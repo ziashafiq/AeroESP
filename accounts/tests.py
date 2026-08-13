@@ -1,3 +1,321 @@
-from django.test import TestCase
+from io import StringIO
 
-# Create your tests here.
+from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.test import TestCase
+from django.urls import reverse
+
+from .models import (
+    StudentProfile,
+    TeacherProfile,
+)
+
+
+class AccountsFoundationTests(TestCase):
+
+    def setUp(self):
+
+        self.User = get_user_model()
+
+        # =================================================
+        # Admin
+        # =================================================
+
+        self.admin = self.User.objects.create_superuser(
+            username="admin_test",
+            email="admin@test.local",
+            password="AdminPass123!",
+        )
+
+        # =================================================
+        # Student
+        # =================================================
+
+        self.student = self.User.objects.create_user(
+            username="student_test",
+            email="student@test.local",
+            password="StudentPass123!",
+        )
+
+        StudentProfile.objects.create(
+            user=self.student,
+            student_id="ST001",
+            university="Test University",
+            department="Aerospace Engineering",
+            primary_aerospace_field=(
+                StudentProfile
+                .AerospaceField
+                .FLIGHT_DYNAMICS_CONTROL
+            ),
+        )
+
+        # =================================================
+        # Approved Teacher
+        # =================================================
+
+        self.teacher = self.User.objects.create_user(
+            username="teacher_test",
+            email="teacher@test.local",
+            password="TeacherPass123!",
+        )
+
+        TeacherProfile.objects.create(
+            user=self.teacher,
+            university="Test University",
+            department="Aerospace Engineering",
+            academic_email="teacher@test.local",
+            approval_status=(
+                TeacherProfile
+                .ApprovalStatus
+                .APPROVED
+            ),
+            approved_by=self.admin,
+        )
+
+        # =================================================
+        # Pending Teacher
+        # =================================================
+
+        self.pending_teacher = (
+            self.User.objects.create_user(
+                username="pending_teacher",
+                email="pending@test.local",
+                password="PendingPass123!",
+            )
+        )
+
+        TeacherProfile.objects.create(
+            user=self.pending_teacher,
+            university="Test University",
+            department="Aerospace Engineering",
+            academic_email="pending@test.local",
+            approval_status=(
+                TeacherProfile
+                .ApprovalStatus
+                .PENDING
+            ),
+        )
+
+        # =================================================
+        # Groups + Permissions
+        # =================================================
+
+        call_command(
+            "setup_roles",
+            stdout=StringIO(),
+        )
+
+    # =====================================================
+    # Custom User
+    # =====================================================
+
+    def test_custom_user_model_is_active(self):
+
+        self.assertEqual(
+            self.User._meta.label,
+            "accounts.CustomUser",
+        )
+
+    # =====================================================
+    # Groups and Permissions
+    # =====================================================
+
+    def test_groups_and_question_permissions(self):
+
+        self.assertTrue(
+            self.student.groups.filter(
+                name="Students"
+            ).exists()
+        )
+
+        self.assertFalse(
+            self.student.groups.filter(
+                name="Teachers"
+            ).exists()
+        )
+
+        self.assertTrue(
+            self.teacher.groups.filter(
+                name="Teachers"
+            ).exists()
+        )
+
+        self.assertFalse(
+            self.teacher.groups.filter(
+                name="Students"
+            ).exists()
+        )
+
+        # Teacher permissions
+        self.assertTrue(
+            self.teacher.has_perm(
+                "assessment.view_question"
+            )
+        )
+
+        self.assertTrue(
+            self.teacher.has_perm(
+                "assessment.add_question"
+            )
+        )
+
+        self.assertTrue(
+            self.teacher.has_perm(
+                "assessment.change_question"
+            )
+        )
+
+        self.assertFalse(
+            self.teacher.has_perm(
+                "assessment.delete_question"
+            )
+        )
+
+        # Student permissions
+        self.assertFalse(
+            self.student.has_perm(
+                "assessment.view_question"
+            )
+        )
+
+        self.assertFalse(
+            self.student.has_perm(
+                "assessment.add_question"
+            )
+        )
+
+        self.assertFalse(
+            self.student.has_perm(
+                "assessment.change_question"
+            )
+        )
+
+    # =====================================================
+    # Student Access
+    # =====================================================
+
+    def test_student_access_control(self):
+
+        self.client.force_login(
+            self.student
+        )
+
+        response = self.client.get(
+            reverse(
+                "accounts:student_dashboard"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        response = self.client.get(
+            reverse(
+                "accounts:teacher_dashboard"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    # =====================================================
+    # Approved Teacher Access
+    # =====================================================
+
+    def test_approved_teacher_access_control(self):
+
+        self.client.force_login(
+            self.teacher
+        )
+
+        response = self.client.get(
+            reverse(
+                "accounts:teacher_dashboard"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        response = self.client.get(
+            reverse(
+                "accounts:student_dashboard"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    # =====================================================
+    # Pending Teacher
+    # =====================================================
+
+    def test_pending_teacher_cannot_access_dashboard(self):
+
+        self.client.force_login(
+            self.pending_teacher
+        )
+
+        response = self.client.get(
+            reverse(
+                "accounts:teacher_pending"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        response = self.client.get(
+            reverse(
+                "accounts:teacher_dashboard"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    # =====================================================
+    # Universal Logout
+    # =====================================================
+
+    def test_universal_logout(self):
+
+        self.client.force_login(
+            self.admin
+        )
+
+        response = self.client.post(
+            reverse(
+                "accounts:logout"
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "accounts:login"
+            ),
+        )
+
+        response = self.client.get(
+            reverse(
+                "accounts:account_center"
+            )
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
