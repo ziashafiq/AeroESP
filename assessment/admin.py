@@ -1,5 +1,7 @@
 from django.contrib import admin
+from django.db.models import Q
 
+from accounts.models import CustomUser, TeacherProfile
 from .models import Question
 
 
@@ -104,3 +106,32 @@ class QuestionAdmin(admin.ModelAdmin):
     @admin.display(description="Question")
     def short_question(self, obj):
         return obj.question_text[:70]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """
+        Limit Question.owner to:
+        1. Superusers/Admins
+        2. Approved teachers
+
+        Students, pending teachers, and rejected teachers
+        must not appear in the Owner selector.
+        """
+
+        if db_field.name == "owner":
+            kwargs["queryset"] = (
+                CustomUser.objects.filter(
+                    Q(is_superuser=True)
+                    | Q(
+                        teacher_profile__approval_status=
+                        TeacherProfile.ApprovalStatus.APPROVED
+                    )
+                )
+                .distinct()
+                .order_by("username")
+            )
+
+        return super().formfield_for_foreignkey(
+            db_field,
+            request,
+            **kwargs,
+        )
