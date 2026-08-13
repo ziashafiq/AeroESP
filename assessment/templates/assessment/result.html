@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>AeroESP Results</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fa;
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        .result-box {
+            background: #173b5e;
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 45px;
+            font-weight: bold;
+        }
+
+        .section {
+            background: white;
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .metric {
+            margin: 15px 0;
+        }
+
+        .bar {
+            background: #e5e7eb;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .fill {
+            background: #2878b5;
+            height: 100%;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: #c62828;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 25px;
+            background: #173b5e;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div class="result-box">
+
+        <h1>AeroESP Assessment Result</h1>
+
+        <div class="score">
+
+            {{ overall_percentage }}%
+
+        </div>
+
+        <p>
+
+            {{ correct_count }}
+            correct answers out of
+            {{ total_questions }}
+
+        </p>
+
+    </div>
+
+
+    <div class="section">
+
+        <h2>Performance by Language Skill</h2>
+
+        {% for result in skill_results %}
+
+            <div class="metric">
+
+                <strong>
+                    {{ result.name }}
+                </strong>
+
+                —
+                {{ result.correct }}/{{ result.total }}
+                ({{ result.percentage }}%)
+
+                <div class="bar">
+
+                    <div
+                        class="fill"
+                        style="width: {{ result.percentage }}%;"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="section">
+
+        <h2>Performance by Aerospace Domain</h2>
+
+        {% for result in domain_results %}
+
+            <div class="metric">
+
+                <strong>
+                    {{ result.name }}
+                </strong>
+
+                —
+                {{ result.correct }}/{{ result.total }}
+                ({{ result.percentage }}%)
+
+                <div class="bar">
+
+                    <div
+                        class="fill"
+                        style="width: {{ result.percentage }}%;"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="section">
+
+        <h2>Question Review</h2>
+
+        {% for result in detailed_results %}
+
+            <div>
+
+                <p>
+
+                    <strong>
+                        {{ forloop.counter }}.
+                        {{ result.question.question_text }}
+                    </strong>
+
+                </p>
+
+                {% if result.is_correct %}
+
+                    <p class="correct">
+                        Correct
+                    </p>
+
+                {% else %}
+
+                    <p class="incorrect">
+
+                        Incorrect
+
+                        <br>
+
+                        Your answer:
+                        {{ result.selected_answer|default:"No answer" }}
+
+                        <br>
+
+                        Correct answer:
+                        {{ result.question.correct_answer }}
+
+                    </p>
+
+                {% endif %}
+
+
+                {% if result.question.explanation %}
+
+                    <p>
+
+                        <strong>Explanation:</strong>
+
+                        {{ result.question.explanation }}
+
+                    </p>
+
+                {% endif %}
+
+                <hr>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <a href="/">
+        Take the Assessment Again
+    </a>
+
+</div>
+
+</body>
+
+</html>
