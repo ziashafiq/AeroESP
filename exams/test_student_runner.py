@@ -778,82 +778,81 @@ class StudentExamRunnerTests(
         )
 
 
-    def test_auto_submit_sets_correct_status(
-        self,
-    ):
+def test_auto_submit_sets_correct_status(
+    self,
+):
 
-        exam = (
-            self.create_published_exam()
+    exam = (
+        self.create_published_exam()
+    )
+
+    attempt, created = (
+        _start_attempt(
+            exam,
+            self.student,
         )
+    )
 
-        now = timezone.now()
+    self.assertTrue(
+        created
+    )
 
-        past_started_at = (
-            now
-            - timedelta(
-                minutes=2
-            )
+    now = timezone.now()
+
+    past_started_at = (
+        now
+        - timedelta(
+            minutes=2
         )
+    )
 
-        past_deadline = (
-            now
-            - timedelta(
-                minutes=1
-            )
+    past_deadline = (
+        now
+        - timedelta(
+            minutes=1
         )
+    )
 
-        ExamAttempt.objects.filter(
-            pk=attempt.pk,
-        ).update(
-            started_at=(
-                past_started_at
+    ExamAttempt.objects.filter(
+        pk=attempt.pk,
+    ).update(
+        started_at=past_started_at,
+        deadline_at=past_deadline,
+    )
+
+    attempt.refresh_from_db()
+
+    self.assertTrue(
+        _deadline_passed(
+            attempt
+        )
+    )
+
+    attempt = (
+        _finalize_attempt(
+            attempt,
+            auto_submit=True,
+        )
+    )
+
+    self.assertEqual(
+        attempt.status,
+        ExamAttempt.Status.AUTO_SUBMITTED,
+    )
+
+    self.assertIsNotNone(
+        attempt.submitted_at
+    )
+
+    self.assertTrue(
+        ExamEvent.objects.filter(
+            attempt=attempt,
+            event_type=(
+                ExamEvent.EventType
+                .AUTO_SUBMITTED
             ),
-            deadline_at=(
-                past_deadline
-            ),
-        )
-
-        ExamAttempt.objects.filter(
-            pk=attempt.pk,
-        ).update(
-            deadline_at=(
-                past_deadline
-            )
-        )
-
-        attempt.refresh_from_db()
-
-        self.assertTrue(
-            _deadline_passed(
-                attempt
-            )
-        )
-
-        attempt = (
-            _finalize_attempt(
-                attempt,
-                auto_submit=True,
-            )
-        )
-
-        self.assertEqual(
-            attempt.status,
-            ExamAttempt.Status
-            .AUTO_SUBMITTED,
-        )
-
-        self.assertTrue(
-            ExamEvent.objects
-            .filter(
-                attempt=attempt,
-                event_type=(
-                    ExamEvent.EventType
-                    .AUTO_SUBMITTED
-                ),
-            )
-            .exists()
-        )
-
+        ).exists()
+    )
 
     # =====================================================
     # Access code / result policy
