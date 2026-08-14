@@ -46,9 +46,9 @@ class ExamPublishWorkflowTests(
             get_user_model()
         )
 
-        cls.teachers_group = (
-            Group.objects.get(
-                name="Teachers"
+        cls.teachers_group, _ = (
+            Group.objects.get_or_create(
+                name="Teachers",
             )
         )
 

@@ -786,18 +786,31 @@ class StudentExamRunnerTests(
             self.create_published_exam()
         )
 
-        attempt, _ = (
-            _start_attempt(
-                exam,
-                self.student,
+        now = timezone.now()
+
+        past_started_at = (
+            now
+            - timedelta(
+                minutes=2
             )
         )
 
         past_deadline = (
-            timezone.now()
+            now
             - timedelta(
-                seconds=1
+                minutes=1
             )
+        )
+
+        ExamAttempt.objects.filter(
+            pk=attempt.pk,
+        ).update(
+            started_at=(
+                past_started_at
+            ),
+            deadline_at=(
+                past_deadline
+            ),
         )
 
         ExamAttempt.objects.filter(
