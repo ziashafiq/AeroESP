@@ -1,0 +1,95 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+{{ page_title }} - AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ page_title }}</h1>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    <p>
+        {{ form.title.label_tag }}
+        <br>
+        {{ form.title }}
+        {{ form.title.errors }}
+    </p>
+
+    <p>
+        {{ form.description.label_tag }}
+        <br>
+        {{ form.description }}
+        {{ form.description.errors }}
+    </p>
+
+    <p>
+        {{ form.instructions.label_tag }}
+        <br>
+        {{ form.instructions }}
+        {{ form.instructions.errors }}
+    </p>
+
+    <p>
+        {{ form.mode.label_tag }}
+        <br>
+        {{ form.mode }}
+        {{ form.mode.errors }}
+    </p>
+
+    <p>
+        {{ form.duration_minutes.label_tag }}
+        <br>
+        {{ form.duration_minutes }}
+        {{ form.duration_minutes.errors }}
+    </p>
+
+    <p>
+        {{ form.starts_at.label_tag }}
+        <br>
+        {{ form.starts_at }}
+        {{ form.starts_at.errors }}
+    </p>
+
+    <p>
+        {{ form.ends_at.label_tag }}
+        <br>
+        {{ form.ends_at }}
+        {{ form.ends_at.errors }}
+    </p>
+
+    <p>
+        {{ form.max_attempts.label_tag }}
+        <br>
+        {{ form.max_attempts }}
+        {{ form.max_attempts.errors }}
+    </p>
+
+    <p>
+        {{ form.shuffle_questions }}
+        {{ form.shuffle_questions.label_tag }}
+    </p>
+
+    <p>
+        {{ form.shuffle_options }}
+        {{ form.shuffle_options.label_tag }}
+    </p>
+
+    <p>
+        {{ form.result_policy.label_tag }}
+        <br>
+        {{ form.result_policy }}
+    </p>
+
+    <button type="submit">
+        Save
+    </button>
+
+</form>
+
+{% endblock %}

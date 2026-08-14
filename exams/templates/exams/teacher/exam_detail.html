@@ -1,0 +1,146 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+{{ exam.title }} - AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ exam.title }}</h1>
+
+<p>
+    <strong>Status:</strong>
+    {{ exam.get_status_display }}
+</p>
+
+<p>
+    <strong>Mode:</strong>
+    {{ exam.get_mode_display }}
+</p>
+
+<p>
+    <strong>Duration:</strong>
+    {{ exam.duration_minutes }} minutes
+</p>
+
+<p>
+    <strong>Maximum Attempts:</strong>
+    {{ exam.max_attempts }}
+</p>
+
+<p>
+    <strong>Questions:</strong>
+    {{ question_count }}
+</p>
+
+<p>
+    <strong>Total Points:</strong>
+    {{ total_points }}
+</p>
+
+<p>
+    <strong>Access Code:</strong>
+    {{ exam.access_code|default:"Not generated yet" }}
+</p>
+
+<p>
+    <strong>Starts:</strong>
+    {{ exam.starts_at|default:"Not specified" }}
+</p>
+
+<p>
+    <strong>Ends:</strong>
+    {{ exam.ends_at|default:"Not specified" }}
+</p>
+
+{% if exam.description %}
+
+<h3>Description</h3>
+<p>{{ exam.description|linebreaks }}</p>
+
+{% endif %}
+
+{% if exam.instructions %}
+
+<h3>Instructions</h3>
+<p>{{ exam.instructions|linebreaks }}</p>
+
+{% endif %}
+
+
+{% if exam.status == "DRAFT" %}
+
+<div class="actions">
+
+    <a href="{% url 'exams:teacher_exam_edit' exam.pk %}">
+        Edit Settings
+    </a>
+
+    <a href="{% url 'exams:teacher_exam_question_bank' exam.pk %}">
+        Add Questions
+    </a>
+
+    <a href="{% url 'exams:teacher_exam_structure' exam.pk %}">
+        Question Structure
+    </a>
+
+    <a href="{% url 'exams:teacher_exam_publish' exam.pk %}">
+        Publish Exam
+    </a>
+
+</div>
+
+{% endif %}
+
+
+<h2>Questions</h2>
+
+{% if exam_questions %}
+
+<table>
+    <thead>
+        <tr>
+            <th>Order</th>
+            <th>Question</th>
+            <th>Points</th>
+            <th>Required</th>
+            <th>Frozen Version</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    {% for item in exam_questions %}
+
+        <tr>
+            <td>{{ item.order }}</td>
+
+            <td>
+                {{ item.question.question_text }}
+            </td>
+
+            <td>
+                {{ item.points }}
+            </td>
+
+            <td>
+                {{ item.required|yesno:"Yes,No" }}
+            </td>
+
+            <td>
+                {{ item.question_version }}
+            </td>
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+</table>
+
+{% else %}
+
+<p>No questions have been added.</p>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+Add Questions - AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>Add Questions</h1>
+
+<p>
+    Exam:
+    <strong>{{ exam.title }}</strong>
+</p>
+
+<form method="get">
+
+    <input
+        type="text"
+        name="q"
+        value="{{ query }}"
+        placeholder="Search question text..."
+    >
+
+    <button type="submit">
+        Search
+    </button>
+
+</form>
+
+<form method="post">
+
+{% csrf_token %}
+
+<table>
+
+<thead>
+<tr>
+    <th>Select</th>
+    <th>Question</th>
+    <th>Domain</th>
+    <th>Topic</th>
+    <th>Difficulty</th>
+    <th>Source</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for question in page_obj %}
+
+<tr>
+
+    <td>
+
+        {% if question.pk in already_linked_ids %}
+
+            Added
+
+        {% else %}
+
+            <input
+                type="checkbox"
+                name="question_ids"
+                value="{{ question.pk }}"
+            >
+
+        {% endif %}
+
+    </td>
+
+    <td>
+        {{ question.question_text }}
+    </td>
+
+    <td>
+        {{ question.domain_ref|default:"-" }}
+    </td>
+
+    <td>
+        {{ question.topic_ref|default:"-" }}
+    </td>
+
+    <td>
+        {{ question.difficulty|default:"-" }}
+    </td>
+
+    <td>
+        {{ question.source_type|default:"-" }}
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+    <td colspan="6">
+        No questions found.
+    </td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+
+<br>
+
+<button type="submit">
+    Add Selected Questions
+</button>
+
+</form>
+
+
+{% if page_obj.has_previous %}
+
+<a href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}">
+    Previous
+</a>
+
+{% endif %}
+
+Page
+{{ page_obj.number }}
+of
+{{ page_obj.paginator.num_pages }}
+
+{% if page_obj.has_next %}
+
+<a href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}">
+    Next
+</a>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+Publish Exam - AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>Publish Exam</h1>
+
+<p>
+    <strong>{{ exam.title }}</strong>
+</p>
+
+<p>
+    Questions:
+    {{ question_count }}
+</p>
+
+<p>
+    Total Points:
+    {{ total_points }}
+</p>
+
+<p>
+    Duration:
+    {{ exam.duration_minutes }} minutes
+</p>
+
+<p>
+    Maximum Attempts:
+    {{ exam.max_attempts }}
+</p>
+
+<p>
+    Start:
+    {{ exam.starts_at|default:"Not specified" }}
+</p>
+
+<p>
+    End:
+    {{ exam.ends_at|default:"Not specified" }}
+</p>
+
+<hr>
+
+<p>
+    Publishing will freeze a snapshot of every question used
+    in this exam.
+</p>
+
+<p>
+    After publication, normal Teacher Exam Builder editing
+    will be disabled.
+</p>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <button type="submit">
+        Confirm Publish
+    </button>
+
+</form>
+
+<br>
+
+<a href="{% url 'exams:teacher_exam_detail' exam.pk %}">
+    Cancel
+</a>
+
+{% endblock %}

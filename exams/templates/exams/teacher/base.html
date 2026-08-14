@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}AeroESP Exams{% endblock %}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            margin-bottom: 24px;
+        }
+
+        nav a {
+            margin-right: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #aaa;
+        }
+
+        .actions {
+            margin: 16px 0;
+        }
+
+        .actions a,
+        .actions button {
+            margin-right: 8px;
+        }
+
+        .errorlist {
+            color: #a00;
+        }
+
+        textarea,
+        input[type="text"],
+        input[type="number"],
+        input[type="datetime-local"],
+        select {
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <a href="{% url 'exams:teacher_exam_list' %}">
+        My Exams
+    </a>
+
+    <a href="{% url 'exams:teacher_exam_create' %}">
+        Create Exam
+    </a>
+</nav>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="message">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% block content %}
+{% endblock %}
+
+</body>
+</html>

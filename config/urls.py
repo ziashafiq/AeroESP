@@ -27,6 +27,11 @@ urlpatterns = [
     ),
 
     path(
+    "teacher/exams/",
+    include("exams.urls"),
+    ),
+
+    path(
         "teacher/",
         include("assessment.teacher_urls"),
     ),

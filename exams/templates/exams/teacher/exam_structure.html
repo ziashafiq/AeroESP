@@ -1,0 +1,92 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+Exam Structure - AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>Exam Structure</h1>
+
+<p>
+    <strong>{{ exam.title }}</strong>
+</p>
+
+<form method="post">
+
+{% csrf_token %}
+
+{{ formset.management_form }}
+
+{{ formset.non_form_errors }}
+
+<table>
+
+<thead>
+<tr>
+    <th>Question</th>
+    <th>Order</th>
+    <th>Points</th>
+    <th>Required</th>
+    <th>Remove</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for form in formset %}
+
+<tr>
+
+    <td>
+        {{ form.id }}
+
+        {{ form.instance.question.question_text }}
+
+        {{ form.non_field_errors }}
+    </td>
+
+    <td>
+        {{ form.order }}
+        {{ form.order.errors }}
+    </td>
+
+    <td>
+        {{ form.points }}
+        {{ form.points.errors }}
+    </td>
+
+    <td>
+        {{ form.required }}
+        {{ form.required.errors }}
+    </td>
+
+    <td>
+        {{ form.DELETE }}
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+    <td colspan="5">
+        No questions are currently in this exam.
+    </td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<br>
+
+<button type="submit">
+    Save Structure
+</button>
+
+</form>
+
+{% endblock %}
