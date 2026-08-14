@@ -1,0 +1,91 @@
+{% extends "exams/student/base.html" %}
+
+{% block content %}
+
+<h1>Student Exams</h1>
+
+<h2>Enter Exam Code</h2>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+        Open Exam
+    </button>
+
+</form>
+
+
+<h2>My Attempts</h2>
+
+{% if attempts %}
+
+<table>
+
+<thead>
+<tr>
+    <th>Exam</th>
+    <th>Attempt</th>
+    <th>Status</th>
+    <th>Started</th>
+    <th>Open</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for attempt in attempts %}
+
+<tr>
+
+    <td>
+        {{ attempt.exam.title }}
+    </td>
+
+    <td>
+        {{ attempt.attempt_number }}
+    </td>
+
+    <td>
+        {{ attempt.get_status_display }}
+    </td>
+
+    <td>
+        {{ attempt.started_at }}
+    </td>
+
+    <td>
+
+        {% if attempt.status == "IN_PROGRESS" %}
+
+        <a href="{% url 'exams_student:take' attempt.pk %}">
+            Continue
+        </a>
+
+        {% else %}
+
+        <a href="{% url 'exams_student:result' attempt.pk %}">
+            Result
+        </a>
+
+        {% endif %}
+
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+
+{% else %}
+
+<p>No attempts yet.</p>
+
+{% endif %}
+
+{% endblock %}

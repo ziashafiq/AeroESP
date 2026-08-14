@@ -1,0 +1,61 @@
+{% extends "exams/student/base.html" %}
+
+{% block content %}
+
+<h1>Exam Submitted</h1>
+
+<p>
+    <strong>Exam:</strong>
+    {{ exam.title }}
+</p>
+
+<p>
+    <strong>Attempt:</strong>
+    {{ attempt.attempt_number }}
+</p>
+
+<p>
+    <strong>Status:</strong>
+    {{ attempt.get_status_display }}
+</p>
+
+<p>
+    <strong>Submitted:</strong>
+    {{ attempt.submitted_at }}
+</p>
+
+
+{% if show_result %}
+
+<hr>
+
+<h2>Result</h2>
+
+<p>
+    Score:
+    {{ attempt.score }}
+    /
+    {{ attempt.max_score }}
+</p>
+
+<p>
+    Percentage:
+    {{ attempt.percentage }}%
+</p>
+
+{% else %}
+
+<p>
+    Your submission was recorded.
+    The score is not currently available
+    under this exam's result policy.
+</p>
+
+{% endif %}
+
+
+<a href="{% url 'exams_student:home' %}">
+    Back to Student Exams
+</a>
+
+{% endblock %}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        {% block title %}
+        AeroESP Student Exams
+        {% endblock %}
+    </title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            margin-bottom: 24px;
+        }
+
+        .message {
+            border: 1px solid #aaa;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .question {
+            border: 1px solid #ccc;
+            padding: 18px;
+            margin: 18px 0;
+        }
+
+        .option {
+            display: block;
+            margin: 10px 0;
+        }
+
+        .timer {
+            font-size: 22px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 12px 0;
+        }
+
+        .save-status {
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<nav>
+
+    <a href="{% url 'exams_student:home' %}">
+        Student Exams
+    </a>
+
+</nav>
+
+{% for message in messages %}
+
+<div class="message">
+    {{ message }}
+</div>
+
+{% endfor %}
+
+{% block content %}
+{% endblock %}
+
+</body>
+</html>

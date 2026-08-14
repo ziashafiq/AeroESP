@@ -1,0 +1,457 @@
+{% extends "exams/student/base.html" %}
+
+{% block title %}
+{{ exam.title }}
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ exam.title }}</h1>
+
+<div class="timer">
+    Time Remaining:
+    <span id="timer">--:--</span>
+</div>
+
+<form
+    id="submit-form"
+    method="post"
+    action="{% url 'exams_student:submit' attempt.pk %}"
+>
+
+    {% csrf_token %}
+
+</form>
+
+
+{% for item in items %}
+
+<div
+    class="question"
+    data-question-id="{{ item.exam_question.pk }}"
+    data-save-url="{{ item.save_url }}"
+>
+
+    <h3>
+        Question {{ forloop.counter }}
+    </h3>
+
+    <p>
+        {{ item.text }}
+    </p>
+
+    {% for option in item.options %}
+
+    <label class="option">
+
+        <input
+            type="radio"
+            name="question_{{ item.exam_question.pk }}"
+            value="{{ option.key }}"
+            {% if item.selected == option.key %}
+                checked
+            {% endif %}
+        >
+
+        <strong>{{ option.key }}.</strong>
+
+        {{ option.text }}
+
+    </label>
+
+    {% endfor %}
+
+    <div
+        class="save-status"
+        id="status-{{ item.exam_question.pk }}"
+    >
+    </div>
+
+</div>
+
+{% endfor %}
+
+
+<button
+    type="button"
+    id="submit-button"
+>
+    Submit Exam
+</button>
+
+<script>
+
+const csrfToken =
+    document.querySelector(
+        "[name=csrfmiddlewaretoken]"
+    ).value;
+
+const deadline =
+    new Date(
+        "{{ deadline_iso|escapejs }}"
+    ).getTime();
+
+const eventUrl =
+    "{% url 'exams_student:event_log' attempt.pk %}";
+
+let timerFinished = false;
+
+
+/* =====================================================
+   Server-backed exam timer display
+   ===================================================== */
+
+function formatTime(milliseconds) {
+
+    const totalSeconds =
+        Math.max(
+            0,
+            Math.floor(
+                milliseconds / 1000
+            )
+        );
+
+    const minutes =
+        Math.floor(
+            totalSeconds / 60
+        );
+
+    const seconds =
+        totalSeconds % 60;
+
+    return (
+        String(minutes)
+        + ":"
+        + String(seconds).padStart(
+            2,
+            "0"
+        )
+    );
+}
+
+
+function updateTimer() {
+
+    const remaining =
+        deadline - Date.now();
+
+    document.getElementById(
+        "timer"
+    ).textContent =
+        formatTime(
+            remaining
+        );
+
+    if (
+        remaining <= 0
+        && !timerFinished
+    ) {
+
+        timerFinished = true;
+
+        document.getElementById(
+            "submit-form"
+        ).submit();
+    }
+}
+
+
+updateTimer();
+
+setInterval(
+    updateTimer,
+    1000
+);
+
+
+/* =====================================================
+   Research / interaction event logger
+   ===================================================== */
+
+async function logEvent(
+    eventType,
+    examQuestionId = null
+) {
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "csrfmiddlewaretoken",
+        csrfToken
+    );
+
+    formData.append(
+        "event_type",
+        eventType
+    );
+
+    if (examQuestionId !== null) {
+
+        formData.append(
+            "exam_question_id",
+            String(
+                examQuestionId
+            )
+        );
+    }
+
+    try {
+
+        await fetch(
+            eventUrl,
+            {
+                method: "POST",
+                body: formData,
+                keepalive: true,
+            }
+        );
+
+    } catch (error) {
+
+        /*
+        Research telemetry failure must
+        never block the student's exam.
+        */
+    }
+}
+
+
+/* =====================================================
+   Question exposure + answer autosave
+   ===================================================== */
+
+document.querySelectorAll(
+    ".question"
+).forEach(
+    function(questionElement) {
+
+        const questionId =
+            questionElement
+            .dataset
+            .questionId;
+
+        let lastTimeMark = null;
+
+        /*
+        Start approximate item dwell time
+        only when the item becomes visible,
+        rather than at page load.
+        */
+        const observer =
+            new IntersectionObserver(
+                function(entries) {
+
+                    entries.forEach(
+                        function(entry) {
+
+                            if (
+                                entry.isIntersecting
+                                && lastTimeMark === null
+                            ) {
+
+                                lastTimeMark =
+                                    Date.now();
+
+                                logEvent(
+                                    "QUESTION_VIEWED",
+                                    questionId
+                                );
+
+                                observer.unobserve(
+                                    questionElement
+                                );
+                            }
+                        }
+                    );
+                },
+                {
+                    threshold: 0.5,
+                }
+            );
+
+        observer.observe(
+            questionElement
+        );
+
+
+        questionElement
+        .querySelectorAll(
+            "input[type=radio]"
+        )
+        .forEach(
+            function(input) {
+
+                input.addEventListener(
+                    "change",
+                    async function() {
+
+                        const statusElement =
+                            document.getElementById(
+                                "status-"
+                                + questionId
+                            );
+
+                        statusElement
+                            .textContent =
+                            "Saving...";
+
+                        const now =
+                            Date.now();
+
+                        const elapsedMs =
+                            lastTimeMark === null
+                            ? 0
+                            : Math.max(
+                                0,
+                                now
+                                - lastTimeMark
+                            );
+
+                        const formData =
+                            new FormData();
+
+                        formData.append(
+                            "csrfmiddlewaretoken",
+                            csrfToken
+                        );
+
+                        formData.append(
+                            "selected_answer",
+                            input.value
+                        );
+
+                        formData.append(
+                            "client_elapsed_ms",
+                            String(
+                                elapsedMs
+                            )
+                        );
+
+                        try {
+
+                            const response =
+                                await fetch(
+                                    questionElement
+                                    .dataset
+                                    .saveUrl,
+                                    {
+                                        method:
+                                            "POST",
+                                        body:
+                                            formData,
+                                    }
+                                );
+
+                            const data =
+                                await response
+                                .json();
+
+                            if (data.ok) {
+
+                                /*
+                                Reset the time mark only
+                                after a successful save.
+                                */
+                                lastTimeMark =
+                                    now;
+
+                                statusElement
+                                    .textContent =
+                                    "Saved";
+
+                            } else if (
+                                data.expired
+                            ) {
+
+                                window.location
+                                    .reload();
+
+                            } else {
+
+                                statusElement
+                                    .textContent =
+                                    (
+                                        data.error
+                                        || "Save failed"
+                                    );
+                            }
+
+                        } catch (error) {
+
+                            statusElement
+                                .textContent =
+                                "Connection error";
+                        }
+                    }
+                );
+            }
+        );
+    }
+);
+
+
+/* =====================================================
+   Page focus / blur telemetry
+   ===================================================== */
+
+window.addEventListener(
+    "blur",
+    function() {
+
+        logEvent(
+            "PAGE_BLUR"
+        );
+    }
+);
+
+window.addEventListener(
+    "focus",
+    function() {
+
+        logEvent(
+            "PAGE_FOCUS"
+        );
+    }
+);
+
+window.addEventListener(
+    "online",
+    function() {
+
+        logEvent(
+            "RECONNECTED"
+        );
+    }
+);
+
+
+/* =====================================================
+   Manual submit
+   ===================================================== */
+
+document.getElementById(
+    "submit-button"
+).addEventListener(
+    "click",
+    function() {
+
+        const confirmed =
+            window.confirm(
+                "Submit the exam? "
+                + "You will not be able "
+                + "to change your answers."
+            );
+
+        if (confirmed) {
+
+            document.getElementById(
+                "submit-form"
+            ).submit();
+        }
+    }
+);
+
+</script>
+
+{% endblock %}

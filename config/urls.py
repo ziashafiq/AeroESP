@@ -30,6 +30,12 @@ urlpatterns = [
     "teacher/exams/",
     include("exams.urls"),
     ),
+    path(
+    "student/exams/",
+    include(
+        "exams.student_urls"
+    ),
+    ),
 
     path(
         "teacher/",

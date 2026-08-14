@@ -1,0 +1,84 @@
+{% extends "exams/student/base.html" %}
+
+{% block content %}
+
+<h1>{{ exam.title }}</h1>
+
+<p>
+    <strong>Mode:</strong>
+    {{ exam.get_mode_display }}
+</p>
+
+<p>
+    <strong>Duration:</strong>
+    {{ exam.duration_minutes }} minutes
+</p>
+
+<p>
+    <strong>Maximum attempts:</strong>
+    {{ exam.max_attempts }}
+</p>
+
+<p>
+    <strong>Attempts used:</strong>
+    {{ attempt_count }}
+</p>
+
+<p>
+    <strong>Starts:</strong>
+    {{ exam.starts_at|default:"Immediately" }}
+</p>
+
+<p>
+    <strong>Ends:</strong>
+    {{ exam.ends_at|default:"No fixed closing time" }}
+</p>
+
+{% if exam.instructions %}
+
+<h3>Instructions</h3>
+
+{{ exam.instructions|linebreaks }}
+
+{% endif %}
+
+
+{% if active_attempt %}
+
+<form
+    method="post"
+    action="{% url 'exams_student:start' exam.pk %}"
+>
+
+    {% csrf_token %}
+
+    <button type="submit">
+        Continue Existing Attempt
+    </button>
+
+</form>
+
+{% elif can_start %}
+
+<form
+    method="post"
+    action="{% url 'exams_student:start' exam.pk %}"
+>
+
+    {% csrf_token %}
+
+    <button type="submit">
+        Start Exam
+    </button>
+
+</form>
+
+{% else %}
+
+<p>
+    This exam cannot currently be started.
+</p>
+
+{% endif %}
+
+{% endblock %}
