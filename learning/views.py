@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import (
     login_required,
 )
 from django.db.models import Count, Q
+from django.http import Http404
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -10,7 +11,12 @@ from django.shortcuts import (
 )
 from django.utils import timezone
 
-from .forms import LearningItemForm
+from assessment.models import Question
+
+from .forms import (
+    LearningItemForm,
+    LearningQuestionForm,
+)
 
 from .models import (
     CourseModule,
@@ -18,6 +24,7 @@ from .models import (
     LearnerError,
     LearningCourse,
     LearningItem,
+    LearningItemQuestion,
     LearningProgress,
     LearningProgram,
 )
@@ -418,6 +425,7 @@ def learning_item_create(
         },
     )
 
+
 @login_required
 def review_due(
     request,
@@ -751,4 +759,157 @@ def module_detail(
             "mastered_count": mastered_count,
             "progress_percent": progress_percent,
         },
+    )
+
+
+# =========================================================
+# Helper: infer skill from learning item
+# =========================================================
+
+def _infer_question_skill(
+    learning_item,
+):
+
+    module_title = (
+        learning_item.module.title
+        .strip()
+        .lower()
+    )
+
+    if "vocab" in module_title:
+        return Question.Skill.VOCABULARY
+
+    if "grammar" in module_title:
+        return Question.Skill.GRAMMAR
+
+    if "listen" in module_title:
+        return Question.Skill.LISTENING
+
+    if "writing" in module_title:
+        return Question.Skill.WRITING
+
+    if "speaking" in module_title:
+        return Question.Skill.SPEAKING
+
+    if "reading" in module_title:
+        return Question.Skill.READING
+
+    return Question.Skill.READING
+
+
+# =========================================================
+# Create a practice question from a learning item
+# =========================================================
+
+@login_required
+def create_practice_question(
+    request,
+    learning_item_id,
+):
+
+    learning_item = get_object_or_404(
+        LearningItem,
+        pk=learning_item_id,
+        created_by=request.user,
+    )
+
+    # GET: show form
+    if request.method != "POST":
+        form = LearningQuestionForm(
+            learning_item=learning_item,
+        )
+        return render(
+            request,
+            "learning/question_form.html",
+            {
+                "form": form,
+                "learning_item": learning_item,
+            },
+        )
+
+    # POST: process form
+    form = LearningQuestionForm(
+        request.POST,
+        learning_item=learning_item,
+    )
+
+    if not form.is_valid():
+        return render(
+            request,
+            "learning/question_form.html",
+            {
+                "form": form,
+                "learning_item": learning_item,
+            },
+        )
+
+    # Create the question
+    question = form.save(commit=False)
+
+    # Set track based on program type
+    program_type = (
+        learning_item
+        .module
+        .course
+        .program
+        .program_type
+    )
+
+    if program_type == "IELTS":
+        question.track = (
+            Question.Track.GENERAL_ENGLISH
+        )
+        question.domain_ref = None
+        question.topic_ref = None
+        question.aerospace_domain = ""
+    else:
+        question.track = (
+            Question.Track.AEROSPACE_ESP
+        )
+
+    question.skill = (
+        _infer_question_skill(
+            learning_item
+        )
+    )
+
+    question.owner = None
+    question.question_language = (
+        Question.Language.ENGLISH
+    )
+    question.options_language = (
+        Question.Language.ENGLISH
+    )
+    question.source_type = (
+        Question.SourceType.MANUAL
+    )
+    question.source_reference = (
+        f"Learning Item #{learning_item.pk}"
+    )
+    question.status = (
+        Question.Status.DRAFT
+    )
+    question.visibility = (
+        Question.Visibility.PRIVATE
+    )
+
+    question.full_clean()
+    question.save()
+
+    # Link to the learning item
+    LearningItemQuestion.objects.create(
+        learning_item=learning_item,
+        question=question,
+    )
+
+    messages.success(
+        request,
+        "Practice question created.",
+    )
+
+    return redirect(
+        "learning:module_detail",
+        module_id=(
+            learning_item.module_id
+        ),
     )

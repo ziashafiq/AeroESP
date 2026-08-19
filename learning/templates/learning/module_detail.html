@@ -244,6 +244,19 @@
 
     {% endif %}
 
+    {% if item.created_by == request.user %}
+
+    <div style="margin-top: 15px;">
+        <a
+            class="button"
+            href="{% url 'learning:learning_question_create' item.pk %}"
+        >
+            Create Practice Question
+        </a>
+    </div>
+
+    {% endif %}
+
 </div>
 
 {% endfor %}

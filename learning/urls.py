@@ -66,4 +66,10 @@ urlpatterns = [
         views.my_errors,
         name="my_errors",
     ),
+
+    path(
+        "items/<int:learning_item_id>/question/add/",
+        views.create_practice_question,
+        name="learning_question_create",
+    ),
 ]

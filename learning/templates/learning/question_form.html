@@ -1,0 +1,105 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Create Practice Question | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+
+    <a href="{% url 'learning:dashboard' %}">
+        Dashboard
+    </a>
+
+    /
+
+    Create Practice Question
+
+</div>
+
+
+<div class="program-header">
+
+    <span class="badge">
+        {{ learning_item.module.course.program.title }}
+    </span>
+
+    <h1>
+        Create Practice Question
+    </h1>
+
+    <p>
+        Create a question from:
+        <strong>
+            {{ learning_item.title }}
+        </strong>
+    </p>
+
+</div>
+
+
+<div class="card">
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {% for field in form %}
+
+        {% if field.name == "domain_ref" %}
+
+            {% if learning_item.module.course.program.program_type == "AEROSPACE_ESP" %}
+
+            <div style="margin-bottom:18px;">
+
+                <label for="{{ field.id_for_label }}">
+                    <strong>
+                        {{ field.label }}
+                    </strong>
+                </label>
+
+                <div style="margin-top:6px;">
+                    {{ field }}
+                </div>
+
+                {{ field.errors }}
+
+            </div>
+
+            {% endif %}
+
+        {% else %}
+
+        <div style="margin-bottom:18px;">
+
+            <label for="{{ field.id_for_label }}">
+                <strong>
+                    {{ field.label }}
+                </strong>
+            </label>
+
+            <div style="margin-top:6px;">
+                {{ field }}
+            </div>
+
+            {{ field.errors }}
+
+        </div>
+
+        {% endif %}
+
+    {% endfor %}
+
+    <button
+        class="button"
+        type="submit"
+    >
+        Create Question
+    </button>
+
+</form>
+
+</div>
+
+{% endblock %}
