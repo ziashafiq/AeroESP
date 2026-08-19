@@ -39,7 +39,7 @@
 
         <a
             class="button"
-            href="{% url 'learning:learning_item_create' %}"
+            href="{% url 'learning:learning_item_create' %}?course={{ course.pk }}"
         >
             + Add Learning Item
         </a>

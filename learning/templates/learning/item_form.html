@@ -6,29 +6,136 @@ Add Learning Item | AeroESP
 
 {% block content %}
 
+<div class="breadcrumb">
+
+    <a href="{% url 'learning:dashboard' %}">
+        Dashboard
+    </a>
+
+    /
+
+    Add Learning Item
+
+</div>
+
+
 <h1 class="page-title">
     Add Learning Item
 </h1>
 
 <p>
-    Record something new you learned today.
+    Record something new you learned.
     It can later be converted into practice
     questions and used in your review plan.
 </p>
 
+
 <div class="card">
 
-<form method="post">
+    <div
+        style="
+            background:#f5f7fb;
+            padding:12px 14px;
+            border-radius:8px;
+            margin-bottom:20px;
+        "
+    >
 
-    {% csrf_token %}
+        <strong>
+            Adding to:
+        </strong>
 
-    {{ form.as_p }}
+        {{ scope_title }}
 
-    <button class="button">
-        Save Learning Item
-    </button>
+    </div>
 
-</form>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {% if scope_course_id %}
+        <input
+            type="hidden"
+            name="scope_course"
+            value="{{ scope_course_id }}"
+        >
+        {% endif %}
+
+        {% if scope_module_id %}
+        <input
+            type="hidden"
+            name="scope_module"
+            value="{{ scope_module_id }}"
+        >
+        {% endif %}
+
+
+        {% for field in form %}
+
+            {% if field.name == "module" and locked_module %}
+
+                <div style="margin-bottom:18px;">
+
+                    <label>
+                        <strong>
+                            Course Section
+                        </strong>
+                    </label>
+
+                    <p>
+                        {{ scope_title }}
+                    </p>
+
+                    <div style="display:none;">
+                        {{ field }}
+                    </div>
+
+                    {% if field.errors %}
+                        {{ field.errors }}
+                    {% endif %}
+
+                </div>
+
+            {% else %}
+
+                <div style="margin-bottom:18px;">
+
+                    <label for="{{ field.id_for_label }}">
+                        <strong>
+                            {{ field.label }}
+                        </strong>
+                    </label>
+
+                    <div style="margin-top:6px;">
+                        {{ field }}
+                    </div>
+
+                    {% if field.help_text %}
+                    <small>
+                        {{ field.help_text }}
+                    </small>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        {{ field.errors }}
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        <button
+            class="button"
+            type="submit"
+        >
+            Save Learning Item
+        </button>
+
+    </form>
 
 </div>
 

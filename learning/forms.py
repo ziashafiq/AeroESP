@@ -1,6 +1,9 @@
 from django import forms
 
-from .models import LearningItem
+from .models import (
+    CourseModule,
+    LearningItem,
+)
 
 
 class LearningItemForm(forms.ModelForm):
@@ -66,7 +69,7 @@ class LearningItemForm(forms.ModelForm):
                 attrs={
                     "rows": 2,
                     "placeholder": (
-                        "Example: depend from"
+                        "Write a common incorrect form..."
                     ),
                 }
             ),
@@ -74,8 +77,68 @@ class LearningItemForm(forms.ModelForm):
                 attrs={
                     "rows": 2,
                     "placeholder": (
-                        "Example: depend on"
+                        "Write the correct form..."
                     ),
                 }
             ),
         }
+
+    def __init__(
+        self,
+        *args,
+        course=None,
+        module=None,
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            **kwargs,
+        )
+
+        queryset = (
+            CourseModule.objects
+            .filter(
+                is_active=True,
+                course__is_active=True,
+                course__program__is_active=True,
+            )
+            .select_related(
+                "course",
+                "course__program",
+            )
+            .order_by(
+                "course__program__order",
+                "course__order",
+                "order",
+            )
+        )
+
+        if module is not None:
+
+            queryset = queryset.filter(
+                pk=module.pk,
+            )
+
+            self.fields[
+                "module"
+            ].queryset = queryset
+
+            self.fields[
+                "module"
+            ].initial = module
+
+        elif course is not None:
+
+            queryset = queryset.filter(
+                course=course,
+            )
+
+            self.fields[
+                "module"
+            ].queryset = queryset
+
+        else:
+
+            self.fields[
+                "module"
+            ].queryset = queryset

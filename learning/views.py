@@ -292,8 +292,62 @@ def learning_item_create(
     request,
 ):
 
+    module = None
+    course = None
+
+    module_id = (
+        request.GET.get("module")
+        or request.POST.get(
+            "scope_module"
+        )
+    )
+
+    course_id = (
+        request.GET.get("course")
+        or request.POST.get(
+            "scope_course"
+        )
+    )
+
+    if module_id:
+
+        module = (
+            CourseModule.objects
+            .filter(
+                pk=module_id,
+                is_active=True,
+                course__is_active=True,
+                course__program__is_active=True,
+            )
+            .select_related(
+                "course",
+                "course__program",
+            )
+            .first()
+        )
+
+        if module is not None:
+            course = module.course
+
+    elif course_id:
+
+        course = (
+            LearningCourse.objects
+            .filter(
+                pk=course_id,
+                is_active=True,
+                program__is_active=True,
+            )
+            .select_related(
+                "program",
+            )
+            .first()
+        )
+
     form = LearningItemForm(
-        request.POST or None
+        request.POST or None,
+        course=course,
+        module=module,
     )
 
     if (
@@ -317,7 +371,27 @@ def learning_item_create(
         )
 
         return redirect(
-            "learning:learning_journal"
+            "learning:module_detail",
+            module_id=item.module_id,
+        )
+
+    if module is not None:
+
+        scope_title = (
+            f"{module.course.title} "
+            f"/ {module.title}"
+        )
+
+    elif course is not None:
+
+        scope_title = (
+            course.title
+        )
+
+    else:
+
+        scope_title = (
+            "All Learning Programs"
         )
 
     return render(
@@ -325,9 +399,24 @@ def learning_item_create(
         "learning/item_form.html",
         {
             "form": form,
+            "scope_course_id": (
+                course.pk
+                if course
+                else ""
+            ),
+            "scope_module_id": (
+                module.pk
+                if module
+                else ""
+            ),
+            "scope_title": (
+                scope_title
+            ),
+            "locked_module": (
+                module is not None
+            ),
         },
     )
-
 
 @login_required
 def review_due(
