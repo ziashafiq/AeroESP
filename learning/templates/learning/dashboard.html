@@ -70,9 +70,7 @@ Dashboard | AeroESP
 
 {% for program in programs %}
 
-    {% for course in program.courses.all %}
-
-    {% if course.is_active %}
+    {% if program.is_active %}
 
     <div class="card course-card">
 
@@ -81,25 +79,43 @@ Dashboard | AeroESP
         </span>
 
         <h3>
-            {{ course.title }}
+            {{ program.title }}
         </h3>
 
         <p>
-            {{ course.description|truncatewords:20 }}
+            {{ program.description|truncatewords:20 }}
         </p>
 
-        <a
-            class="button"
-            href="{% url 'learning:course_detail' course.pk %}"
-        >
-            Open Course
-        </a>
+        {% if program.program_type == "IELTS" %}
+            <a
+                class="button"
+                href="{% url 'learning:ielts_dashboard' %}"
+            >
+                Open IELTS
+            </a>
+        {% elif program.program_type == "AEROSPACE_ESP" %}
+            <a
+                class="button"
+                href="{% url 'learning:aerospace_dashboard' %}"
+            >
+                Open Aerospace English
+            </a>
+        {% else %}
+            <a
+                class="button"
+                href="#"
+            >
+                View Program
+            </a>
+        {% endif %}
 
     </div>
 
     {% endif %}
 
-    {% endfor %}
+{% empty %}
+
+    <p>No learning programs available.</p>
 
 {% endfor %}
 

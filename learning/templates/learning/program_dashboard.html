@@ -6,29 +6,119 @@
 
 {% block content %}
 
+<div class="breadcrumb">
+    <a href="{% url 'learning:dashboard' %}">
+        Dashboard
+    </a>
+    /
+    {{ program.title }}
+</div>
+
+
 <div class="program-header">
 
-    <span class="badge">
-        {{ program.get_program_type_display }}
-    </span>
+    <div class="program-top">
 
-    <h1>
-        {{ program.title }}
-    </h1>
+        <div>
 
-    <p>
-        {{ program.description }}
-    </p>
+            <span class="badge">
+                {{ program.get_program_type_display }}
+            </span>
+
+            <h1>
+                {{ program.title }}
+            </h1>
+
+            <p>
+                {{ program.description }}
+            </p>
+
+        </div>
+
+        {% if course %}
+
+        <a
+            class="button"
+            href="{% url 'learning:learning_item_create' %}"
+        >
+            + Add Learning Item
+        </a>
+
+        {% endif %}
+
+    </div>
+
 
     {% if course %}
 
-    <div style="margin-top: 22px;">
+    <div class="program-meta">
 
-        <div style="
-            display:flex;
-            justify-content:space-between;
-            margin-bottom:8px;
-        ">
+        <div class="meta-box">
+
+            <strong>
+                Your Level:
+            </strong>
+
+            {% if enrollment and enrollment.assigned_level %}
+
+                {{ enrollment.get_assigned_level_display }}
+
+            {% else %}
+
+                Not assessed yet
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="meta-box">
+
+            <strong>
+                Class:
+            </strong>
+
+            {% if enrollment and enrollment.class_name %}
+
+                {{ enrollment.class_name }}
+
+            {% else %}
+
+                Not assigned
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="meta-box">
+
+            <strong>
+                Sections:
+            </strong>
+
+            {{ module_cards|length }}
+
+        </div>
+
+
+        <div class="meta-box">
+
+            <strong>
+                Tracked Items:
+            </strong>
+
+            {{ total_items }}
+
+        </div>
+
+    </div>
+
+
+    <div class="course-progress">
+
+        <div class="course-progress-header">
+
             <strong>
                 Overall Progress
             </strong>
@@ -36,6 +126,7 @@
             <strong>
                 {{ course_progress }}%
             </strong>
+
         </div>
 
         <div class="progress-track">
@@ -60,11 +151,13 @@
 <div class="section">
 
     <h2>
-        {{ course.title }}
+        Course Sections
     </h2>
 
     <p>
-        {{ course.description }}
+        Choose a section to study,
+        add learning materials,
+        and track your progress.
     </p>
 
 </div>
@@ -88,39 +181,56 @@
         {{ card.module.title }}
     </h3>
 
+    {% if card.module.description %}
+
+    <p>
+        {{ card.module.description }}
+    </p>
+
+    {% endif %}
+
+
     <div class="skill-meta">
 
-        Personal items:
+        Personal learning items:
         {{ card.personal_items }}
 
         <br>
 
-        Shared items:
+        Shared learning items:
         {{ card.public_items }}
+
+        <br>
+
+        Mastered:
+        {{ card.mastered }}
+        /
+        {{ card.tracked }}
 
     </div>
 
-    <div style="
-        display:flex;
-        justify-content:space-between;
-        margin-bottom:6px;
-    ">
+
+    <div class="course-progress-header">
 
         <span>
             Progress
         </span>
 
-        <span>
+        <strong>
             {{ card.progress_percent }}%
-        </span>
+        </strong>
 
     </div>
+
 
     <div class="progress-track">
 
         <div
             class="progress-fill"
-            style="width: {{ card.progress_percent }}%;"
+            style="
+                width:
+                {{ card.progress_percent }}%;
+            "
         >
         </div>
 
@@ -138,6 +248,17 @@
 </div>
 
 {% endfor %}
+
+</div>
+
+
+{% else %}
+
+<div class="card empty-state">
+
+    <h2>
+        No active learning course.
+    </h2>
 
 </div>
 

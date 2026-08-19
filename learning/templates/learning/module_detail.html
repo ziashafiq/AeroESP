@@ -6,62 +6,164 @@
 
 {% block content %}
 
-<a
-    href="{% url 'learning:course_detail' module.course.pk %}"
->
-    ← Back to Course
-</a>
 
-<br><br>
+<div class="breadcrumb">
+
+    <a href="{% url 'learning:dashboard' %}">
+        Dashboard
+    </a>
+
+    /
+
+    {% if module.course.program.program_type == "IELTS" %}
+
+    <a href="{% url 'learning:ielts_dashboard' %}">
+        IELTS
+    </a>
+
+    {% else %}
+
+    <a href="{% url 'learning:aerospace_dashboard' %}">
+        Aerospace English
+    </a>
+
+    {% endif %}
+
+    /
+
+    {{ module.title }}
+
+</div>
+
 
 <div class="program-header">
 
-    <span class="badge">
-        {{ module.course.program.title }}
-    </span>
+    <div class="module-header">
 
-    <h1>
-        {{ module.title }}
-    </h1>
+        <div>
 
-    <p>
-        {{ module.get_module_type_display }}
-    </p>
+            <span class="badge">
+                {{ module.course.program.title }}
+            </span>
 
-    <a
-        class="button"
-        href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
-    >
-        + Add Learning Item
-    </a>
+            <h1>
+                {{ module.title }}
+            </h1>
+
+            <p>
+                {{ module.get_module_type_display }}
+            </p>
+
+        </div>
+
+
+        <a
+            class="button"
+            href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
+        >
+            + Add Learning Item
+        </a>
+
+    </div>
+
+
+    <div class="course-progress">
+
+        <div class="course-progress-header">
+
+            <strong>
+                Your Progress
+            </strong>
+
+            <strong>
+                {{ progress_percent }}%
+            </strong>
+
+        </div>
+
+        <div class="progress-track">
+
+            <div
+                class="progress-fill"
+                style="
+                    width:
+                    {{ progress_percent }}%;
+                "
+            >
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
 
-<div class="cards">
+<div class="cards section">
 
     <div class="card">
-        <h3>Personal Items</h3>
-        <h2>{{ personal_count }}</h2>
+
+        <h3>
+            My Learning Items
+        </h3>
+
+        <div class="stat-number">
+            {{ personal_count }}
+        </div>
+
     </div>
 
-    <div class="card">
-        <h3>Tracked</h3>
-        <h2>{{ tracked_count }}</h2>
-    </div>
 
     <div class="card">
-        <h3>Mastered</h3>
-        <h2>{{ mastered_count }}</h2>
+
+        <h3>
+            Items Tracked
+        </h3>
+
+        <div class="stat-number">
+            {{ tracked_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Mastered
+        </h3>
+
+        <div class="stat-number">
+            {{ mastered_count }}
+        </div>
+
     </div>
 
 </div>
 
-<br>
 
-<h2>
-    Learning Content
-</h2>
+<div class="section">
+
+    <div class="module-header">
+
+        <div>
+
+            <h2>
+                Learning Content
+            </h2>
+
+            <p>
+                Your notes and shared
+                learning materials for
+                this section.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 {% if items %}
 
@@ -77,45 +179,88 @@
         {{ item.title }}
     </h3>
 
+
     {% if item.definition_en %}
+
     <p>
-        <strong>Definition:</strong>
+        <strong>
+            Definition
+        </strong>
+        <br>
         {{ item.definition_en }}
     </p>
+
     {% endif %}
+
+
+    {% if item.explanation %}
+
+    <p>
+        <strong>
+            Notes
+        </strong>
+        <br>
+        {{ item.explanation }}
+    </p>
+
+    {% endif %}
+
 
     {% if item.example %}
+
     <p>
-        <strong>Example:</strong>
+        <strong>
+            Example
+        </strong>
+        <br>
         {{ item.example }}
     </p>
+
     {% endif %}
+
 
     {% if item.common_mistake %}
+
     <p>
-        <strong>Common Mistake:</strong>
+        <strong>
+            Common Mistake
+        </strong>
+        <br>
         {{ item.common_mistake }}
     </p>
+
     {% endif %}
 
+
     {% if item.correct_form %}
+
     <p>
-        <strong>Correct Form:</strong>
+        <strong>
+            Correct Form
+        </strong>
+        <br>
         {{ item.correct_form }}
     </p>
+
     {% endif %}
 
 </div>
 
 {% endfor %}
 
+
 {% else %}
 
-<div class="card">
+<div class="card empty-state">
 
     <h3>
-        No learning content yet.
+        This section is empty.
     </h3>
+
+    <p>
+        Add the first item you learn
+        in this section.
+    </p>
 
     <a
         class="button"

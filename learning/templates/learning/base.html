@@ -82,6 +82,15 @@
             color: #154b91;
         }
 
+        /* new sidebar title style */
+        .sidebar-title {
+            margin: 24px 14px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #8995a7;
+        }
+
         .content {
             padding: 30px;
         }
@@ -189,6 +198,115 @@
             margin-bottom: 15px;
         }
 
+        /* ----- new LMS styles ----- */
+        .program-header {
+            background: #ffffff;
+            border: 1px solid #e1e6ef;
+            border-radius: 16px;
+            padding: 26px;
+            margin-bottom: 24px;
+        }
+
+        .program-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .program-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .meta-box {
+            background: #f5f7fb;
+            border-radius: 9px;
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #e7ebf1;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #154b91;
+            border-radius: 20px;
+        }
+
+        .skill-card {
+            min-height: 230px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .skill-card .button {
+            margin-top: auto;
+            align-self: flex-start;
+        }
+
+        .skill-number {
+            color: #8793a5;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .skill-meta {
+            font-size: 14px;
+            color: #66758a;
+            line-height: 1.7;
+            margin: 10px 0 15px;
+        }
+
+        .course-progress {
+            margin-top: 22px;
+        }
+
+        .course-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 25px;
+        }
+
+        .breadcrumb {
+            margin-bottom: 18px;
+            color: #68778c;
+        }
+
+        .breadcrumb a {
+            color: #154b91;
+            text-decoration: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .stat-number {
+            font-size: 30px;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        /* ----- end new styles ----- */
+
         @media (
             max-width: 800px
         ) {
@@ -228,6 +346,10 @@
 
     <aside class="sidebar">
 
+        <div class="sidebar-title">
+            OVERVIEW
+        </div>
+
         <a href="{% url 'learning:dashboard' %}">
             Dashboard
         </a>
@@ -236,21 +358,49 @@
             My Courses
         </a>
 
+
+        <div class="sidebar-title">
+            LEARNING PROGRAMS
+        </div>
+
+        <a href="{% url 'learning:ielts_dashboard' %}">
+            General English & IELTS
+        </a>
+
+        <a href="{% url 'learning:aerospace_dashboard' %}">
+            Aerospace English
+        </a>
+
+
+        <div class="sidebar-title">
+            PERSONAL LEARNING
+        </div>
+
         <a href="{% url 'learning:learning_journal' %}">
             Learning Journal
         </a>
 
         <a href="{% url 'learning:review_due' %}">
-            Review
+            Review Queue
         </a>
 
         <a href="{% url 'learning:my_errors' %}">
             Error Analysis
         </a>
 
+
+        <div class="sidebar-title">
+            ASSESSMENT
+        </div>
+
         <a href="/student/exams/">
             Practice & Exams
         </a>
+
+
+        <div class="sidebar-title">
+            ACCOUNT
+        </div>
 
         <a href="/accounts/student/dashboard/">
             Profile

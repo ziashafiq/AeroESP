@@ -416,11 +416,21 @@ def _build_course_dashboard(
         return {
             "program": program,
             "course": None,
+            "enrollment": None,
             "module_cards": [],
             "course_progress": 0,
             "total_items": 0,
             "mastered_items": 0,
         }
+
+    enrollment = (
+        Enrollment.objects
+        .filter(
+            student=request.user,
+            course=course,
+        )
+        .first()
+    )
 
     modules = (
         course.modules
@@ -459,12 +469,15 @@ def _build_course_dashboard(
             .count()
         )
 
-        if tracked:
-            progress_percent = round(
-                mastered / tracked * 100
+        progress_percent = (
+            round(
+                mastered
+                / tracked
+                * 100
             )
-        else:
-            progress_percent = 0
+            if tracked
+            else 0
+        )
 
         personal_items = (
             LearningItem.objects
@@ -492,27 +505,35 @@ def _build_course_dashboard(
                 "module": module,
                 "tracked": tracked,
                 "mastered": mastered,
-                "progress_percent": progress_percent,
-                "personal_items": personal_items,
-                "public_items": public_items,
+                "progress_percent": (
+                    progress_percent
+                ),
+                "personal_items": (
+                    personal_items
+                ),
+                "public_items": (
+                    public_items
+                ),
             }
         )
 
         total_tracked += tracked
         total_mastered += mastered
 
-    if total_tracked:
-        course_progress = round(
+    course_progress = (
+        round(
             total_mastered
             / total_tracked
             * 100
         )
-    else:
-        course_progress = 0
+        if total_tracked
+        else 0
+    )
 
     return {
         "program": program,
         "course": course,
+        "enrollment": enrollment,
         "module_cards": module_cards,
         "course_progress": course_progress,
         "total_items": total_tracked,
