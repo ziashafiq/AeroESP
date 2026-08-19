@@ -32,6 +32,7 @@ class TeacherQuestionForm(forms.ModelForm):
             "explanation",
             "question_language",
             "options_language",
+            "track",
             "skill",
             "domain_ref",
             "topic_ref",
@@ -50,6 +51,7 @@ class TeacherQuestionForm(forms.ModelForm):
             "explanation": "Explanation",
             "question_language": "Question Language",
             "options_language": "Options Language",
+            "track": "Learning Track",
             "skill": "Language Skill",
             "domain_ref": "Aerospace Domain",
             "topic_ref": "Aerospace Topic",
@@ -127,6 +129,29 @@ class TeacherQuestionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # -------------------------------------------------
+        # Determine selected track
+        # -------------------------------------------------
+        selected_track = None
+
+        if self.is_bound:
+            selected_track = self.data.get(
+                "track"
+            )
+
+        elif (
+            self.instance
+            and self.instance.pk
+        ):
+            selected_track = (
+                self.instance.track
+            )
+
+        if not selected_track:
+            selected_track = (
+                Question.Track.AEROSPACE_ESP
+            )
+
+        # -------------------------------------------------
         # Domains
         # -------------------------------------------------
 
@@ -140,7 +165,10 @@ class TeacherQuestionForm(forms.ModelForm):
             )
         )
 
-        self.fields["domain_ref"].required = True
+        self.fields["domain_ref"].required = (
+            selected_track
+            == Question.Track.AEROSPACE_ESP
+        )
 
         # -------------------------------------------------
         # Topics
@@ -160,9 +188,24 @@ class TeacherQuestionForm(forms.ModelForm):
             )
         )
 
+        # If track is General English, no topics/domains
+        if (
+            selected_track
+            == Question.Track.GENERAL_ENGLISH
+        ):
+            topic_queryset = (
+                topic_queryset.none()
+            )
+
+            self.fields[
+                "domain_ref"
+            ].queryset = (
+                AerospaceDomain.objects.none()
+            )
+
         # If form is submitted, restrict topics to
         # the selected domain.
-        if self.is_bound:
+        elif self.is_bound:
 
             domain_id = self.data.get(
                 "domain_ref"
@@ -224,6 +267,10 @@ class TeacherQuestionForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
+        track = cleaned_data.get(
+            "track"
+        )
+
         domain = cleaned_data.get(
             "domain_ref"
         )
@@ -231,6 +278,40 @@ class TeacherQuestionForm(forms.ModelForm):
         topic = cleaned_data.get(
             "topic_ref"
         )
+
+        if (
+            track
+            == Question.Track.AEROSPACE_ESP
+            and not domain
+        ):
+
+            self.add_error(
+                "domain_ref",
+                "Please select an aerospace domain.",
+            )
+
+        if (
+            track
+            == Question.Track.GENERAL_ENGLISH
+        ):
+
+            if domain:
+
+                self.add_error(
+                    "domain_ref",
+                    "General English / IELTS questions "
+                    "do not use an aerospace domain.",
+                )
+
+            if topic:
+
+                self.add_error(
+                    "topic_ref",
+                    "General English / IELTS questions "
+                    "do not use an aerospace topic.",
+                )
+
+            return cleaned_data
 
         if topic and not domain:
 
@@ -256,7 +337,10 @@ class TeacherQuestionForm(forms.ModelForm):
                 AerospaceTopic.ApprovalStatus.APPROVED,
             }
 
-            if topic.approval_status not in allowed_statuses:
+            if (
+                topic.approval_status
+                not in allowed_statuses
+            ):
 
                 self.add_error(
                     "topic_ref",

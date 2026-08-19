@@ -197,21 +197,48 @@ class AerospaceTopic(models.Model):
 
 class Question(models.Model):
 
+    class Track(models.TextChoices):
+
+        GENERAL_ENGLISH = (
+            "GENERAL_ENGLISH",
+            "General English / IELTS",
+        )
+
+        AEROSPACE_ESP = (
+            "AEROSPACE_ESP",
+            "Aerospace English / ESP",
+        )
+
     class Skill(models.TextChoices):
 
         VOCABULARY = (
             "VOCAB",
-            "Technical Vocabulary",
+            "Vocabulary",
         )
 
         GRAMMAR = (
             "GRAMMAR",
-            "Grammar in Engineering Context",
+            "Grammar",
         )
 
         READING = (
             "READING",
-            "Technical Reading",
+            "Reading",
+        )
+
+        LISTENING = (
+            "LISTENING",
+            "Listening",
+        )
+
+        WRITING = (
+            "WRITING",
+            "Writing",
+        )
+
+        SPEAKING = (
+            "SPEAKING",
+            "Speaking",
         )
 
     class Domain(models.TextChoices):
@@ -464,6 +491,12 @@ class Question(models.Model):
     # Educational Classification
     # =====================================================
 
+    track = models.CharField(
+        max_length=30,
+        choices=Track.choices,
+        default=Track.AEROSPACE_ESP,
+    )
+
     skill = models.CharField(
         max_length=20,
         choices=Skill.choices,
@@ -476,6 +509,8 @@ class Question(models.Model):
     aerospace_domain = models.CharField(
         max_length=20,
         choices=Domain.choices,
+        blank=True,
+        default="",
     )
 
     topic = models.CharField(
@@ -564,6 +599,45 @@ class Question(models.Model):
     def clean(self):
         super().clean()
 
+        if (
+            self.track
+            == self.Track.AEROSPACE_ESP
+            and not self.domain_ref
+        ):
+
+            raise ValidationError(
+                {
+                    "domain_ref":
+                        "Aerospace English questions "
+                        "must have an aerospace domain."
+                }
+            )
+
+        if (
+            self.track
+            == self.Track.GENERAL_ENGLISH
+        ):
+
+            if self.domain_ref:
+
+                raise ValidationError(
+                    {
+                        "domain_ref":
+                            "General English / IELTS questions "
+                            "must not use an aerospace domain."
+                    }
+                )
+
+            if self.topic_ref:
+
+                raise ValidationError(
+                    {
+                        "topic_ref":
+                            "General English / IELTS questions "
+                            "must not use an aerospace topic."
+                    }
+                )
+
         if self.topic_ref and not self.domain_ref:
 
             raise ValidationError(
@@ -597,16 +671,27 @@ class Question(models.Model):
 
         self.updated_at = timezone.now()
 
-        # Temporary synchronization for old quiz engine.
-        if self.domain_ref:
-            self.aerospace_domain = (
-                self.domain_ref.code
-            )
+        if (
+            self.track
+            == self.Track.AEROSPACE_ESP
+        ):
 
-        if self.topic_ref:
-            self.topic = (
-                self.topic_ref.name
-            )
+            if self.domain_ref:
+                self.aerospace_domain = (
+                    self.domain_ref.code
+                )
+
+            if self.topic_ref:
+                self.topic = (
+                    self.topic_ref.name
+                )
+
+        else:
+
+            self.aerospace_domain = ""
+            self.domain_ref = None
+            self.topic_ref = None
+            self.topic = ""
 
         super().save(
             *args,

@@ -34,6 +34,7 @@ def build_balanced_test():
 
             candidates = list(
                 Question.objects.filter(
+                    track=Question.Track.AEROSPACE_ESP,
                     skill=skill,
                     aerospace_domain=domain,
                 )
