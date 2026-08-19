@@ -128,6 +128,21 @@ class TeacherQuestionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Backward compatibility:
+        # Older forms/tests created aerospace questions
+        # before the track field existed.
+        if (
+            self.is_bound
+            and not self.data.get("track")
+        ):
+            mutable_data = self.data.copy()
+
+            mutable_data["track"] = (
+                Question.Track.AEROSPACE_ESP
+            )
+
+            self.data = mutable_data
+
         # -------------------------------------------------
         # Determine selected track
         # -------------------------------------------------
