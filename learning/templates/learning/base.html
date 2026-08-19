@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% block title %}
+        AeroESP Learning
+        {% endblock %}
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            background: #f4f6fa;
+            color: #18212f;
+        }
+
+        .topbar {
+            height: 64px;
+            background: #ffffff;
+            border-bottom:
+                1px solid #dde3ec;
+            display: flex;
+            align-items: center;
+            justify-content:
+                space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: #154b91;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns:
+                240px 1fr;
+            min-height:
+                calc(100vh - 64px);
+        }
+
+        .sidebar {
+            background: #ffffff;
+            border-right:
+                1px solid #dde3ec;
+            padding: 22px 14px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 14px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #27364b;
+        }
+
+        .sidebar a:hover {
+            background: #eef4ff;
+            color: #154b91;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .page-title {
+            margin-top: 0;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(220px, 1fr)
+                );
+            gap: 18px;
+        }
+
+        .card {
+            background: #ffffff;
+            border:
+                1px solid #e1e6ef;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow:
+                0 3px 12px
+                rgba(0,0,0,.04);
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .course-card {
+            min-height: 180px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #eef4ff;
+            color: #154b91;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .button {
+            display: inline-block;
+            background: #154b91;
+            color: white;
+            text-decoration: none;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .button-secondary {
+            background: #edf1f7;
+            color: #26364b;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .module {
+            background: white;
+            border: 1px solid #e1e6ef;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            padding: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            border-bottom:
+                1px solid #e6eaf0;
+            padding: 12px;
+            text-align: left;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border:
+                1px solid #ccd4df;
+            border-radius: 7px;
+        }
+
+        .message {
+            background: #eaf7ee;
+            border:
+                1px solid #b9dfc4;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        @media (
+            max-width: 800px
+        ) {
+
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .content {
+                padding: 18px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+
+    <div class="brand">
+        AeroESP
+    </div>
+
+    <div>
+        {{ request.user.username }}
+    </div>
+
+</div>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <a href="{% url 'learning:dashboard' %}">
+            Dashboard
+        </a>
+
+        <a href="{% url 'learning:my_courses' %}">
+            My Courses
+        </a>
+
+        <a href="{% url 'learning:learning_journal' %}">
+            Learning Journal
+        </a>
+
+        <a href="{% url 'learning:review_due' %}">
+            Review
+        </a>
+
+        <a href="{% url 'learning:my_errors' %}">
+            Error Analysis
+        </a>
+
+        <a href="/student/exams/">
+            Practice & Exams
+        </a>
+
+        <a href="/accounts/student/dashboard/">
+            Profile
+        </a>
+
+    </aside>
+
+    <main class="content">
+
+        {% for message in messages %}
+
+        <div class="message">
+            {{ message }}
+        </div>
+
+        {% endfor %}
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+</div>
+
+</body>
+</html>

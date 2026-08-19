@@ -27,9 +27,15 @@ urlpatterns = [
     ),
 
     path(
+        "learn/",
+        include("learning.urls"),
+    ),
+
+    path(
     "teacher/exams/",
     include("exams.urls"),
     ),
+    
     path(
     "student/exams/",
     include(

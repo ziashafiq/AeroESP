@@ -510,6 +510,20 @@ class Enrollment(models.Model):
         )
         PAUSED = "PAUSED", "Paused"
 
+    class PlacementStatus(models.TextChoices):
+        NOT_ASSESSED = (
+            "NOT_ASSESSED",
+            "Not Assessed",
+        )
+        PLACEMENT_TEST = (
+            "PLACEMENT_TEST",
+            "Placement Test",
+        )
+        TEACHER_ASSIGNED = (
+            "TEACHER_ASSIGNED",
+            "Teacher Assigned",
+        )
+
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -526,6 +540,29 @@ class Enrollment(models.Model):
         max_length=20,
         choices=Status.choices,
         default=Status.ACTIVE,
+    )
+
+    # New fields added after status
+    assigned_level = models.CharField(
+        max_length=30,
+        choices=LearningCourse.Level.choices,
+        blank=True,
+    )
+
+    class_name = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    placement_status = models.CharField(
+        max_length=30,
+        choices=PlacementStatus.choices,
+        default=PlacementStatus.NOT_ASSESSED,
+    )
+
+    placement_updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
     )
 
     enrolled_at = models.DateTimeField(

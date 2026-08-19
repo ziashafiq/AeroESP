@@ -1,0 +1,71 @@
+{% extends "learning/base.html" %}
+
+{% block content %}
+
+<h1>
+    My Error History
+</h1>
+
+{% if errors %}
+
+<table>
+
+<tr>
+    <th>Category</th>
+    <th>My Answer</th>
+    <th>Expected</th>
+    <th>Scope</th>
+    <th>Status</th>
+</tr>
+
+{% for error in errors %}
+
+<tr>
+
+    <td>
+        {{ error.get_category_display }}
+    </td>
+
+    <td>
+        {{ error.student_response }}
+    </td>
+
+    <td>
+        {{ error.expected_response }}
+    </td>
+
+    <td>
+
+        {% if error.is_esp_specific_error %}
+            Aerospace ESP
+        {% elif error.is_general_english_error %}
+            General English
+        {% else %}
+            Unclassified
+        {% endif %}
+
+    </td>
+
+    <td>
+        {% if error.resolved %}
+            Resolved
+        {% else %}
+            Active
+        {% endif %}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<div class="card">
+    No learner errors recorded yet.
+</div>
+
+{% endif %}
+
+{% endblock %}

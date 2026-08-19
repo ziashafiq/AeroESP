@@ -1,0 +1,164 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Dashboard | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">
+    Learning Dashboard
+</h1>
+
+<div class="cards section">
+
+    <div class="card">
+        <h3>
+            Learning Items
+        </h3>
+        <h2>
+            {{ learned_count }}
+        </h2>
+        <a
+            class="button"
+            href="{% url 'learning:learning_item_create' %}"
+        >
+            Add Learning Item
+        </a>
+    </div>
+
+    <div class="card">
+        <h3>
+            Review Due
+        </h3>
+        <h2>
+            {{ review_due_count }}
+        </h2>
+        <a
+            class="button button-secondary"
+            href="{% url 'learning:review_due' %}"
+        >
+            Review
+        </a>
+    </div>
+
+    <div class="card">
+        <h3>
+            Unresolved Errors
+        </h3>
+        <h2>
+            {{ unresolved_errors }}
+        </h2>
+        <a
+            class="button button-secondary"
+            href="{% url 'learning:my_errors' %}"
+        >
+            View Errors
+        </a>
+    </div>
+
+</div>
+
+
+<div class="section">
+
+<h2>
+    Learning Programs
+</h2>
+
+<div class="cards">
+
+{% for program in programs %}
+
+    {% for course in program.courses.all %}
+
+    {% if course.is_active %}
+
+    <div class="card course-card">
+
+        <span class="badge">
+            {{ program.get_program_type_display }}
+        </span>
+
+        <h3>
+            {{ course.title }}
+        </h3>
+
+        <p>
+            {{ course.description|truncatewords:20 }}
+        </p>
+
+        <a
+            class="button"
+            href="{% url 'learning:course_detail' course.pk %}"
+        >
+            Open Course
+        </a>
+
+    </div>
+
+    {% endif %}
+
+    {% endfor %}
+
+{% endfor %}
+
+</div>
+
+</div>
+
+
+<div class="section">
+
+<h2>
+    Recent Learning
+</h2>
+
+{% if recent_items %}
+
+<table>
+
+<tr>
+    <th>Item</th>
+    <th>Type</th>
+    <th>Course</th>
+    <th>Date</th>
+</tr>
+
+{% for item in recent_items %}
+
+<tr>
+
+    <td>
+        {{ item.title }}
+    </td>
+
+    <td>
+        {{ item.get_item_type_display }}
+    </td>
+
+    <td>
+        {{ item.module.course.title }}
+    </td>
+
+    <td>
+        {{ item.created_at|date:"Y-m-d" }}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<p>
+    No learning items recorded yet.
+</p>
+
+{% endif %}
+
+</div>
+
+{% endblock %}

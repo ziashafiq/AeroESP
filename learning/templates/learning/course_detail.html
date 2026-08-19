@@ -1,0 +1,63 @@
+{% extends "learning/base.html" %}
+
+{% block content %}
+
+<span class="badge">
+    {{ course.program.title }}
+</span>
+
+<h1>
+    {{ course.title }}
+</h1>
+
+<p>
+    {{ course.description }}
+</p>
+
+{% if not enrollment %}
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <button class="button">
+        Add to My Courses
+    </button>
+
+</form>
+
+<br>
+
+{% endif %}
+
+{% for module in course.modules.all %}
+
+<div class="module">
+
+    <h3>
+        {{ forloop.counter }}.
+        {{ module.title }}
+    </h3>
+
+    <span class="badge">
+        {{ module.get_module_type_display }}
+    </span>
+
+    {% if module.description %}
+
+    <p>
+        {{ module.description }}
+    </p>
+
+    {% endif %}
+
+    <p>
+        Learning items:
+        {{ module.items.count }}
+    </p>
+
+</div>
+
+{% endfor %}
+
+{% endblock %}

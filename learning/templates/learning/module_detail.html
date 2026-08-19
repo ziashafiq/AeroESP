@@ -1,0 +1,131 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+{{ module.title }} | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<a
+    href="{% url 'learning:course_detail' module.course.pk %}"
+>
+    ← Back to Course
+</a>
+
+<br><br>
+
+<div class="program-header">
+
+    <span class="badge">
+        {{ module.course.program.title }}
+    </span>
+
+    <h1>
+        {{ module.title }}
+    </h1>
+
+    <p>
+        {{ module.get_module_type_display }}
+    </p>
+
+    <a
+        class="button"
+        href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
+    >
+        + Add Learning Item
+    </a>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+        <h3>Personal Items</h3>
+        <h2>{{ personal_count }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>Tracked</h3>
+        <h2>{{ tracked_count }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>Mastered</h3>
+        <h2>{{ mastered_count }}</h2>
+    </div>
+
+</div>
+
+<br>
+
+<h2>
+    Learning Content
+</h2>
+
+{% if items %}
+
+{% for item in items %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ item.get_item_type_display }}
+    </span>
+
+    <h3>
+        {{ item.title }}
+    </h3>
+
+    {% if item.definition_en %}
+    <p>
+        <strong>Definition:</strong>
+        {{ item.definition_en }}
+    </p>
+    {% endif %}
+
+    {% if item.example %}
+    <p>
+        <strong>Example:</strong>
+        {{ item.example }}
+    </p>
+    {% endif %}
+
+    {% if item.common_mistake %}
+    <p>
+        <strong>Common Mistake:</strong>
+        {{ item.common_mistake }}
+    </p>
+    {% endif %}
+
+    {% if item.correct_form %}
+    <p>
+        <strong>Correct Form:</strong>
+        {{ item.correct_form }}
+    </p>
+    {% endif %}
+
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<div class="card">
+
+    <h3>
+        No learning content yet.
+    </h3>
+
+    <a
+        class="button"
+        href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
+    >
+        Add First Learning Item
+    </a>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

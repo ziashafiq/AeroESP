@@ -1,0 +1,42 @@
+{% extends "learning/base.html" %}
+
+{% block content %}
+
+<h1>
+    Review Due
+</h1>
+
+{% if records %}
+
+{% for record in records %}
+
+<div class="card">
+
+    <h3>
+        {{ record.learning_item.title }}
+    </h3>
+
+    <p>
+        {{ record.learning_item.definition_en }}
+    </p>
+
+    <p>
+        Next review:
+        {{ record.next_review_at }}
+    </p>
+
+</div>
+
+<br>
+
+{% endfor %}
+
+{% else %}
+
+<div class="card">
+    No reviews are due.
+</div>
+
+{% endif %}
+
+{% endblock %}

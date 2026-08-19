@@ -1,0 +1,125 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+My Courses | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">
+    My Courses
+</h1>
+
+<p>
+    Continue your learning programs
+    and track your assigned level.
+</p>
+
+<div class="cards">
+
+{% for card in course_cards %}
+
+{% with course=card.course enrollment=card.enrollment %}
+
+<div class="card course-card">
+
+    <span class="badge">
+        {{ course.program.title }}
+    </span>
+
+    <h3>
+        {{ course.title }}
+    </h3>
+
+    {% if course.description %}
+
+    <p>
+        {{ course.description|truncatewords:20 }}
+    </p>
+
+    {% endif %}
+
+    <p>
+        <strong>Sections:</strong>
+        {{ course.module_count }}
+    </p>
+
+
+    <p>
+        <strong>Your Level:</strong>
+
+        {% if enrollment and enrollment.assigned_level %}
+
+            {{ enrollment.get_assigned_level_display }}
+
+        {% else %}
+
+            Not assessed yet
+
+        {% endif %}
+    </p>
+
+
+    <p>
+        <strong>Class:</strong>
+
+        {% if enrollment and enrollment.class_name %}
+
+            {{ enrollment.class_name }}
+
+        {% else %}
+
+            Not assigned
+
+        {% endif %}
+    </p>
+
+
+    {% if enrollment %}
+
+    <p>
+        <strong>Placement:</strong>
+        {{ enrollment.get_placement_status_display }}
+    </p>
+
+    {% endif %}
+
+
+    {% if course.program.program_type == "IELTS" %}
+
+    <a
+        class="button"
+        href="{% url 'learning:ielts_dashboard' %}"
+    >
+        Open IELTS
+    </a>
+
+    {% elif course.program.program_type == "AEROSPACE_ESP" %}
+
+    <a
+        class="button"
+        href="{% url 'learning:aerospace_dashboard' %}"
+    >
+        Open Aerospace English
+    </a>
+
+    {% else %}
+
+    <a
+        class="button"
+        href="{% url 'learning:course_detail' course.pk %}"
+    >
+        Open Course
+    </a>
+
+    {% endif %}
+
+</div>
+
+{% endwith %}
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

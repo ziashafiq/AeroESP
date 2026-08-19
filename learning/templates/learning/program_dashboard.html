@@ -1,0 +1,146 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+{{ program.title }} | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="program-header">
+
+    <span class="badge">
+        {{ program.get_program_type_display }}
+    </span>
+
+    <h1>
+        {{ program.title }}
+    </h1>
+
+    <p>
+        {{ program.description }}
+    </p>
+
+    {% if course %}
+
+    <div style="margin-top: 22px;">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:8px;
+        ">
+            <strong>
+                Overall Progress
+            </strong>
+
+            <strong>
+                {{ course_progress }}%
+            </strong>
+        </div>
+
+        <div class="progress-track">
+
+            <div
+                class="progress-fill"
+                style="width: {{ course_progress }}%;"
+            >
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+{% if course %}
+
+<div class="section">
+
+    <h2>
+        {{ course.title }}
+    </h2>
+
+    <p>
+        {{ course.description }}
+    </p>
+
+</div>
+
+
+<div class="cards">
+
+{% for card in module_cards %}
+
+<div class="card skill-card">
+
+    <div class="skill-number">
+        SECTION {{ forloop.counter }}
+    </div>
+
+    <span class="badge">
+        {{ card.module.get_module_type_display }}
+    </span>
+
+    <h3>
+        {{ card.module.title }}
+    </h3>
+
+    <div class="skill-meta">
+
+        Personal items:
+        {{ card.personal_items }}
+
+        <br>
+
+        Shared items:
+        {{ card.public_items }}
+
+    </div>
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        margin-bottom:6px;
+    ">
+
+        <span>
+            Progress
+        </span>
+
+        <span>
+            {{ card.progress_percent }}%
+        </span>
+
+    </div>
+
+    <div class="progress-track">
+
+        <div
+            class="progress-fill"
+            style="width: {{ card.progress_percent }}%;"
+        >
+        </div>
+
+    </div>
+
+    <br>
+
+    <a
+        class="button"
+        href="{% url 'learning:module_detail' card.module.pk %}"
+    >
+        Open Section
+    </a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endif %}
+
+{% endblock %}

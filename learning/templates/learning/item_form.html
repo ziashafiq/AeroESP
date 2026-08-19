@@ -1,0 +1,35 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Add Learning Item | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">
+    Add Learning Item
+</h1>
+
+<p>
+    Record something new you learned today.
+    It can later be converted into practice
+    questions and used in your review plan.
+</p>
+
+<div class="card">
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button class="button">
+        Save Learning Item
+    </button>
+
+</form>
+
+</div>
+
+{% endblock %}

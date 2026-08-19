@@ -1,0 +1,91 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Learning Journal | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">
+    Learning Journal
+</h1>
+
+<p>
+    Save new words, phrases, grammar points,
+    mistakes, technical terms, and anything
+    you learn during your studies.
+</p>
+
+<a
+    class="button"
+    href="{% url 'learning:learning_item_create' %}"
+>
+    + Add Learning Item
+</a>
+
+<br><br>
+
+<form method="get">
+
+    <input
+        name="q"
+        value="{{ query }}"
+        placeholder="Search your learning journal..."
+    >
+
+</form>
+
+<br>
+
+{% if items %}
+
+<table>
+
+<tr>
+    <th>Learning Item</th>
+    <th>Type</th>
+    <th>Course Section</th>
+    <th>Definition</th>
+    <th>Date</th>
+</tr>
+
+{% for item in items %}
+
+<tr>
+
+    <td>
+        {{ item.title }}
+    </td>
+
+    <td>
+        {{ item.get_item_type_display }}
+    </td>
+
+    <td>
+        {{ item.module.title }}
+    </td>
+
+    <td>
+        {{ item.definition_en|truncatewords:15 }}
+    </td>
+
+    <td>
+        {{ item.created_at|date:"Y-m-d" }}
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+{% else %}
+
+<div class="card">
+    Your learning journal is empty.
+    Add your first learning item.
+</div>
+
+{% endif %}
+
+{% endblock %}
