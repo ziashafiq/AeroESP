@@ -73,8 +73,7 @@ def ai_dashboard(request):
 
         insights = (
             insights.filter(
-                student__learning_enrollments__
-                course__created_by=request.user
+                student__learning_enrollments__course__created_by=request.user
             )
             .distinct()
         )
