@@ -799,6 +799,27 @@ class OpenAIQuestionGenerator(
 
     provider_name = "OPENAI_RESPONSES_V1"
 
+    def __init__(self):
+        self.model = getattr(
+            settings,
+            "AEROESP_OPENAI_MODEL",
+            "gpt-4o-mini",
+        )
+        self.timeout = getattr(
+            settings,
+            "AEROESP_OPENAI_TIMEOUT",
+            45,
+        )
+
+        try:
+            import openai
+            self.client = openai.OpenAI()
+        except ImportError:
+            raise QuestionGenerationError(
+                "OpenAI Python library not installed. "
+                "Please install openai and set OPENAI_API_KEY."
+            )
+
     def generate(
         self,
         *,
@@ -810,57 +831,58 @@ class OpenAIQuestionGenerator(
         theme="",
         teacher_instructions="",
     ):
-        # Prepare the prompt for the OpenAI API.
-        # This is a simplified version; in production you'd use the OpenAI client.
-        # We'll simulate the generation with a structured fallback.
-        # For demonstration, we'll use the baseline but with a placeholder.
-
-        # Actually, we should implement the OpenAI call here.
-        # Since this is a code skeleton, we'll raise NotImplementedError for now,
-        # but we'll include the structure as requested.
-
-        # Build the prompt
         domain_name = domain.name if domain else "general aerospace"
         topic_name = topic.name if topic else ""
         theme_text = theme.strip() or topic_name or domain_name
 
+        # Build prompt
         prompt = (
             f"Generate a multiple-choice question for the {track} track, "
             f"skill: {skill}, difficulty: {difficulty}. "
             f"Domain: {domain_name}. Topic: {theme_text}. "
-            f"Provide a question with four options (A, B, C, D) and a correct answer. "
-            f"Return the result in JSON format with keys: question_text, option_a, option_b, option_c, option_d, correct_answer, explanation."
+            f"Teacher instructions: {teacher_instructions or 'None'}. "
+            "Provide a question with four options (A, B, C, D) and a correct answer. "
+            "Return the result in JSON format with keys: question_text, option_a, option_b, option_c, option_d, correct_answer, explanation."
         )
 
-        # Simulate OpenAI response (fallback to baseline for now)
-        # In a real implementation you would call openai.ChatCompletion.create(...)
-        # For now, we'll use the baseline generator as a placeholder.
-        baseline = BaselineQuestionGenerator()
-        result = baseline.generate(
-            track=track,
-            skill=skill,
-            difficulty=difficulty,
-            domain=domain,
-            topic=topic,
-            theme=theme,
-            teacher_instructions=teacher_instructions,
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert in creating high-quality multiple-choice questions for aerospace English and General English contexts."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=500,
+                timeout=self.timeout,
+                response_format={"type": "json_object"},
+            )
+            content = response.choices[0].message.content
+            data = json.loads(content)
 
-        # Validate the result (reuse the validation method)
-        self._validate_result(result)
+            # Validate the result
+            self._validate_result(data)
 
-        # Add provider and metadata
-        result["provider"] = self.provider_name
-        result["metadata"] = {
-            "track": track,
-            "skill": skill,
-            "difficulty": difficulty,
-            "domain": domain_name,
-            "topic": topic_name,
-            "theme": theme_text,
-            "teacher_instructions": teacher_instructions,
-        }
-        return result
+            # Add provider and metadata
+            data["provider"] = self.provider_name
+            data["metadata"] = {
+                "model": self.model,
+                "response_id": getattr(
+                    response,
+                    "id",
+                    None,
+                ),
+                "track": track,
+                "skill": skill,
+                "difficulty": difficulty,
+                "domain": domain_name,
+                "topic": topic_name,
+                "theme": theme_text,
+            }
+            return data
+
+        except Exception as e:
+            raise QuestionGenerationError(f"OpenAI generation failed: {str(e)}")
 
     def _validate_result(
         self,
@@ -918,9 +940,7 @@ class OpenAIQuestionGenerator(
             data["option_d"].strip(),
         ]
 
-        if len(
-            set(options)
-        ) != 4:
+        if len(set(options)) != 4:
 
             raise QuestionGenerationError(
                 "Generated answer options "
@@ -932,9 +952,8 @@ class OpenAIQuestionGenerator(
             if len(option) > 500:
 
                 raise QuestionGenerationError(
-                    "A generated option "
-                    "exceeded the Question "
-                    "Bank length limit."
+                    "A generated option exceeded "
+                    "the Question Bank length limit."
                 )
 
 
