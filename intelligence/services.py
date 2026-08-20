@@ -811,15 +811,6 @@ class OpenAIQuestionGenerator(
             45,
         )
 
-        try:
-            import openai
-            self.client = openai.OpenAI()
-        except ImportError:
-            raise QuestionGenerationError(
-                "OpenAI Python library not installed. "
-                "Please install openai and set OPENAI_API_KEY."
-            )
-
     def generate(
         self,
         *,
@@ -831,6 +822,16 @@ class OpenAIQuestionGenerator(
         theme="",
         teacher_instructions="",
     ):
+        # Check API key
+        api_key = os.getenv(
+            "OPENAI_API_KEY",
+            "",
+        ).strip()
+        if not api_key:
+            raise QuestionGenerationError(
+                "OPENAI_API_KEY is not configured."
+            )
+
         domain_name = domain.name if domain else "general aerospace"
         topic_name = topic.name if topic else ""
         theme_text = theme.strip() or topic_name or domain_name
@@ -846,7 +847,13 @@ class OpenAIQuestionGenerator(
         )
 
         try:
-            response = self.client.chat.completions.create(
+            from openai import OpenAI
+            client = OpenAI(
+                api_key=api_key,
+                timeout=self.timeout,
+            )
+
+            response = client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are an expert in creating high-quality multiple-choice questions for aerospace English and General English contexts."},
@@ -854,7 +861,6 @@ class OpenAIQuestionGenerator(
                 ],
                 temperature=0.7,
                 max_tokens=500,
-                timeout=self.timeout,
                 response_format={"type": "json_object"},
             )
             content = response.choices[0].message.content
