@@ -1,0 +1,189 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Class Analytics | AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<div class="program-header">
+
+    <h1>
+        {{ course.title }}
+    </h1>
+
+    <p>
+        Class:
+        {{ class_name }}
+    </p>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Students
+        </h3>
+
+        <div class="stat-number">
+            {{ student_count }}
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+            Class Accuracy
+        </h3>
+
+        <div class="stat-number">
+            {{ class_accuracy }}%
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+            Class Mastery
+        </h3>
+
+        <div class="stat-number">
+            {{ class_mastery }}%
+        </div>
+
+    </div>
+
+</div>
+
+
+<h2>
+    Students
+</h2>
+
+{% for row in students %}
+
+<div class="module">
+
+    <h3>
+        {{ row.student.username }}
+    </h3>
+
+    <p>
+        Level:
+        {% if row.enrollment.assigned_level %}
+            {{ row.enrollment.assigned_level }}
+        {% else %}
+            Not assessed
+        {% endif %}
+    </p>
+
+    <p>
+        Accuracy:
+        {{ row.summary.accuracy }}%
+    </p>
+
+    <p>
+        Mastery:
+        {{ row.summary.mastery }}%
+    </p>
+
+    <p>
+        Due:
+        {{ row.summary.due }}
+    </p>
+
+    <p>
+        Errors:
+        {{ row.summary.errors }}
+    </p>
+
+    {% if row.summary.needs_attention %}
+        <span class="badge">
+            Needs Attention
+        </span>
+    {% endif %}
+
+    <a
+        class="button"
+        href="{% url 'learning:teacher_student_detail' row.student.pk %}"
+    >
+        Student Analytics
+    </a>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No students in this class.
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Weakest Areas
+</h2>
+
+<div class="cards">
+
+{% for area in weak_categories %}
+
+<div class="card">
+
+    <h3>
+        {{ area.category }}
+    </h3>
+
+    <div class="stat-number">
+        {{ area.total }}
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No error data.
+</div>
+
+{% endfor %}
+
+</div>
+
+
+{% if domain_stats %}
+
+<h2>
+    Aerospace Domain Performance
+</h2>
+
+{% for domain in domain_stats %}
+
+<div class="module">
+
+    <h3>
+        {{ domain.name }}
+    </h3>
+
+    <p>
+        Accuracy:
+        <strong>
+            {{ domain.accuracy }}%
+        </strong>
+    </p>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+
+{% endblock %}

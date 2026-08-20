@@ -2,9 +2,11 @@
 from decimal import Decimal
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import (
     login_required,
 )
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, Q
 from django.http import Http404, JsonResponse
@@ -2808,5 +2810,405 @@ def learning_analytics(request):
             "latest_placement": (
                 latest_placement
             ),
+        },
+    )
+
+
+# =========================================================
+# Teacher Learning Views
+# =========================================================
+
+def _student_course_summary(student, course):
+    """
+    Compute summary statistics for a student in a specific course.
+    Returns a dict with correct, incorrect, attempts, accuracy,
+    tracked, mastered, mastery, due, errors, needs_attention.
+    """
+    now = timezone.now()
+
+    progress_qs = LearningProgress.objects.filter(
+        student=student,
+        learning_item__module__course=course,
+    )
+
+    correct = sum(p.correct_count for p in progress_qs)
+    incorrect = sum(p.incorrect_count for p in progress_qs)
+    attempts = correct + incorrect
+    tracked = progress_qs.count()
+    mastered = progress_qs.filter(status=LearningProgress.Status.MASTERED).count()
+
+    accuracy = round(correct / attempts * 100, 1) if attempts else 0
+    mastery = round(mastered / tracked * 100, 1) if tracked else 0
+
+    due = progress_qs.filter(
+        next_review_at__lte=now,
+    ).exclude(
+        status=LearningProgress.Status.MASTERED
+    ).count()
+
+    errors = LearnerError.objects.filter(
+        student=student,
+        learning_item__module__course=course,
+        resolved=False,
+    ).count()
+
+    needs_attention = (
+        (attempts >= 3 and accuracy < 60) or
+        errors >= 3 or
+        due >= 5
+    )
+
+    return {
+        "correct": correct,
+        "incorrect": incorrect,
+        "attempts": attempts,
+        "accuracy": accuracy,
+        "tracked": tracked,
+        "mastered": mastered,
+        "mastery": mastery,
+        "due": due,
+        "errors": errors,
+        "needs_attention": needs_attention,
+    }
+
+
+@login_required
+def teacher_learning_dashboard(request):
+    """
+    Dashboard for approved teachers to monitor student progress.
+    Requires teacher profile with is_approved=True.
+    """
+    user = request.user
+    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
+        raise PermissionDenied("You are not an approved teacher.")
+
+    # Get all courses taught by this teacher
+    courses = LearningCourse.objects.filter(
+        created_by=user,
+        is_active=True,
+    ).select_related('program')
+
+    course_ids = list(courses.values_list('id', flat=True))
+    if not course_ids:
+        # No courses - return empty dashboard
+        return render(
+            request,
+            "learning/teacher_learning_dashboard.html",
+            {
+                "courses": [],
+                "classes": [],
+                "course_count": 0,
+                "class_count": 0,
+                "student_count": 0,
+                "weak_categories": [],
+                "attention_students": [],
+            }
+        )
+
+    # Get all enrollments for these courses (active status)
+    enrollments = Enrollment.objects.filter(
+        course_id__in=course_ids,
+        status=Enrollment.Status.ACTIVE,
+    ).select_related('student', 'course')
+
+    # Group by class_name (or "Unassigned" for blank)
+    classes = {}
+    unique_students = set()
+
+    for enrollment in enrollments:
+        class_name = enrollment.class_name or "Unassigned"
+        key = (enrollment.course_id, class_name)
+        if key not in classes:
+            classes[key] = {
+                "course": enrollment.course,
+                "class_name": class_name,
+                "students": [],
+            }
+        # Avoid duplicates (a student might be enrolled in multiple courses)
+        # We'll add a placeholder; later we compute summary per student per course
+        # Actually we want per student per course, so we keep all.
+        student_id = enrollment.student_id
+        unique_students.add(student_id)
+        classes[key]["students"].append(enrollment.student)
+
+    # For each class group, compute per-student summaries
+    class_list = []
+    for (course_id, class_name), group in classes.items():
+        student_rows = []
+        for student in group["students"]:
+            summary = _student_course_summary(student, group["course"])
+            student_rows.append({
+                "student": student,
+                "summary": summary,
+            })
+        # Sort students by needs_attention first, then by accuracy ascending
+        student_rows.sort(
+            key=lambda row: (
+                not row["summary"]["needs_attention"],  # True first
+                row["summary"]["accuracy"],
+            )
+        )
+        class_list.append({
+            "course": group["course"],
+            "class_name": class_name,
+            "students": student_rows,
+        })
+
+    # Top weak categories across all classes
+    weak_categories = (
+        LearnerError.objects
+        .filter(
+            student_id__in=unique_students,
+            learning_item__module__course_id__in=course_ids,
+            resolved=False,
+        )
+        .values("category")
+        .annotate(total=Count("id"))
+        .order_by("-total", "category")[:8]
+    )
+
+    # Students needing attention
+    attention_students = []
+    for group in class_list:
+        for row in group["students"]:
+            if row["summary"]["needs_attention"]:
+                attention_students.append({
+                    "student": row["student"],
+                    "course": group["course"],
+                    "class_name": group["class_name"],
+                    "summary": row["summary"],
+                })
+
+    attention_students.sort(
+        key=lambda row: (
+            row["summary"]["accuracy"],
+            -row["summary"]["errors"],
+        )
+    )
+
+    return render(
+        request,
+        "learning/teacher_learning_dashboard.html",
+        {
+            "courses": courses,
+            "classes": class_list,
+            "course_count": len(courses),
+            "class_count": len(class_list),
+            "student_count": len(unique_students),
+            "weak_categories": weak_categories,
+            "attention_students": attention_students[:20],
+        },
+    )
+
+
+@login_required
+def teacher_class_detail(request, course_id, class_name):
+    """
+    Detailed view for a specific class within a course.
+    """
+    user = request.user
+    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
+        raise PermissionDenied("You are not an approved teacher.")
+
+    course = get_object_or_404(
+        LearningCourse.objects.select_related('program'),
+        pk=course_id,
+        created_by=user,
+        is_active=True,
+    )
+
+    # Get enrollments for this course and class
+    class_name = class_name if class_name != "Unassigned" else ""
+    enrollments = Enrollment.objects.filter(
+        course=course,
+        class_name=class_name,
+        status=Enrollment.Status.ACTIVE,
+    ).select_related('student')
+
+    if not enrollments:
+        # No students in this class
+        return render(
+            request,
+            "learning/teacher_class_detail.html",
+            {
+                "course": course,
+                "class_name": class_name or "Unassigned",
+                "students": [],
+                "student_count": 0,
+                "class_accuracy": 0,
+                "class_mastery": 0,
+                "weak_categories": [],
+                "domain_stats": [],
+            }
+        )
+
+    students = []
+    total_correct = 0
+    total_incorrect = 0
+    total_tracked = 0
+    total_mastered = 0
+    student_ids = []
+
+    for enrollment in enrollments:
+        student = enrollment.student
+        student_ids.append(student.id)
+        summary = _student_course_summary(student, course)
+        students.append({
+            "student": student,
+            "summary": summary,
+        })
+        total_correct += summary["correct"]
+        total_incorrect += summary["incorrect"]
+        total_tracked += summary["tracked"]
+        total_mastered += summary["mastered"]
+
+    # Class-wide accuracy and mastery
+    total_attempts = total_correct + total_incorrect
+    class_accuracy = round(total_correct / total_attempts * 100, 1) if total_attempts else 0
+    class_mastery = round(total_mastered / total_tracked * 100, 1) if total_tracked else 0
+
+    # Weak categories for this class
+    weak_categories = (
+        LearnerError.objects
+        .filter(
+            student_id__in=student_ids,
+            learning_item__module__course=course,
+            resolved=False,
+        )
+        .values("category")
+        .annotate(total=Count("id"))
+        .order_by("-total", "category")[:8]
+    )
+
+    # Domain stats (Aerospace domains)
+    domain_map = {}
+    progress_qs = LearningProgress.objects.filter(
+        student_id__in=student_ids,
+        learning_item__module__course=course,
+    ).select_related('learning_item__aerospace_domain')
+
+    for progress in progress_qs:
+        item = progress.learning_item
+        if item.aerospace_domain:
+            name = item.aerospace_domain.name
+        else:
+            name = item.module.title if item.module else "Other"
+        data = domain_map.setdefault(
+            name,
+            {"name": name, "correct": 0, "incorrect": 0}
+        )
+        data["correct"] += progress.correct_count
+        data["incorrect"] += progress.incorrect_count
+
+    domain_stats = []
+    for data in domain_map.values():
+        attempts = data["correct"] + data["incorrect"]
+        data["accuracy"] = round(data["correct"] / attempts * 100, 1) if attempts else 0
+        domain_stats.append(data)
+
+    domain_stats.sort(key=lambda x: (x["accuracy"], x["name"]))
+
+    return render(
+        request,
+        "learning/teacher_class_detail.html",
+        {
+            "course": course,
+            "class_name": class_name or "Unassigned",
+            "students": students,
+            "student_count": len(students),
+            "class_accuracy": class_accuracy,
+            "class_mastery": class_mastery,
+            "weak_categories": weak_categories,
+            "domain_stats": domain_stats,
+        },
+    )
+
+
+@login_required
+def teacher_student_detail(request, student_id):
+    """
+    Detailed view for a specific student, visible to teachers.
+    """
+    user = request.user
+    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
+        raise PermissionDenied("You are not an approved teacher.")
+
+    student = get_object_or_404(get_user_model(), pk=student_id)
+
+    # Get courses that this student is enrolled in and that the teacher teaches
+    teacher_courses = LearningCourse.objects.filter(
+        created_by=user,
+        is_active=True,
+    )
+    teacher_course_ids = list(teacher_courses.values_list('id', flat=True))
+
+    enrollments = Enrollment.objects.filter(
+        student=student,
+        course_id__in=teacher_course_ids,
+        status=Enrollment.Status.ACTIVE,
+    ).select_related('course')
+
+    if not enrollments:
+        # Student not in any of this teacher's courses
+        return render(
+            request,
+            "learning/teacher_student_detail.html",
+            {
+                "student_object": student,
+                "course_rows": [],
+                "latest_placement": None,
+                "errors": [],
+                "weak_areas": [],
+            }
+        )
+
+    course_ids = [enrollment.course_id for enrollment in enrollments]
+
+    course_rows = []
+    for enrollment in enrollments:
+        summary = _student_course_summary(student, enrollment.course)
+        course_rows.append({
+            "enrollment": enrollment,
+            "course": enrollment.course,
+            "summary": summary,
+        })
+
+    # Latest placement attempt
+    latest_placement = PlacementAttempt.objects.filter(
+        student=student,
+        status=PlacementAttempt.Status.COMPLETED,
+    ).order_by("-completed_at").first()
+
+    # Recent errors
+    errors = LearnerError.objects.filter(
+        student=student,
+        learning_item__module__course_id__in=course_ids,
+    ).select_related(
+        "learning_item",
+        "question",
+    ).order_by("-occurred_at")[:20]
+
+    # Weak areas
+    weak_areas = (
+        LearnerError.objects
+        .filter(
+            student=student,
+            learning_item__module__course_id__in=course_ids,
+            resolved=False,
+        )
+        .values("category")
+        .annotate(total=Count("id"))
+        .order_by("-total")[:10]
+    )
+
+    return render(
+        request,
+        "learning/teacher_student_detail.html",
+        {
+            "student_object": student,
+            "course_rows": course_rows,
+            "latest_placement": latest_placement,
+            "errors": errors,
+            "weak_areas": weak_areas,
         },
     )

@@ -120,4 +120,22 @@ urlpatterns = [
         views.learning_path,
         name="learning_path",
     ),
+
+    path(
+        "teacher/",
+        views.teacher_learning_dashboard,
+        name="teacher_learning_dashboard",
+    ),
+
+    path(
+        "teacher/courses/<int:course_id>/class/",
+        views.teacher_class_detail,
+        name="teacher_class_detail",
+    ),
+
+    path(
+        "teacher/students/<int:student_id>/",
+        views.teacher_student_detail,
+        name="teacher_student_detail",
+    ),
 ]

@@ -1,0 +1,199 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Student Analytics | AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<div class="program-header">
+
+    <h1>
+        Student Analytics
+    </h1>
+
+    <h2>
+        {{ student_object.username }}
+    </h2>
+
+</div>
+
+
+{% if latest_placement %}
+
+<h2>
+    Placement Profile
+</h2>
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            CEFR
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.cefr_level }}
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+            IELTS Estimate
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.ielts_estimate }}
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+            Overall
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.overall_score }}%
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<h2>
+    Course Performance
+</h2>
+
+{% for row in course_rows %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ row.course.program.title }}
+    </span>
+
+    <h3>
+        {{ row.course.title }}
+    </h3>
+
+    <p>
+        Class:
+        {% if row.enrollment.class_name %}
+            {{ row.enrollment.class_name }}
+        {% else %}
+            Unassigned
+        {% endif %}
+    </p>
+
+    <p>
+        Accuracy:
+        {{ row.summary.accuracy }}%
+    </p>
+
+    <p>
+        Mastery:
+        {{ row.summary.mastery }}%
+    </p>
+
+    <p>
+        Correct:
+        {{ row.summary.correct }}
+    </p>
+
+    <p>
+        Incorrect:
+        {{ row.summary.incorrect }}
+    </p>
+
+    <p>
+        Due Reviews:
+        {{ row.summary.due }}
+    </p>
+
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Weak Areas
+</h2>
+
+<div class="cards">
+
+{% for area in weak_areas %}
+
+<div class="card">
+
+    <h3>
+        {{ area.category }}
+    </h3>
+
+    <div class="stat-number">
+        {{ area.total }}
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No unresolved weak areas.
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<h2>
+    Recent Errors
+</h2>
+
+{% for error in errors %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ error.get_category_display }}
+    </span>
+
+    {% if error.learning_item %}
+
+    <h3>
+        {{ error.learning_item.title }}
+    </h3>
+
+    {% endif %}
+
+    <p>
+        Student Answer:
+        {{ error.student_response }}
+    </p>
+
+    <p>
+        Expected:
+        {{ error.expected_response }}
+    </p>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No recorded errors.
+</div>
+
+{% endfor %}
+
+
+{% endblock %}

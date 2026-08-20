@@ -1,0 +1,196 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Teacher Analytics | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="program-header">
+
+    <h1>
+        Teacher Learning Dashboard
+    </h1>
+
+    <p>
+        Monitor classes, learners,
+        performance, and weak areas.
+    </p>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+        <h3>Courses</h3>
+        <div class="stat-number">
+            {{ course_count }}
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Classes</h3>
+        <div class="stat-number">
+            {{ class_count }}
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Students</h3>
+        <div class="stat-number">
+            {{ student_count }}
+        </div>
+    </div>
+
+</div>
+
+
+<h2>
+    My Classes
+</h2>
+
+{% for group in classes %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ group.course.program.title }}
+    </span>
+
+    <h3>
+        {{ group.course.title }}
+        /
+        {{ group.class_name }}
+    </h3>
+
+    <p>
+        Students:
+        {{ group.student_count }}
+    </p>
+
+    <p>
+        Accuracy:
+        {{ group.accuracy }}%
+    </p>
+
+    <p>
+        Mastery:
+        {{ group.mastery }}%
+    </p>
+
+    <p>
+        Due Reviews:
+        {{ group.due }}
+    </p>
+
+    <p>
+        Unresolved Errors:
+        {{ group.errors }}
+    </p>
+
+    <p>
+        Students Needing Attention:
+        {{ group.attention_count }}
+    </p>
+
+    <a
+        class="button"
+        href="{% url 'learning:teacher_class_detail' group.course.pk %}?name={{ group.class_query|urlencode }}"
+    >
+        Open Class Analytics
+    </a>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No active classes yet.
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Students Needing Attention
+</h2>
+
+{% for row in attention_students %}
+
+<div class="module">
+
+    <h3>
+        {{ row.student.username }}
+    </h3>
+
+    <p>
+        {{ row.course.title }}
+        /
+        {{ row.class_name }}
+    </p>
+
+    <p>
+        Accuracy:
+        {{ row.summary.accuracy }}%
+    </p>
+
+    <p>
+        Errors:
+        {{ row.summary.errors }}
+    </p>
+
+    <p>
+        Due:
+        {{ row.summary.due }}
+    </p>
+
+    <a
+        class="button"
+        href="{% url 'learning:teacher_student_detail' row.student.pk %}"
+    >
+        View Student
+    </a>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No learners currently require attention.
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Class Weak Areas
+</h2>
+
+<div class="cards">
+
+{% for area in weak_categories %}
+
+<div class="card">
+
+    <h3>
+        {{ area.category }}
+    </h3>
+
+    <div class="stat-number">
+        {{ area.total }}
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No unresolved class errors yet.
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}
