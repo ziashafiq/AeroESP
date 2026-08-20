@@ -1,0 +1,237 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Error Analysis | AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<div class="program-header">
+
+    <h1>
+        Error Analysis
+    </h1>
+
+    <p>
+        Identify recurring mistakes
+        and weak learning areas.
+    </p>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Unresolved
+        </h3>
+
+        <div class="stat-number">
+            {{ unresolved_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            General English
+        </h3>
+
+        <div class="stat-number">
+            {{ general_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Aerospace English
+        </h3>
+
+        <div class="stat-number">
+            {{ aerospace_count }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<br>
+
+
+<div class="card">
+
+    <strong>
+        Error Scope
+    </strong>
+
+    <p>
+
+        <a
+            class="button"
+            href="?scope=all"
+        >
+            All
+        </a>
+
+        <a
+            class="button"
+            href="?scope=general"
+        >
+            General English
+        </a>
+
+        <a
+            class="button"
+            href="?scope=aerospace"
+        >
+            Aerospace English
+        </a>
+
+    </p>
+
+</div>
+
+
+<h2>
+    Weak Areas
+</h2>
+
+
+<div class="cards">
+
+{% for item in category_summary %}
+
+<div class="card">
+
+    <h3>
+        {{ item.category }}
+    </h3>
+
+    <div class="stat-number">
+        {{ item.total }}
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No error data yet.
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<h2>
+    Error History
+</h2>
+
+
+{% for error in errors %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ error.get_category_display }}
+    </span>
+
+
+    {% if error.learning_item %}
+
+    <h3>
+        {{ error.learning_item.title }}
+    </h3>
+
+    {% endif %}
+
+
+    {% if error.question %}
+
+    <p>
+        <strong>
+            Question
+        </strong>
+
+        <br>
+
+        {{ error.question.question_text }}
+    </p>
+
+    {% endif %}
+
+
+    <p>
+        <strong>
+            Your Answer
+        </strong>
+
+        <br>
+
+        {{ error.student_response }}
+    </p>
+
+
+    <p>
+        <strong>
+            Expected Answer
+        </strong>
+
+        <br>
+
+        {{ error.expected_response }}
+    </p>
+
+
+    {% if not error.resolved %}
+
+    <form
+        method="post"
+        action="{% url 'learning:resolve_learner_error' error.pk %}"
+    >
+
+        {% csrf_token %}
+
+        <button
+            type="submit"
+            class="button"
+        >
+            Mark as Resolved
+        </button>
+
+    </form>
+
+    {% else %}
+
+    <span class="badge">
+        Resolved
+    </span>
+
+    {% endif %}
+
+</div>
+
+{% empty %}
+
+<div class="card empty-state">
+
+    <h3>
+        No recorded errors.
+    </h3>
+
+</div>
+
+{% endfor %}
+
+
+{% endblock %}

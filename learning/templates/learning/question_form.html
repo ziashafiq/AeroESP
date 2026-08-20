@@ -30,7 +30,8 @@ Create Practice Question | AeroESP
     </h1>
 
     <p>
-        Create a question from:
+        Create a practice question from:
+
         <strong>
             {{ learning_item.title }}
         </strong>
@@ -41,65 +42,104 @@ Create Practice Question | AeroESP
 
 <div class="card">
 
-<form method="post">
+    <form method="post">
 
-    {% csrf_token %}
+        {% csrf_token %}
 
-    {% for field in form %}
-
-        {% if field.name == "domain_ref" %}
-
-            {% if learning_item.module.course.program.program_type == "AEROSPACE_ESP" %}
-
-            <div style="margin-bottom:18px;">
-
-                <label for="{{ field.id_for_label }}">
-                    <strong>
-                        {{ field.label }}
-                    </strong>
-                </label>
-
-                <div style="margin-top:6px;">
-                    {{ field }}
-                </div>
-
-                {{ field.errors }}
-
-            </div>
-
-            {% endif %}
-
-        {% else %}
+        {% for field in form %}
 
         <div style="margin-bottom:18px;">
 
             <label for="{{ field.id_for_label }}">
+
                 <strong>
                     {{ field.label }}
                 </strong>
+
             </label>
 
             <div style="margin-top:6px;">
                 {{ field }}
             </div>
 
-            {{ field.errors }}
+            {% if field.help_text %}
+
+            <small>
+                {{ field.help_text }}
+            </small>
+
+            {% endif %}
+
+            {% if field.errors %}
+
+            <div>
+                {{ field.errors }}
+            </div>
+
+            {% endif %}
 
         </div>
 
-        {% endif %}
+        {% endfor %}
 
-    {% endfor %}
 
-    <button
-        class="button"
-        type="submit"
-    >
-        Create Question
-    </button>
+        <button
+            class="button"
+            type="submit"
+        >
+            Create Question
+        </button>
 
-</form>
+    </form>
 
 </div>
+
+<script>
+    (function() {
+        // Only apply if domain and topic fields exist (Aerospace track)
+        const domainSelect = document.getElementById('id_domain_ref');
+        const topicSelect = document.getElementById('id_topic_ref');
+
+        if (!domainSelect || !topicSelect) {
+            return;
+        }
+
+        async function loadTopics(domainId, selectedTopicId = null) {
+            if (!domainId) {
+                topicSelect.innerHTML = '<option value="">---------</option>';
+                return;
+            }
+
+            try {
+                const url = "{% url 'learning:aerospace_topics_api' %}?domain=" + domainId;
+                const response = await fetch(url);
+                const data = await response.json();
+                const topics = data.topics || [];
+
+                // Preserve the "---------" empty option
+                let html = '<option value="">---------</option>';
+                topics.forEach(topic => {
+                    const selected = (selectedTopicId && topic.id == selectedTopicId) ? ' selected' : '';
+                    html += `<option value="${topic.id}"${selected}>${topic.name}</option>`;
+                });
+                topicSelect.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading topics:', error);
+            }
+        }
+
+        // On page load, if domain is already selected, load its topics
+        const initialDomain = domainSelect.value;
+        const initialTopic = topicSelect.value;
+        if (initialDomain) {
+            loadTopics(initialDomain, initialTopic);
+        }
+
+        // On domain change, reload topics and reset selection
+        domainSelect.addEventListener('change', function() {
+            loadTopics(this.value);
+        });
+    })();
+</script>
 
 {% endblock %}

@@ -1,0 +1,188 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Practice Result | AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+{% if error_message %}
+
+<div class="card">
+
+    <h2>
+        Answer Required
+    </h2>
+
+    <p>
+        {{ error_message }}
+    </p>
+
+    <a
+        class="button"
+        href="{% url 'learning:daily_practice' %}?mode={{ mode }}"
+    >
+        Back to Practice
+    </a>
+
+</div>
+
+
+{% else %}
+
+
+<div class="program-header">
+
+    {% if is_correct %}
+
+    <h1>
+        Correct ✓
+    </h1>
+
+    <p>
+        Good work. Your learning progress
+        has been updated.
+    </p>
+
+    {% else %}
+
+    <h1>
+        Needs Review
+    </h1>
+
+    <p>
+        This answer has been added to
+        your error analysis and review queue.
+    </p>
+
+    {% endif %}
+
+</div>
+
+
+<div class="card">
+
+    <h3>
+        Question
+    </h3>
+
+    <p>
+        {{ question.question_text }}
+    </p>
+
+
+    <p>
+        <strong>
+            Your Answer
+        </strong>
+
+        <br>
+
+        {{ selected_answer }}.
+        {{ selected_answer_text }}
+    </p>
+
+
+    <p>
+        <strong>
+            Correct Answer
+        </strong>
+
+        <br>
+
+        {{ correct_answer }}.
+        {{ correct_answer_text }}
+    </p>
+
+
+    {% if question.explanation %}
+
+    <p>
+        <strong>
+            Explanation
+        </strong>
+
+        <br>
+
+        {{ question.explanation }}
+    </p>
+
+    {% endif %}
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Correct
+        </h3>
+
+        <div class="stat-number">
+            {{ progress.correct_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Incorrect
+        </h3>
+
+        <div class="stat-number">
+            {{ progress.incorrect_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Mastery
+        </h3>
+
+        <div class="stat-number">
+            {{ progress.mastery_score }}%
+        </div>
+
+    </div>
+
+</div>
+
+
+<br>
+
+
+<a
+    class="button"
+    href="{% url 'learning:daily_practice' %}?mode={{ mode }}"
+>
+    Continue Practice
+</a>
+
+
+<a
+    class="button"
+    href="{% url 'learning:review_due' %}"
+>
+    Review Queue
+</a>
+
+
+<a
+    class="button"
+    href="{% url 'learning:my_errors' %}"
+>
+    Error Analysis
+</a>
+
+
+{% endif %}
+
+{% endblock %}

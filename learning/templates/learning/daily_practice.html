@@ -1,0 +1,229 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Daily Practice | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="program-header">
+
+    <h1>
+        Daily Practice
+    </h1>
+
+    <p>
+        Practice your learning items
+        and strengthen weak areas.
+    </p>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Due Today
+        </h3>
+
+        <div class="stat-number">
+            {{ due_count }}
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+            Available Questions
+        </h3>
+
+        <div class="stat-number">
+            {{ total_questions }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<br>
+
+
+<div class="card">
+
+    <strong>
+        Practice Mode
+    </strong>
+
+    <p>
+
+        <a
+            class="button"
+            href="?mode=general"
+        >
+            General English
+        </a>
+
+        <a
+            class="button"
+            href="?mode=aerospace"
+        >
+            Aerospace English
+        </a>
+
+        <a
+            class="button"
+            href="?mode=mixed"
+        >
+            Mixed Practice
+        </a>
+
+    </p>
+
+</div>
+
+
+{% if current_link %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ current_link.learning_item.module.course.program.title }}
+    </span>
+
+    <span class="badge">
+        {{ current_link.learning_item.module.title }}
+    </span>
+
+    <p>
+        Learning Item:
+        <strong>
+            {{ current_link.learning_item.title }}
+        </strong>
+    </p>
+
+    <h2>
+        {{ current_link.question.question_text }}
+    </h2>
+
+
+    <form
+        method="post"
+        action="{% url 'learning:practice_answer' current_link.pk %}"
+    >
+
+        {% csrf_token %}
+
+        <input
+            type="hidden"
+            name="mode"
+            value="{{ mode }}"
+        >
+
+
+        <p>
+
+            <label>
+
+                <input
+                    type="radio"
+                    name="answer"
+                    value="A"
+                    required
+                >
+
+                A.
+                {{ current_link.question.option_a }}
+
+            </label>
+
+        </p>
+
+
+        <p>
+
+            <label>
+
+                <input
+                    type="radio"
+                    name="answer"
+                    value="B"
+                >
+
+                B.
+                {{ current_link.question.option_b }}
+
+            </label>
+
+        </p>
+
+
+        <p>
+
+            <label>
+
+                <input
+                    type="radio"
+                    name="answer"
+                    value="C"
+                >
+
+                C.
+                {{ current_link.question.option_c }}
+
+            </label>
+
+        </p>
+
+
+        <p>
+
+            <label>
+
+                <input
+                    type="radio"
+                    name="answer"
+                    value="D"
+                >
+
+                D.
+                {{ current_link.question.option_d }}
+
+            </label>
+
+        </p>
+
+
+        <button
+            type="submit"
+            class="button"
+        >
+            Submit Answer
+        </button>
+
+    </form>
+
+</div>
+
+
+{% else %}
+
+<div class="card empty-state">
+
+    <h2>
+        No practice questions available.
+    </h2>
+
+    <p>
+        Create practice questions from
+        your learning items first.
+    </p>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

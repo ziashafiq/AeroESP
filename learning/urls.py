@@ -68,8 +68,38 @@ urlpatterns = [
     ),
 
     path(
+        "errors/<int:error_id>/resolve/",
+        views.resolve_learner_error,
+        name="resolve_learner_error",
+    ),
+
+    path(
         "items/<int:learning_item_id>/question/add/",
         views.create_practice_question,
         name="learning_question_create",
+    ),
+
+    path(
+        "api/aerospace-topics/",
+        views.aerospace_topics_api,
+        name="aerospace_topics_api",
+    ),
+
+    path(
+        "modules/<int:module_id>/topics/<int:topic_id>/",
+        views.aerospace_topic_detail,
+        name="aerospace_topic_detail",
+    ),
+
+    path(
+        "practice/",
+        views.daily_practice,
+        name="daily_practice",
+    ),
+
+    path(
+        "practice/<int:link_id>/answer/",
+        views.practice_answer,
+        name="practice_answer",
     ),
 ]

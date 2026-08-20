@@ -233,6 +233,14 @@ class CourseModule(models.Model):
         related_name="modules",
     )
 
+    aerospace_domain = models.ForeignKey(
+        "assessment.AerospaceDomain",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="learning_modules",
+    )
+
     title = models.CharField(
         max_length=200,
     )
@@ -361,6 +369,34 @@ class LearningItem(models.Model):
         related_name="items",
     )
 
+    aerospace_domain = models.ForeignKey(
+        "assessment.AerospaceDomain",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="learning_items",
+    )
+
+    aerospace_topic = models.ForeignKey(
+        "assessment.AerospaceTopic",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="learning_items",
+    )
+
+    english_focus = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
+
+    english_topic = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -458,6 +494,35 @@ class LearningItem(models.Model):
             ),
         ]
 
+    def clean(self):
+        super().clean()
+
+        if (
+            self.aerospace_topic
+            and not self.aerospace_domain
+        ):
+            raise ValidationError(
+                {
+                    "aerospace_domain":
+                        "Select an aerospace domain "
+                        "before selecting a topic."
+                }
+            )
+
+        if (
+            self.aerospace_topic
+            and self.aerospace_domain
+            and self.aerospace_topic.domain_id
+            != self.aerospace_domain_id
+        ):
+            raise ValidationError(
+                {
+                    "aerospace_topic":
+                        "The selected topic does not belong "
+                        "to the selected aerospace domain."
+                }
+            )
+
     def __str__(self):
         return self.title
 
@@ -542,7 +607,6 @@ class Enrollment(models.Model):
         default=Status.ACTIVE,
     )
 
-    # New fields added after status
     assigned_level = models.CharField(
         max_length=30,
         choices=LearningCourse.Level.choices,

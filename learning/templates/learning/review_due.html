@@ -1,42 +1,202 @@
 {% extends "learning/base.html" %}
 
+{% block title %}
+Review Queue | AeroESP
+{% endblock %}
+
 {% block content %}
 
-<h1>
-    Review Due
-</h1>
 
-{% if records %}
+<div class="program-header">
 
-{% for record in records %}
-
-<div class="card">
-
-    <h3>
-        {{ record.learning_item.title }}
-    </h3>
+    <h1>
+        Review Queue
+    </h1>
 
     <p>
-        {{ record.learning_item.definition_en }}
-    </p>
-
-    <p>
-        Next review:
-        {{ record.next_review_at }}
+        Review learning items according
+        to your spaced-repetition schedule.
     </p>
 
 </div>
 
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Due
+        </h3>
+
+        <div class="stat-number">
+            {{ due_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Overdue
+        </h3>
+
+        <div class="stat-number">
+            {{ overdue_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Mastered
+        </h3>
+
+        <div class="stat-number">
+            {{ mastered_count }}
+        </div>
+
+    </div>
+
+</div>
+
+
 <br>
+
+
+<div class="card">
+
+    <strong>
+        Review Scope
+    </strong>
+
+    <p>
+
+        <a
+            class="button"
+            href="?scope=all"
+        >
+            All
+        </a>
+
+        <a
+            class="button"
+            href="?scope=general"
+        >
+            General English
+        </a>
+
+        <a
+            class="button"
+            href="?scope=aerospace"
+        >
+            Aerospace English
+        </a>
+
+    </p>
+
+</div>
+
+
+<h2>
+    Due for Review
+</h2>
+
+
+{% if due_items %}
+
+{% for progress in due_items %}
+
+<div class="module">
+
+    <span class="badge">
+
+        {{ progress.learning_item.module.course.program.title }}
+
+    </span>
+
+    <h3>
+        {{ progress.learning_item.title }}
+    </h3>
+
+    <p>
+        Section:
+        {{ progress.learning_item.module.title }}
+    </p>
+
+    <p>
+        Mastery:
+        {{ progress.mastery_score }}%
+    </p>
+
+    <p>
+        Correct:
+        {{ progress.correct_count }}
+
+        &nbsp; | &nbsp;
+
+        Incorrect:
+        {{ progress.incorrect_count }}
+    </p>
+
+    <a
+        class="button"
+        href="{% url 'learning:daily_practice' %}"
+    >
+        Review Now
+    </a>
+
+</div>
 
 {% endfor %}
 
 {% else %}
 
-<div class="card">
-    No reviews are due.
+<div class="card empty-state">
+
+    <h3>
+        Nothing is due right now.
+    </h3>
+
+    <p>
+        Your review queue is clear.
+    </p>
+
 </div>
 
 {% endif %}
+
+
+<h2>
+    Upcoming Reviews
+</h2>
+
+
+{% for progress in upcoming_items %}
+
+<div class="card">
+
+    <strong>
+        {{ progress.learning_item.title }}
+    </strong>
+
+    <p>
+        Next review:
+        {{ progress.next_review_at }}
+    </p>
+
+</div>
+
+{% empty %}
+
+<p>
+    No upcoming reviews.
+</p>
+
+{% endfor %}
+
 
 {% endblock %}

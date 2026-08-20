@@ -70,6 +70,13 @@ Add Learning Item | AeroESP
         >
         {% endif %}
 
+        {% if scope_topic_id %}
+        <input
+            type="hidden"
+            name="scope_topic"
+            value="{{ scope_topic_id }}"
+        >
+        {% endif %}
 
         {% for field in form %}
 
@@ -138,5 +145,105 @@ Add Learning Item | AeroESP
     </form>
 
 </div>
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const domainSelect =
+            document.getElementById(
+                "id_aerospace_domain"
+            );
+
+        const topicSelect =
+            document.getElementById(
+                "id_aerospace_topic"
+            );
+
+        /*
+         * IELTS has no aerospace fields.
+         */
+        if (
+            !domainSelect ||
+            !topicSelect
+        ) {
+            return;
+        }
+
+        const topicsUrl =
+            "{% url 'learning:aerospace_topics_api' %}";
+
+        async function loadTopics(
+            domainId
+        ) {
+
+            topicSelect.innerHTML =
+                '<option value="">'
+                + '---------'
+                + '</option>';
+
+            if (!domainId) {
+                return;
+            }
+
+            const response =
+                await fetch(
+                    topicsUrl
+                    + "?domain="
+                    + encodeURIComponent(
+                        domainId
+                    )
+                );
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data =
+                await response.json();
+
+            data.topics.forEach(
+                function (topic) {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value =
+                        topic.id;
+
+                    option.textContent =
+                        topic.name;
+
+                    topicSelect.appendChild(
+                        option
+                    );
+                }
+            );
+        }
+
+        /*
+         * Only needed when main branch
+         * can be changed manually.
+         */
+        if (!domainSelect.disabled) {
+
+            domainSelect.addEventListener(
+                "change",
+                function () {
+
+                    loadTopics(
+                        domainSelect.value
+                    );
+
+                }
+            );
+        }
+
+    }
+);
+</script>
 
 {% endblock %}

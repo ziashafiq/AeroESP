@@ -1,0 +1,244 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+{{ topic.name }} | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+
+    <a href="{% url 'learning:dashboard' %}">
+        Dashboard
+    </a>
+
+    /
+
+    <a href="{% url 'learning:aerospace_dashboard' %}">
+        Aerospace English
+    </a>
+
+    /
+
+    <a href="{% url 'learning:module_detail' module.pk %}">
+        {{ module.title }}
+    </a>
+
+    /
+
+    {{ topic.name }}
+
+</div>
+
+
+<div class="program-header">
+
+    <div class="module-header">
+
+        <div>
+
+            <span class="badge">
+                {{ module.aerospace_domain.name }}
+            </span>
+
+            {% if topic.parent %}
+
+            <p>
+                {{ topic.parent.name }}
+            </p>
+
+            {% endif %}
+
+            <h1>
+                {{ topic.name }}
+            </h1>
+
+            {% if topic.description %}
+
+            <p>
+                {{ topic.description }}
+            </p>
+
+            {% endif %}
+
+        </div>
+
+
+        <a
+            class="button"
+            href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}&topic={{ topic.pk }}"
+        >
+            + Add Learning Item
+        </a>
+
+    </div>
+
+
+    <div class="course-progress">
+
+        <div class="course-progress-header">
+
+            <strong>
+                Topic Progress
+            </strong>
+
+            <strong>
+                {{ progress_percent }}%
+            </strong>
+
+        </div>
+
+        <div class="progress-track">
+
+            <div
+                class="progress-fill"
+                style="width: {{ progress_percent }}%;"
+            >
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            My Learning Items
+        </h3>
+
+        <div class="stat-number">
+            {{ personal_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Tracked
+        </h3>
+
+        <div class="stat-number">
+            {{ tracked_count }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Mastered
+        </h3>
+
+        <div class="stat-number">
+            {{ mastered_count }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<br>
+
+<h2>
+    Learning Content
+</h2>
+
+
+{% if items %}
+
+{% for item in items %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ item.get_item_type_display }}
+    </span>
+
+    <h3>
+        {{ item.title }}
+    </h3>
+
+
+    {% if item.definition_en %}
+
+    <p>
+        <strong>Definition</strong>
+        <br>
+        {{ item.definition_en }}
+    </p>
+
+    {% endif %}
+
+
+    {% if item.explanation %}
+
+    <p>
+        <strong>Notes</strong>
+        <br>
+        {{ item.explanation }}
+    </p>
+
+    {% endif %}
+
+
+    {% if item.example %}
+
+    <p>
+        <strong>Example</strong>
+        <br>
+        {{ item.example }}
+    </p>
+
+    {% endif %}
+
+
+    {% if item.created_by == request.user %}
+
+    <a
+        class="button"
+        href="{% url 'learning:learning_question_create' item.pk %}"
+    >
+        Create Practice Question
+    </a>
+
+    {% endif %}
+
+</div>
+
+{% endfor %}
+
+
+{% else %}
+
+<div class="card empty-state">
+
+    <h3>
+        No learning items in this topic yet.
+    </h3>
+
+    <p>
+        Add your first learning item for
+        {{ topic.name }}.
+    </p>
+
+    <a
+        class="button"
+        href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}&topic={{ topic.pk }}"
+    >
+        Add First Learning Item
+    </a>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
