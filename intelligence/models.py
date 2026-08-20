@@ -195,3 +195,151 @@ class LearnerInsightSnapshot(models.Model):
             f"{self.scope} - "
             f"{self.risk_band}"
         )
+
+
+class GeneratedQuestionDraft(models.Model):
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending Review"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        REJECTED = "REJECTED", "Rejected"
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="ai_generated_question_drafts",
+    )
+
+    track = models.CharField(
+        max_length=40,
+        blank=True,
+        default="",
+    )
+
+    skill = models.CharField(
+        max_length=40,
+        blank=True,
+        default="",
+    )
+
+    difficulty = models.CharField(
+        max_length=40,
+        blank=True,
+        default="",
+    )
+
+    domain = models.ForeignKey(
+        "assessment.AerospaceDomain",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="ai_generated_drafts",
+    )
+
+    topic = models.ForeignKey(
+        "assessment.AerospaceTopic",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="ai_generated_drafts",
+    )
+
+    theme = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+    )
+
+    teacher_instructions = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    question_text = models.TextField()
+
+    option_a = models.CharField(
+        max_length=500,
+    )
+
+    option_b = models.CharField(
+        max_length=500,
+    )
+
+    option_c = models.CharField(
+        max_length=500,
+    )
+
+    option_d = models.CharField(
+        max_length=500,
+    )
+
+    correct_answer = models.CharField(
+        max_length=1,
+    )
+
+    explanation = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    provider = models.CharField(
+        max_length=80,
+        default="BASELINE_V1",
+    )
+
+    generation_metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+    created_question = models.ForeignKey(
+        "assessment.Question",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="originating_ai_drafts",
+    )
+
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_ai_generated_drafts",
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-created_at",
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "created_by",
+                    "status",
+                ],
+                name="ai_draft_owner_status_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"AI Draft {self.pk} - "
+            f"{self.status}"
+        )

@@ -506,7 +506,7 @@ def build_learner_insight(
     )
 
     # ------------------------------------------
-    # Explainable risk score: 0â€“100
+    # Explainable risk score: 0–100
     # ------------------------------------------
 
     risk = 0.0
@@ -632,3 +632,166 @@ def build_learner_insight(
     )
 
     return snapshot
+
+
+# =========================================================
+# Question Generator Framework
+# =========================================================
+
+class BaseQuestionGenerator:
+
+    provider_name = "BASE"
+
+    def generate(
+        self,
+        *,
+        track,
+        skill,
+        difficulty,
+        domain=None,
+        topic=None,
+        theme="",
+        teacher_instructions="",
+    ):
+        raise NotImplementedError
+
+
+class BaselineQuestionGenerator(
+    BaseQuestionGenerator
+):
+
+    provider_name = "BASELINE_V1"
+
+    def generate(
+        self,
+        *,
+        track,
+        skill,
+        difficulty,
+        domain=None,
+        topic=None,
+        theme="",
+        teacher_instructions="",
+    ):
+
+        subject = (
+            theme.strip()
+            if theme
+            else ""
+        )
+
+        if not subject and topic:
+            subject = topic.name
+
+        if not subject and domain:
+            subject = domain.name
+
+        if not subject:
+            subject = "English usage"
+
+        if (
+            track
+            == Question.Track.AEROSPACE_ESP
+        ):
+
+            question_text = (
+                "Which statement best describes "
+                f"the technical meaning of "
+                f"'{subject}' in an aerospace "
+                "engineering context?"
+            )
+
+            option_a = (
+                f"A technically appropriate "
+                f"description of {subject}."
+            )
+
+            option_b = (
+                "A statement unrelated to the "
+                "engineering concept."
+            )
+
+            option_c = (
+                "A grammatically possible but "
+                "technically incorrect statement."
+            )
+
+            option_d = (
+                "A definition from an unrelated "
+                "discipline."
+            )
+
+            explanation = (
+                f"Option A is the intended "
+                f"technical interpretation of "
+                f"{subject}. This baseline draft "
+                f"must be reviewed and edited by "
+                f"the teacher before use."
+            )
+
+        else:
+
+            question_text = (
+                "Which option best matches the "
+                f"intended English usage related "
+                f"to '{subject}'?"
+            )
+
+            option_a = (
+                "The contextually appropriate "
+                "English usage."
+            )
+
+            option_b = (
+                "An unrelated usage."
+            )
+
+            option_c = (
+                "A grammatically inappropriate "
+                "usage."
+            )
+
+            option_d = (
+                "A semantically unrelated usage."
+            )
+
+            explanation = (
+                "Option A is the intended answer. "
+                "This baseline item is generated "
+                "only to exercise the AI-assisted "
+                "draft workflow and requires "
+                "teacher review."
+            )
+
+        return {
+            "question_text": question_text,
+            "option_a": option_a,
+            "option_b": option_b,
+            "option_c": option_c,
+            "option_d": option_d,
+            "correct_answer": "A",
+            "explanation": explanation,
+            "provider": self.provider_name,
+            "metadata": {
+                "track": track,
+                "skill": skill,
+                "difficulty": difficulty,
+                "theme": subject,
+                "teacher_instructions": (
+                    teacher_instructions
+                ),
+            },
+        }
+
+
+def get_question_generator(
+    provider_name="BASELINE_V1",
+):
+
+    if provider_name == "BASELINE_V1":
+        return BaselineQuestionGenerator()
+
+    raise ValueError(
+        f"Unknown question generator "
+        f"provider: {provider_name}"
+    )

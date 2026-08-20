@@ -7,18 +7,21 @@ from django.shortcuts import (
 )
 from django.utils import timezone
 
+from assessment.forms import TeacherQuestionForm
 from assessment.models import Question
 
 from learning.models import Enrollment
 
+from .forms import QuestionGenerationForm
 from .models import (
+    GeneratedQuestionDraft,
     LearnerInsightSnapshot,
     QuestionAISuggestion,
 )
-
 from .services import (
     analyze_question,
     build_learner_insight,
+    get_question_generator,
 )
 
 
@@ -323,4 +326,479 @@ def learner_insight(
             "student_object": student,
             "snapshot": snapshot,
         },
+    )
+
+
+# =========================================================
+# AI Question Generation Views
+# =========================================================
+
+@login_required
+def generate_question_view(request):
+
+    _require_teacher(request.user)
+
+    if request.method == "POST":
+
+        form = QuestionGenerationForm(
+            request.POST,
+            user=request.user,
+        )
+
+        if form.is_valid():
+
+            data = form.cleaned_data
+
+            generator = get_question_generator(
+                provider_name="BASELINE_V1"
+            )
+
+            result = generator.generate(
+                track=data["track"],
+                skill=data["skill"],
+                difficulty=data["difficulty"],
+                domain=data.get("domain"),
+                topic=data.get("topic"),
+                theme=data.get("theme", ""),
+                teacher_instructions=(
+                    data.get(
+                        "teacher_instructions",
+                        "",
+                    )
+                ),
+            )
+
+            draft = (
+                GeneratedQuestionDraft
+                .objects
+                .create(
+                    created_by=request.user,
+                    track=data["track"],
+                    skill=data["skill"],
+                    difficulty=data[
+                        "difficulty"
+                    ],
+                    domain=data.get(
+                        "domain"
+                    ),
+                    topic=data.get(
+                        "topic"
+                    ),
+                    theme=data.get(
+                        "theme",
+                        "",
+                    ),
+                    teacher_instructions=(
+                        data.get(
+                            "teacher_instructions",
+                            "",
+                        )
+                    ),
+                    question_text=result[
+                        "question_text"
+                    ],
+                    option_a=result[
+                        "option_a"
+                    ],
+                    option_b=result[
+                        "option_b"
+                    ],
+                    option_c=result[
+                        "option_c"
+                    ],
+                    option_d=result[
+                        "option_d"
+                    ],
+                    correct_answer=result[
+                        "correct_answer"
+                    ],
+                    explanation=result[
+                        "explanation"
+                    ],
+                    provider=result[
+                        "provider"
+                    ],
+                    generation_metadata=(
+                        result["metadata"]
+                    ),
+                )
+            )
+
+            return redirect(
+                "intelligence:"
+                "generated_draft_detail",
+                draft_id=draft.pk,
+            )
+
+    else:
+
+        form = (
+            QuestionGenerationForm()
+        )
+
+    return render(
+        request,
+        (
+            "intelligence/"
+            "generate_question.html"
+        ),
+        {
+            "form": form,
+        },
+    )
+
+
+@login_required
+def generated_draft_detail(
+    request,
+    draft_id,
+):
+
+    _require_teacher(
+        request.user
+    )
+
+    drafts = (
+        GeneratedQuestionDraft
+        .objects
+        .select_related(
+            "domain",
+            "topic",
+            "created_question",
+        )
+    )
+
+    if not request.user.is_superuser:
+        drafts = drafts.filter(
+            created_by=request.user
+        )
+
+    draft = get_object_or_404(
+        drafts,
+        pk=draft_id,
+    )
+
+    return render(
+        request,
+        (
+            "intelligence/"
+            "generated_draft_detail.html"
+        ),
+        {
+            "draft": draft,
+        },
+    )
+
+
+@login_required
+def edit_generated_draft(
+    request,
+    draft_id,
+):
+
+    _require_teacher(
+        request.user
+    )
+
+    drafts = (
+        GeneratedQuestionDraft
+        .objects
+        .filter(
+            status=(
+                GeneratedQuestionDraft
+                .Status
+                .PENDING
+            )
+        )
+    )
+
+    if not request.user.is_superuser:
+        drafts = drafts.filter(
+            created_by=request.user
+        )
+
+    draft = get_object_or_404(
+        drafts,
+        pk=draft_id,
+    )
+
+    if request.method == "POST":
+
+        fields = [
+            "question_text",
+            "option_a",
+            "option_b",
+            "option_c",
+            "option_d",
+            "correct_answer",
+            "explanation",
+        ]
+
+        for field in fields:
+
+            value = (
+                request.POST.get(
+                    field,
+                    "",
+                )
+                .strip()
+            )
+
+            setattr(
+                draft,
+                field,
+                value,
+            )
+
+        if draft.correct_answer not in {
+            "A",
+            "B",
+            "C",
+            "D",
+        }:
+
+            return render(
+                request,
+                (
+                    "intelligence/"
+                    "edit_generated_draft.html"
+                ),
+                {
+                    "draft": draft,
+                    "error_message": (
+                        "Correct answer must "
+                        "be A, B, C, or D."
+                    ),
+                },
+            )
+
+        draft.save()
+
+        return redirect(
+            "intelligence:"
+            "generated_draft_detail",
+            draft_id=draft.pk,
+        )
+
+    return render(
+        request,
+        (
+            "intelligence/"
+            "edit_generated_draft.html"
+        ),
+        {
+            "draft": draft,
+        },
+    )
+
+
+@login_required
+def accept_generated_draft(
+    request,
+    draft_id,
+):
+
+    _require_teacher(
+        request.user
+    )
+
+    if request.method != "POST":
+        raise PermissionDenied()
+
+    drafts = (
+        GeneratedQuestionDraft
+        .objects
+        .filter(
+            status=(
+                GeneratedQuestionDraft
+                .Status
+                .PENDING
+            )
+        )
+    )
+
+    if not request.user.is_superuser:
+        drafts = drafts.filter(
+            created_by=request.user
+        )
+
+    draft = get_object_or_404(
+        drafts,
+        pk=draft_id,
+    )
+
+    # Prepare form data for TeacherQuestionForm
+    form_data = {
+        "question_text": draft.question_text,
+        "option_a": draft.option_a,
+        "option_b": draft.option_b,
+        "option_c": draft.option_c,
+        "option_d": draft.option_d,
+        "correct_answer": draft.correct_answer,
+        "explanation": draft.explanation,
+        "question_language": Question.Language.ENGLISH,
+        "options_language": Question.Language.ENGLISH,
+        "skill": draft.skill,
+        "track": draft.track,
+        "domain_ref": (
+            draft.domain_id
+            if draft.domain_id
+            else ""
+        ),
+        "topic_ref": (
+            draft.topic_id
+            if draft.topic_id
+            else ""
+        ),
+        "difficulty": (
+            draft.difficulty
+        ),
+        "source_reference": (
+            "AI-assisted draft; "
+            f"provider={draft.provider}; "
+            f"draft_id={draft.pk}"
+        ),
+        "visibility": (
+            Question.Visibility.PRIVATE
+        ),
+    }
+
+    form = TeacherQuestionForm(
+        data=form_data
+    )
+
+    if not form.is_valid():
+
+        return render(
+            request,
+            (
+                "intelligence/"
+                "generated_draft_detail.html"
+            ),
+            {
+                "draft": draft,
+                "question_form_errors": (
+                    form.errors
+                ),
+            },
+        )
+
+    question = form.save(
+        commit=False
+    )
+
+    question.owner = (
+        request.user
+    )
+
+    question.source_type = (
+        Question.SourceType.AI
+    )
+
+    question.status = (
+        Question.Status.DRAFT
+    )
+
+    question.visibility = (
+        Question.Visibility.PRIVATE
+    )
+
+    question.full_clean()
+    question.save()
+
+    draft.status = (
+        GeneratedQuestionDraft
+        .Status
+        .ACCEPTED
+    )
+
+    draft.created_question = (
+        question
+    )
+
+    draft.reviewed_by = (
+        request.user
+    )
+
+    draft.reviewed_at = (
+        timezone.now()
+    )
+
+    draft.save(
+        update_fields=[
+            "status",
+            "created_question",
+            "reviewed_by",
+            "reviewed_at",
+        ]
+    )
+
+    return redirect(
+        "intelligence:"
+        "generated_draft_detail",
+        draft_id=draft.pk,
+    )
+
+
+@login_required
+def reject_generated_draft(
+    request,
+    draft_id,
+):
+
+    _require_teacher(
+        request.user
+    )
+
+    if request.method != "POST":
+        raise PermissionDenied()
+
+    drafts = (
+        GeneratedQuestionDraft
+        .objects
+        .filter(
+            status=(
+                GeneratedQuestionDraft
+                .Status
+                .PENDING
+            )
+        )
+    )
+
+    if not request.user.is_superuser:
+        drafts = drafts.filter(
+            created_by=request.user
+        )
+
+    draft = get_object_or_404(
+        drafts,
+        pk=draft_id,
+    )
+
+    draft.status = (
+        GeneratedQuestionDraft
+        .Status
+        .REJECTED
+    )
+
+    draft.reviewed_by = (
+        request.user
+    )
+
+    draft.reviewed_at = (
+        timezone.now()
+    )
+
+    draft.save(
+        update_fields=[
+            "status",
+            "reviewed_by",
+            "reviewed_at",
+        ]
+    )
+
+    return redirect(
+        "intelligence:"
+        "generated_draft_detail",
+        draft_id=draft.pk,
     )

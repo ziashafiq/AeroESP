@@ -1,0 +1,46 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+AI Question Generator | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="program-header">
+
+    <h1>
+        AI Question Generator
+    </h1>
+
+    <p>
+        Generate a draft question for
+        teacher review.
+    </p>
+
+</div>
+
+<div class="card">
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button
+            type="submit"
+            class="button"
+        >
+            Generate Draft
+        </button>
+
+    </form>
+
+</div>
+
+<p>
+    Generated questions are never
+    published automatically.
+</p>
+
+{% endblock %}

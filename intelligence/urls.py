@@ -37,4 +37,34 @@ urlpatterns = [
         views.learner_insight,
         name="learner_insight",
     ),
+
+    path(
+        "generate/",
+        views.generate_question_view,
+        name="generate_question",
+    ),
+
+    path(
+        "generated/<int:draft_id>/",
+        views.generated_draft_detail,
+        name="generated_draft_detail",
+    ),
+
+    path(
+        "generated/<int:draft_id>/edit/",
+        views.edit_generated_draft,
+        name="edit_generated_draft",
+    ),
+
+    path(
+        "generated/<int:draft_id>/accept/",
+        views.accept_generated_draft,
+        name="accept_generated_draft",
+    ),
+
+    path(
+        "generated/<int:draft_id>/reject/",
+        views.reject_generated_draft,
+        name="reject_generated_draft",
+    ),
 ]

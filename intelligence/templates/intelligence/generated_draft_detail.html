@@ -1,0 +1,159 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Generated Question Draft | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>
+    Generated Question Draft
+</h1>
+
+<div class="card">
+
+    <p>
+        <strong>Status:</strong>
+        {{ draft.get_status_display }}
+    </p>
+
+    <p>
+        <strong>Provider:</strong>
+        {{ draft.provider }}
+    </p>
+
+    <p>
+        <strong>Track:</strong>
+        {{ draft.track }}
+    </p>
+
+    <p>
+        <strong>Skill:</strong>
+        {{ draft.skill }}
+    </p>
+
+    <p>
+        <strong>Difficulty:</strong>
+        {{ draft.difficulty }}
+    </p>
+
+</div>
+
+
+<div class="module">
+
+    <h2>
+        {{ draft.question_text }}
+    </h2>
+
+    <p>
+        A. {{ draft.option_a }}
+    </p>
+
+    <p>
+        B. {{ draft.option_b }}
+    </p>
+
+    <p>
+        C. {{ draft.option_c }}
+    </p>
+
+    <p>
+        D. {{ draft.option_d }}
+    </p>
+
+    <p>
+        <strong>
+            Correct Answer:
+        </strong>
+        {{ draft.correct_answer }}
+    </p>
+
+    <p>
+        <strong>
+            Explanation:
+        </strong>
+        {{ draft.explanation }}
+    </p>
+
+</div>
+
+
+{% if question_form_errors %}
+
+<div class="card">
+
+    <h3>
+        Question Bank Validation Failed
+    </h3>
+
+    {{ question_form_errors }}
+
+</div>
+
+{% endif %}
+
+
+{% if draft.status == "PENDING" %}
+
+<a
+    class="button"
+    href="{% url 'intelligence:edit_generated_draft' draft.pk %}"
+>
+    Edit Draft
+</a>
+
+
+<form
+    method="post"
+    action="{% url 'intelligence:accept_generated_draft' draft.pk %}"
+    style="display:inline;"
+>
+
+    {% csrf_token %}
+
+    <button
+        type="submit"
+        class="button"
+    >
+        Accept to Question Bank
+    </button>
+
+</form>
+
+
+<form
+    method="post"
+    action="{% url 'intelligence:reject_generated_draft' draft.pk %}"
+    style="display:inline;"
+>
+
+    {% csrf_token %}
+
+    <button
+        type="submit"
+        class="button"
+    >
+        Reject
+    </button>
+
+</form>
+
+{% endif %}
+
+
+{% if draft.created_question %}
+
+<div class="card">
+
+    <strong>
+        Added to Question Bank as
+        Draft Question
+        #{{ draft.created_question.pk }}
+    </strong>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Edit AI Draft | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>
+    Edit Generated Draft
+</h1>
+
+
+{% if error_message %}
+
+<div class="card">
+    {{ error_message }}
+</div>
+
+{% endif %}
+
+
+<form method="post">
+
+{% csrf_token %}
+
+
+<p>
+    <label>
+        Question
+    </label>
+
+    <textarea
+        name="question_text"
+        rows="5"
+        required
+    >{{ draft.question_text }}</textarea>
+</p>
+
+
+<p>
+    <label>Option A</label>
+
+    <input
+        type="text"
+        name="option_a"
+        value="{{ draft.option_a }}"
+        required
+    >
+</p>
+
+
+<p>
+    <label>Option B</label>
+
+    <input
+        type="text"
+        name="option_b"
+        value="{{ draft.option_b }}"
+        required
+    >
+</p>
+
+
+<p>
+    <label>Option C</label>
+
+    <input
+        type="text"
+        name="option_c"
+        value="{{ draft.option_c }}"
+        required
+    >
+</p>
+
+
+<p>
+    <label>Option D</label>
+
+    <input
+        type="text"
+        name="option_d"
+        value="{{ draft.option_d }}"
+        required
+    >
+</p>
+
+
+<p>
+    <label>
+        Correct Answer
+    </label>
+
+    <select name="correct_answer">
+
+        <option value="A"
+            {% if draft.correct_answer == "A" %}selected{% endif %}
+        >A</option>
+
+        <option value="B"
+            {% if draft.correct_answer == "B" %}selected{% endif %}
+        >B</option>
+
+        <option value="C"
+            {% if draft.correct_answer == "C" %}selected{% endif %}
+        >C</option>
+
+        <option value="D"
+            {% if draft.correct_answer == "D" %}selected{% endif %}
+        >D</option>
+
+    </select>
+
+</p>
+
+
+<p>
+    <label>
+        Explanation
+    </label>
+
+    <textarea
+        name="explanation"
+        rows="4"
+    >{{ draft.explanation }}</textarea>
+</p>
+
+
+<button
+    type="submit"
+    class="button"
+>
+    Save Changes
+</button>
+
+</form>
+
+{% endblock %}
