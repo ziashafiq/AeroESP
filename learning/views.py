@@ -1178,7 +1178,149 @@ def _question_option_text(
 
 
 # =========================================================
-# Daily Practice Views
+# Adaptive Practice Helpers
+# =========================================================
+
+def _build_adaptive_practice_pool(user, mode):
+    """
+    Build a list of candidate practice items (LearningItemQuestion) for the user,
+    categorized into buckets: weak, due, new, reinforcement.
+    Returns a list of dictionaries with keys: link, progress, bucket, score, unresolved_errors.
+    """
+    now = timezone.now()
+
+    # Base queryset: all questions linked to learning items created by the user
+    qs = LearningItemQuestion.objects.filter(
+        learning_item__created_by=user
+    ).select_related(
+        "learning_item",
+        "learning_item__module",
+        "question",
+    )
+
+    # Filter by mode (general / aerospace / mixed)
+    if mode == "general":
+        qs = qs.filter(
+            learning_item__module__course__program__program_type=LearningProgram.ProgramType.IELTS
+        )
+    elif mode == "aerospace":
+        qs = qs.filter(
+            learning_item__module__course__program__program_type=LearningProgram.ProgramType.AEROSPACE_ESP
+        )
+    # else: mixed, no filter
+
+    candidates = []
+
+    for link in qs:
+        # Get or create progress for this user and learning item
+        progress, _ = LearningProgress.objects.get_or_create(
+            student=user,
+            learning_item=link.learning_item,
+            defaults={
+                "status": LearningProgress.Status.NEW,
+                "next_review_at": None,
+            }
+        )
+
+        # Skip mastered items
+        if progress.status == LearningProgress.Status.MASTERED:
+            continue
+
+        # Count unresolved errors for this learning item
+        unresolved_errors = LearnerError.objects.filter(
+            student=user,
+            learning_item=link.learning_item,
+            resolved=False
+        ).count()
+
+        # Determine bucket
+        bucket = None
+        score = 0
+
+        if unresolved_errors > 0:
+            bucket = "weak"
+            score = 100 + unresolved_errors  # higher score for more errors
+        elif progress.next_review_at and progress.next_review_at <= now:
+            bucket = "due"
+            score = 80
+        elif progress.status == LearningProgress.Status.NEW or progress.review_count == 0:
+            bucket = "new"
+            score = 60
+        else:
+            # Reinforcement: has been reviewed but not mastered, and not due yet
+            bucket = "reinforcement"
+            mastery = float(progress.mastery_score or 0)
+            score = max(0, 100 - mastery)
+
+        candidates.append({
+            "link": link,
+            "progress": progress,
+            "bucket": bucket,
+            "score": score,
+            "unresolved_errors": unresolved_errors,
+        })
+
+    return candidates
+
+
+def _select_adaptive_question(request, mode):
+    """
+    Selects the most appropriate question from the practice pool using adaptive logic.
+    Returns a tuple (selected_candidate_dict, reason_label).
+    """
+    candidates = _build_adaptive_practice_pool(request.user, mode)
+
+    if not candidates:
+        return None, None
+
+    # Get recently practiced links from session to avoid repetition
+    recent_ids = request.session.get("practice_recent_links", [])
+    # Filter out recently practiced (unless we have very few)
+    available = [c for c in candidates if c["link"].pk not in recent_ids]
+
+    if not available:
+        # If all are recent, just use all candidates
+        available = candidates
+        recent_ids = []  # reset recent list
+
+    # Determine preferred bucket based on sequence slot
+    sequence = int(request.session.get("practice_sequence", 0))
+    slot = sequence % 10
+
+    # Bucket preference order: weak -> due -> new -> reinforcement
+    if slot <= 3:
+        preferred_bucket = "weak"
+    elif slot <= 6:
+        preferred_bucket = "due"
+    elif slot <= 8:
+        preferred_bucket = "new"
+    else:
+        preferred_bucket = "reinforcement"
+
+    preferred = [c for c in available if c["bucket"] == preferred_bucket]
+    pool = preferred if preferred else available
+
+    # Select the candidate with highest score (and tie-break by newer pk)
+    selected = max(pool, key=lambda item: (item["score"], -item["link"].pk))
+
+    # Update session
+    selected_id = selected["link"].pk
+    recent_ids.append(selected_id)
+    request.session["practice_recent_links"] = recent_ids[-5:]  # keep last 5
+    request.session["practice_sequence"] = sequence + 1
+
+    reason_labels = {
+        "weak": "Weak Area",
+        "due": "Due Review",
+        "new": "New Content",
+        "reinforcement": "Retention Practice",
+    }
+
+    return selected, reason_labels.get(selected["bucket"], "Practice")
+
+
+# =========================================================
+# Daily Practice View (Adaptive)
 # =========================================================
 
 @login_required
@@ -1200,98 +1342,29 @@ def daily_practice(request):
     }:
         mode = "mixed"
 
-    now = timezone.now()
+    candidates = _build_adaptive_practice_pool(request.user, mode)
+    selected, selection_reason = _select_adaptive_question(request, mode)
 
-    # Get all learning items with questions linked
-    links = (
-        LearningItemQuestion.objects
-        .filter(
-            learning_item__created_by=request.user,
-        )
-        .select_related(
-            "learning_item",
-            "learning_item__module",
-            "question",
-        )
-        .order_by(
-            "?",
-        )
-    )
+    current_link = selected["link"] if selected else None
+    current_progress = selected["progress"] if selected else None
 
-    # Filter by mode
-    if mode == "general":
-        links = links.filter(
-            learning_item__module__course__program__program_type=(
-                LearningProgram.ProgramType.IELTS
-            )
-        )
-    elif mode == "aerospace":
-        links = links.filter(
-            learning_item__module__course__program__program_type=(
-                LearningProgram.ProgramType.AEROSPACE_ESP
-            )
-        )
-
-    due_links = []
-    future_links = []
-
-    for link in links:
-        progress = (
-            LearningProgress.objects
-            .filter(
-                student=request.user,
-                learning_item=link.learning_item,
-            )
-            .first()
-        )
-
-        if (
-            progress is None
-            or progress.next_review_at is None
-            or progress.next_review_at <= now
-        ):
-            due_links.append(
-                (
-                    link,
-                    progress,
-                )
-            )
-        else:
-            future_links.append(
-                (
-                    link,
-                    progress,
-                )
-            )
-
-    practice_pool = (
-        due_links
-        if due_links
-        else future_links
-    )
-
-    current_link = None
-    current_progress = None
-
-    if practice_pool:
-        current_link = practice_pool[0][0]
-        current_progress = practice_pool[0][1]
-
-    total_questions = links.count()
-    due_count = len(due_links)
-
-    context = {
-        "mode": mode,
-        "current_link": current_link,
-        "current_progress": current_progress,
-        "total_questions": total_questions,
-        "due_count": due_count,
-    }
+    due_count = sum(1 for item in candidates if item["bucket"] == "due")
+    weak_count = sum(1 for item in candidates if item["bucket"] == "weak")
+    new_count = sum(1 for item in candidates if item["bucket"] == "new")
 
     return render(
         request,
         "learning/daily_practice.html",
-        context,
+        {
+            "mode": mode,
+            "current_link": current_link,
+            "current_progress": current_progress,
+            "total_questions": len(candidates),
+            "due_count": due_count,
+            "weak_count": weak_count,
+            "new_count": new_count,
+            "selection_reason": selection_reason,
+        },
     )
 
 
@@ -2196,6 +2269,85 @@ def placement_result(
             ),
             "total_count": (
                 total_count
+            ),
+        },
+    )
+
+
+# =========================================================
+# Learning Path Recommendations
+# =========================================================
+
+@login_required
+def learning_path(request):
+
+    general_candidates = (
+        _build_adaptive_practice_pool(
+            request.user,
+            "general",
+        )
+    )
+
+    aerospace_candidates = (
+        _build_adaptive_practice_pool(
+            request.user,
+            "aerospace",
+        )
+    )
+
+    def top_items(
+        candidates,
+        limit=8,
+    ):
+        return sorted(
+            candidates,
+            key=lambda item: (
+                item["score"],
+                item["unresolved_errors"],
+            ),
+            reverse=True,
+        )[:limit]
+
+    general_recommendations = (
+        top_items(
+            general_candidates
+        )
+    )
+
+    aerospace_recommendations = (
+        top_items(
+            aerospace_candidates
+        )
+    )
+
+    latest_placement = (
+        PlacementAttempt.objects
+        .filter(
+            student=request.user,
+            status=(
+                PlacementAttempt
+                .Status
+                .COMPLETED
+            ),
+        )
+        .order_by(
+            "-completed_at"
+        )
+        .first()
+    )
+
+    return render(
+        request,
+        "learning/learning_path.html",
+        {
+            "general_recommendations": (
+                general_recommendations
+            ),
+            "aerospace_recommendations": (
+                aerospace_recommendations
+            ),
+            "latest_placement": (
+                latest_placement
             ),
         },
     )

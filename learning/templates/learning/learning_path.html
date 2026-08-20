@@ -1,0 +1,153 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+My Learning Path | AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<div class="program-header">
+
+    <h1>
+        My Learning Path
+    </h1>
+
+    <p>
+        Personalized recommendations based
+        on your placement, errors, reviews,
+        and mastery history.
+    </p>
+
+</div>
+
+
+{% if latest_placement %}
+
+<div class="card">
+
+    <h3>
+        Current Diagnostic Profile
+    </h3>
+
+    <p>
+        CEFR:
+        <strong>
+            {{ latest_placement.cefr_level }}
+        </strong>
+    </p>
+
+    <p>
+        IELTS Estimate:
+        <strong>
+            {{ latest_placement.ielts_estimate }}
+        </strong>
+    </p>
+
+    <p>
+        Overall:
+        <strong>
+            {{ latest_placement.overall_score }}%
+        </strong>
+    </p>
+
+</div>
+
+{% endif %}
+
+
+<h2>
+    General English Recommendations
+</h2>
+
+
+{% for recommendation in general_recommendations %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ recommendation.bucket|title }}
+    </span>
+
+    <h3>
+        {{ recommendation.link.learning_item.title }}
+    </h3>
+
+    <p>
+        Section:
+        {{ recommendation.link.learning_item.module.title }}
+    </p>
+
+    {% if recommendation.unresolved_errors %}
+
+    <p>
+        Unresolved errors:
+        {{ recommendation.unresolved_errors }}
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No General English recommendations yet.
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Aerospace English Recommendations
+</h2>
+
+
+{% for recommendation in aerospace_recommendations %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ recommendation.bucket|title }}
+    </span>
+
+    <h3>
+        {{ recommendation.link.learning_item.title }}
+    </h3>
+
+    <p>
+        Section:
+        {{ recommendation.link.learning_item.module.title }}
+    </p>
+
+    {% if recommendation.link.learning_item.aerospace_topic %}
+
+    <p>
+        Topic:
+        {{ recommendation.link.learning_item.aerospace_topic.name }}
+    </p>
+
+    {% endif %}
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No Aerospace recommendations yet.
+</div>
+
+{% endfor %}
+
+
+<br>
+
+<a
+    class="button"
+    href="{% url 'learning:daily_practice' %}"
+>
+    Start Adaptive Practice
+</a>
+
+
+{% endblock %}

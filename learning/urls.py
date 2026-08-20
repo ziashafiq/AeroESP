@@ -114,4 +114,10 @@ urlpatterns = [
         views.placement_result,
         name="placement_result",
     ),
+
+    path(
+        "path/",
+        views.learning_path,
+        name="learning_path",
+    ),
 ]

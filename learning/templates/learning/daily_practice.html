@@ -46,6 +46,30 @@ Daily Practice | AeroESP
 
     </div>
 
+    <div class="card">
+
+        <h3>
+            Weak Areas
+        </h3>
+
+        <div class="stat-number">
+            {{ weak_count }}
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+            New Content
+        </h3>
+
+        <div class="stat-number">
+            {{ new_count }}
+        </div>
+
+    </div>
+
 </div>
 
 
@@ -97,6 +121,14 @@ Daily Practice | AeroESP
     <span class="badge">
         {{ current_link.learning_item.module.title }}
     </span>
+
+    {% if selection_reason %}
+
+    <span class="badge">
+        Recommended: {{ selection_reason }}
+    </span>
+
+    {% endif %}
 
     <p>
         Learning Item:
