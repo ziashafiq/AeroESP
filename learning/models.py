@@ -1181,3 +1181,186 @@ class PlacementResponse(models.Model):
             f"Attempt {self.attempt_id} - "
             f"Question {self.question_id}"
         )
+
+
+class LearningEvent(models.Model):
+
+    class EventType(models.TextChoices):
+
+        PRACTICE_ANSWER = (
+            "PRACTICE_ANSWER",
+            "Practice Answer",
+        )
+
+        PLACEMENT_COMPLETE = (
+            "PLACEMENT_COMPLETE",
+            "Placement Completed",
+        )
+
+        ERROR_RESOLVED = (
+            "ERROR_RESOLVED",
+            "Error Resolved",
+        )
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="learning_events",
+    )
+
+    event_type = models.CharField(
+        max_length=40,
+        choices=EventType.choices,
+    )
+
+    learning_item = models.ForeignKey(
+        LearningItem,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="learning_events",
+    )
+
+    question = models.ForeignKey(
+        "assessment.Question",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="learning_events",
+    )
+
+    placement_attempt = models.ForeignKey(
+        PlacementAttempt,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="learning_events",
+    )
+
+    program_type = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+    )
+
+    skill = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+    )
+
+    aerospace_domain = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+    )
+
+    aerospace_topic = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+    )
+
+    english_focus = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
+
+    english_topic = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
+
+    selected_answer = models.CharField(
+        max_length=10,
+        blank=True,
+        default="",
+    )
+
+    correct_answer = models.CharField(
+        max_length=10,
+        blank=True,
+        default="",
+    )
+
+    is_correct = models.BooleanField(
+        null=True,
+        blank=True,
+    )
+
+    mastery_before = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    mastery_after = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    review_count_before = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    review_count_after = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    occurred_at = models.DateTimeField(
+        default=timezone.now,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+
+        ordering = [
+            "-occurred_at",
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "student",
+                    "occurred_at",
+                ],
+                name="learn_event_student_idx",
+            ),
+            models.Index(
+                fields=[
+                    "event_type",
+                    "occurred_at",
+                ],
+                name="learn_event_type_idx",
+            ),
+            models.Index(
+                fields=[
+                    "program_type",
+                    "skill",
+                ],
+                name="learn_event_skill_idx",
+            ),
+        ]
+
+    def __str__(self):
+
+        return (
+            f"{self.student} - "
+            f"{self.event_type} - "
+            f"{self.occurred_at}"
+        )

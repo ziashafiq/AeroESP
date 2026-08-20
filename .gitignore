@@ -7,3 +7,4 @@ __pycache__/
 media/
 staticfiles
 /backups/
+/research_exports/

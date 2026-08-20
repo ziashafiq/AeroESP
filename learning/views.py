@@ -32,6 +32,7 @@ from .models import (
     Enrollment,
     LearnerError,
     LearningCourse,
+    LearningEvent,
     LearningItem,
     LearningItemQuestion,
     LearningProgress,
@@ -745,6 +746,30 @@ def resolve_learner_error(
             ]
         )
 
+        # ==============================================
+        # Record error resolution event
+        # ==============================================
+        _record_learning_event(
+            student=request.user,
+            event_type=(
+                LearningEvent
+                .EventType
+                .ERROR_RESOLVED
+            ),
+            learning_item=(
+                error.learning_item
+            ),
+            question=(
+                error.question
+            ),
+            metadata={
+                "error_category": (
+                    error.category
+                ),
+                "error_id": error.pk,
+            },
+        )
+
     return redirect(
         "learning:my_errors"
     )
@@ -1180,6 +1205,93 @@ def _question_option_text(
 
 
 # =========================================================
+# Helper: record a learning event
+# =========================================================
+
+def _record_learning_event(
+    student,
+    event_type,
+    learning_item=None,
+    question=None,
+    placement_attempt=None,
+    selected_answer="",
+    correct_answer="",
+    is_correct=None,
+    mastery_before=None,
+    mastery_after=None,
+    review_count_before=None,
+    review_count_after=None,
+    metadata=None,
+):
+    """
+    Record a learning event for analytics.
+    """
+    program_type = ""
+    skill = ""
+    aerospace_domain = ""
+    aerospace_topic = ""
+    english_focus = ""
+    english_topic = ""
+
+    if learning_item is not None:
+        program_type = (
+            learning_item
+            .module
+            .course
+            .program
+            .program_type
+        )
+        if learning_item.aerospace_domain:
+            aerospace_domain = (
+                learning_item
+                .aerospace_domain
+                .name
+            )
+        if learning_item.aerospace_topic:
+            aerospace_topic = (
+                learning_item
+                .aerospace_topic
+                .name
+            )
+        english_focus = (
+            learning_item.english_focus
+            or ""
+        )
+        english_topic = (
+            learning_item.english_topic
+            or ""
+        )
+
+    if question is not None:
+        skill = (
+            question.skill
+            or ""
+        )
+
+    return LearningEvent.objects.create(
+        student=student,
+        event_type=event_type,
+        learning_item=learning_item,
+        question=question,
+        placement_attempt=placement_attempt,
+        program_type=program_type,
+        skill=skill,
+        aerospace_domain=aerospace_domain,
+        aerospace_topic=aerospace_topic,
+        english_focus=english_focus,
+        english_topic=english_topic,
+        selected_answer=selected_answer,
+        correct_answer=correct_answer,
+        is_correct=is_correct,
+        mastery_before=mastery_before,
+        mastery_after=mastery_after,
+        review_count_before=review_count_before,
+        review_count_after=review_count_after,
+        metadata=metadata or {},
+    )
+
+
+# =========================================================
 # Adaptive Practice Helpers
 # =========================================================
 
@@ -1442,6 +1554,10 @@ def practice_answer(
         )
     )
 
+    # Capture before values for event logging
+    mastery_before = progress.mastery_score
+    review_count_before = progress.review_count
+
     # =============================================
     # Update progress based on answer
     # =============================================
@@ -1538,6 +1654,38 @@ def practice_answer(
 
     progress.last_reviewed_at = now
     progress.save()
+
+    # =============================================
+    # Record learning event
+    # =============================================
+    _record_learning_event(
+        student=request.user,
+        event_type=(
+            LearningEvent
+            .EventType
+            .PRACTICE_ANSWER
+        ),
+        learning_item=learning_item,
+        question=question,
+        selected_answer=selected_answer,
+        correct_answer=correct_answer,
+        is_correct=is_correct,
+        mastery_before=mastery_before,
+        mastery_after=progress.mastery_score,
+        review_count_before=review_count_before,
+        review_count_after=progress.review_count,
+        metadata={
+            "practice_mode": mode,
+            "progress_status": (
+                progress.status
+            ),
+            "next_review_at": (
+                progress.next_review_at.isoformat()
+                if progress.next_review_at
+                else None
+            ),
+        },
+    )
 
     # Record the error if incorrect
     if not is_correct:
@@ -2190,6 +2338,57 @@ def placement_test_submit(
     attempt.status = PlacementAttempt.Status.COMPLETED
     attempt.completed_at = timezone.now()
     attempt.save()
+
+    # ==========================================
+    # Record placement completion event
+    # ==========================================
+    _record_learning_event(
+        student=request.user,
+        event_type=(
+            LearningEvent
+            .EventType
+            .PLACEMENT_COMPLETE
+        ),
+        placement_attempt=attempt,
+        metadata={
+            "overall_score": (
+                str(
+                    attempt.overall_score
+                )
+            ),
+            "cefr_level": (
+                attempt.cefr_level
+            ),
+            "ielts_estimate": (
+                str(
+                    attempt.ielts_estimate
+                )
+                if attempt.ielts_estimate
+                is not None
+                else None
+            ),
+            "vocabulary_score": (
+                str(
+                    attempt.vocabulary_score
+                )
+            ),
+            "grammar_score": (
+                str(
+                    attempt.grammar_score
+                )
+            ),
+            "reading_score": (
+                str(
+                    attempt.reading_score
+                )
+            ),
+            "listening_score": (
+                str(
+                    attempt.listening_score
+                )
+            ),
+        },
+    )
 
     # Update enrollment
     program = attempt.program
