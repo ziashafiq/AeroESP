@@ -164,3 +164,25 @@ LOGIN_REDIRECT_URL = "accounts:role_redirect"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 LOGIN_REDIRECT_URL = "accounts:role_redirect"
+
+
+# =========================================================
+# AeroESP AI configuration
+# =========================================================
+
+AEROESP_AI_PROVIDER = os.getenv(
+    "AEROESP_AI_PROVIDER",
+    "BASELINE_V1",
+)
+
+AEROESP_OPENAI_MODEL = os.getenv(
+    "AEROESP_OPENAI_MODEL",
+    "gpt-5.5",
+)
+
+AEROESP_OPENAI_TIMEOUT = int(
+    os.getenv(
+        "AEROESP_OPENAI_TIMEOUT",
+        "45",
+    )
+)

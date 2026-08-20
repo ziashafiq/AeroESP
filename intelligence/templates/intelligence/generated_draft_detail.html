@@ -22,6 +22,18 @@ Generated Question Draft | AeroESP
         {{ draft.provider }}
     </p>
 
+    {% if draft.generation_metadata.model %}
+
+    <p>
+        <strong>
+            Model:
+        </strong>
+
+        {{ draft.generation_metadata.model }}
+    </p>
+
+    {% endif %}
+
     <p>
         <strong>Track:</strong>
         {{ draft.track }}

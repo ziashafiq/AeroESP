@@ -9,6 +9,21 @@ from assessment.models import (
 
 class QuestionGenerationForm(forms.Form):
 
+    provider = forms.ChoiceField(
+        choices=[
+            (
+                "BASELINE_V1",
+                "Explainable Baseline",
+            ),
+            (
+                "OPENAI_RESPONSES_V1",
+                "OpenAI LLM",
+            ),
+        ],
+        initial="BASELINE_V1",
+        label="Generation Provider",
+    )
+
     track = forms.ChoiceField(
         choices=Question.Track.choices,
         label="Learning Track",

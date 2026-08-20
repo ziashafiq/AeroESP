@@ -19,6 +19,7 @@ from .models import (
     QuestionAISuggestion,
 )
 from .services import (
+    QuestionGenerationError,
     analyze_question,
     build_learner_insight,
     get_question_generator,
@@ -342,93 +343,98 @@ def generate_question_view(request):
 
         form = QuestionGenerationForm(
             request.POST,
-            user=request.user,
         )
 
         if form.is_valid():
 
             data = form.cleaned_data
 
-            generator = get_question_generator(
-                provider_name="BASELINE_V1"
-            )
+            try:
+                provider_name = data.get("provider", "BASELINE_V1")
+                generator = get_question_generator(provider_name)
 
-            result = generator.generate(
-                track=data["track"],
-                skill=data["skill"],
-                difficulty=data["difficulty"],
-                domain=data.get("domain"),
-                topic=data.get("topic"),
-                theme=data.get("theme", ""),
-                teacher_instructions=(
-                    data.get(
-                        "teacher_instructions",
-                        "",
-                    )
-                ),
-            )
-
-            draft = (
-                GeneratedQuestionDraft
-                .objects
-                .create(
-                    created_by=request.user,
+                result = generator.generate(
                     track=data["track"],
                     skill=data["skill"],
-                    difficulty=data[
-                        "difficulty"
-                    ],
-                    domain=data.get(
-                        "domain"
-                    ),
-                    topic=data.get(
-                        "topic"
-                    ),
-                    theme=data.get(
-                        "theme",
-                        "",
-                    ),
+                    difficulty=data["difficulty"],
+                    domain=data.get("domain"),
+                    topic=data.get("topic"),
+                    theme=data.get("theme", ""),
                     teacher_instructions=(
                         data.get(
                             "teacher_instructions",
                             "",
                         )
                     ),
-                    question_text=result[
-                        "question_text"
-                    ],
-                    option_a=result[
-                        "option_a"
-                    ],
-                    option_b=result[
-                        "option_b"
-                    ],
-                    option_c=result[
-                        "option_c"
-                    ],
-                    option_d=result[
-                        "option_d"
-                    ],
-                    correct_answer=result[
-                        "correct_answer"
-                    ],
-                    explanation=result[
-                        "explanation"
-                    ],
-                    provider=result[
-                        "provider"
-                    ],
-                    generation_metadata=(
-                        result["metadata"]
-                    ),
                 )
-            )
 
-            return redirect(
-                "intelligence:"
-                "generated_draft_detail",
-                draft_id=draft.pk,
-            )
+                draft = (
+                    GeneratedQuestionDraft
+                    .objects
+                    .create(
+                        created_by=request.user,
+                        track=data["track"],
+                        skill=data["skill"],
+                        difficulty=data[
+                            "difficulty"
+                        ],
+                        domain=data.get(
+                            "domain"
+                        ),
+                        topic=data.get(
+                            "topic"
+                        ),
+                        theme=data.get(
+                            "theme",
+                            "",
+                        ),
+                        teacher_instructions=(
+                            data.get(
+                                "teacher_instructions",
+                                "",
+                            )
+                        ),
+                        question_text=result[
+                            "question_text"
+                        ],
+                        option_a=result[
+                            "option_a"
+                        ],
+                        option_b=result[
+                            "option_b"
+                        ],
+                        option_c=result[
+                            "option_c"
+                        ],
+                        option_d=result[
+                            "option_d"
+                        ],
+                        correct_answer=result[
+                            "correct_answer"
+                        ],
+                        explanation=result[
+                            "explanation"
+                        ],
+                        provider=result[
+                            "provider"
+                        ],
+                        generation_metadata=(
+                            result["metadata"]
+                        ),
+                    )
+                )
+
+                return redirect(
+                    "intelligence:"
+                    "generated_draft_detail",
+                    draft_id=draft.pk,
+                )
+
+            except QuestionGenerationError as exc:
+                form.add_error(
+                    None,
+                    str(exc),
+                )
 
     else:
 
