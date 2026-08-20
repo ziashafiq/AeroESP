@@ -2117,6 +2117,36 @@ def _placement_level_from_score(
     )
 
 
+def _course_level_from_cefr(
+    cefr_level,
+):
+    mapping = {
+        "A1": (
+            LearningCourse.Level.BEGINNER
+        ),
+        "A2": (
+            LearningCourse.Level.ELEMENTARY
+        ),
+        "B1": (
+            LearningCourse.Level.INTERMEDIATE
+        ),
+        "B2": (
+            LearningCourse.Level.UPPER_INTERMEDIATE
+        ),
+        "C1": (
+            LearningCourse.Level.ADVANCED
+        ),
+        "C2": (
+            LearningCourse.Level.ADVANCED
+        ),
+    }
+
+    return mapping.get(
+        str(cefr_level).strip().upper(),
+        "",
+    )
+
+
 @login_required
 def placement_test(request):
     """
@@ -2405,7 +2435,7 @@ def placement_test_submit(
             course=course,
         )
         enrollment.status = Enrollment.Status.ACTIVE
-        enrollment.assigned_level = cefr_level
+        enrollment.assigned_level = _course_level_from_cefr(cefr_level)
         enrollment.placement_status = Enrollment.PlacementStatus.PLACEMENT_TEST
         enrollment.placement_updated_at = timezone.now()
         enrollment.save()
