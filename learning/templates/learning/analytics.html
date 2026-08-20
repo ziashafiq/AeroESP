@@ -1,0 +1,385 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Learning Analytics | AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<div class="program-header">
+
+    <h1>
+        Learning Analytics
+    </h1>
+
+    <p>
+        Analyze your performance,
+        mastery, errors, and weak areas.
+    </p>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Overall Accuracy
+        </h3>
+
+        <div class="stat-number">
+            {{ overall_accuracy }}%
+        </div>
+
+        <p>
+            {{ total_attempts }}
+            recorded attempts
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Mastery
+        </h3>
+
+        <div class="stat-number">
+            {{ mastery_percent }}%
+        </div>
+
+        <p>
+            {{ mastered_count }}
+            of
+            {{ tracked_count }}
+            items mastered
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Due Reviews
+        </h3>
+
+        <div class="stat-number">
+            {{ due_count }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<h2>
+    Program Performance
+</h2>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <span class="badge">
+            General English
+        </span>
+
+        <h3>
+            Accuracy
+        </h3>
+
+        <div class="stat-number">
+            {{ general_stats.accuracy }}%
+        </div>
+
+        <p>
+            Tracked:
+            {{ general_stats.tracked }}
+        </p>
+
+        <p>
+            Mastered:
+            {{ general_stats.mastered }}
+        </p>
+
+        <p>
+            Mastery:
+            {{ general_stats.mastery }}%
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <span class="badge">
+            Aerospace English
+        </span>
+
+        <h3>
+            Accuracy
+        </h3>
+
+        <div class="stat-number">
+            {{ aerospace_stats.accuracy }}%
+        </div>
+
+        <p>
+            Tracked:
+            {{ aerospace_stats.tracked }}
+        </p>
+
+        <p>
+            Mastered:
+            {{ aerospace_stats.mastered }}
+        </p>
+
+        <p>
+            Mastery:
+            {{ aerospace_stats.mastery }}%
+        </p>
+
+    </div>
+
+</div>
+
+
+{% if latest_placement %}
+
+<h2>
+    Placement Profile
+</h2>
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            CEFR
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.cefr_level }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            IELTS Estimate
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.ielts_estimate }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Vocabulary
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.vocabulary_score }}%
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Grammar
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.grammar_score }}%
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Reading
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.reading_score }}%
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Listening
+        </h3>
+
+        <div class="stat-number">
+            {{ latest_placement.listening_score }}%
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
+<h2>
+    Weak Areas
+</h2>
+
+
+<div class="cards">
+
+{% for error in unresolved_distribution %}
+
+<div class="card">
+
+    <h3>
+        {{ error.category }}
+    </h3>
+
+    <div class="stat-number">
+        {{ error.total }}
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No unresolved weak areas.
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<h2>
+    Aerospace Domain Performance
+</h2>
+
+
+{% for domain in domain_stats %}
+
+<div class="module">
+
+    <h3>
+        {{ domain.name }}
+    </h3>
+
+    <p>
+        Accuracy:
+        <strong>
+            {{ domain.accuracy }}%
+        </strong>
+    </p>
+
+    <p>
+        Mastery:
+        <strong>
+            {{ domain.mastery }}%
+        </strong>
+    </p>
+
+    <p>
+        Tracked Items:
+        {{ domain.tracked }}
+    </p>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No Aerospace domain data yet.
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Aerospace Topic Performance
+</h2>
+
+
+{% for topic in topic_stats %}
+
+<div class="module">
+
+    <h3>
+        {{ topic.name }}
+    </h3>
+
+    <p>
+        Accuracy:
+        <strong>
+            {{ topic.accuracy }}%
+        </strong>
+    </p>
+
+    <p>
+        Tracked Items:
+        {{ topic.tracked }}
+    </p>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No Aerospace topic data yet.
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Error Distribution
+</h2>
+
+
+<div class="cards">
+
+{% for error in error_distribution %}
+
+<div class="card">
+
+    <h3>
+        {{ error.category }}
+    </h3>
+
+    <div class="stat-number">
+        {{ error.total }}
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No error data yet.
+</div>
+
+{% endfor %}
+
+</div>
+
+
+{% endblock %}

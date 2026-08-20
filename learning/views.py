@@ -1,4 +1,4 @@
-from datetime import timedelta
+﻿from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -2345,6 +2345,465 @@ def learning_path(request):
             ),
             "aerospace_recommendations": (
                 aerospace_recommendations
+            ),
+            "latest_placement": (
+                latest_placement
+            ),
+        },
+    )
+
+
+# =========================================================
+# Learning Analytics
+# =========================================================
+
+@login_required
+def learning_analytics(request):
+    now = timezone.now()
+
+    progress_qs = (
+        LearningProgress.objects
+        .filter(
+            student=request.user,
+        )
+        .select_related(
+            "learning_item",
+            "learning_item__module",
+            "learning_item__module__course",
+            "learning_item__module__course__program",
+            "learning_item__aerospace_domain",
+            "learning_item__aerospace_topic",
+        )
+    )
+
+    # ==========================================
+    # Overall statistics
+    # ==========================================
+
+    total_correct = sum(
+        p.correct_count
+        for p in progress_qs
+    )
+
+    total_incorrect = sum(
+        p.incorrect_count
+        for p in progress_qs
+    )
+
+    total_attempts = (
+        total_correct
+        + total_incorrect
+    )
+
+    overall_accuracy = (
+        round(
+            total_correct
+            / total_attempts
+            * 100,
+            1,
+        )
+        if total_attempts
+        else 0
+    )
+
+    tracked_count = (
+        progress_qs.count()
+    )
+
+    mastered_count = (
+        progress_qs
+        .filter(
+            status=(
+                LearningProgress
+                .Status
+                .MASTERED
+            )
+        )
+        .count()
+    )
+
+    mastery_percent = (
+        round(
+            mastered_count
+            / tracked_count
+            * 100,
+            1,
+        )
+        if tracked_count
+        else 0
+    )
+
+    due_count = (
+        progress_qs
+        .filter(
+            next_review_at__lte=now,
+        )
+        .exclude(
+            status=(
+                LearningProgress
+                .Status
+                .MASTERED
+            )
+        )
+        .count()
+    )
+
+    # ==========================================
+    # Program statistics
+    # ==========================================
+
+    def program_stats(
+        program_type,
+    ):
+
+        qs = progress_qs.filter(
+            learning_item__module__course__program__program_type=(
+                program_type
+            )
+        )
+
+        correct = sum(
+            p.correct_count
+            for p in qs
+        )
+
+        incorrect = sum(
+            p.incorrect_count
+            for p in qs
+        )
+
+        attempts = (
+            correct + incorrect
+        )
+
+        tracked = qs.count()
+
+        mastered = (
+            qs.filter(
+                status=(
+                    LearningProgress
+                    .Status
+                    .MASTERED
+                )
+            )
+            .count()
+        )
+
+        return {
+            "correct": correct,
+            "incorrect": incorrect,
+            "attempts": attempts,
+            "accuracy": (
+                round(
+                    correct
+                    / attempts
+                    * 100,
+                    1,
+                )
+                if attempts
+                else 0
+            ),
+            "tracked": tracked,
+            "mastered": mastered,
+            "mastery": (
+                round(
+                    mastered
+                    / tracked
+                    * 100,
+                    1,
+                )
+                if tracked
+                else 0
+            ),
+        }
+
+    general_stats = program_stats(
+        LearningProgram
+        .ProgramType
+        .IELTS
+    )
+
+    aerospace_stats = program_stats(
+        LearningProgram
+        .ProgramType
+        .AEROSPACE_ESP
+    )
+
+    # ==========================================
+    # Error distribution
+    # ==========================================
+
+    error_qs = (
+        LearnerError.objects
+        .filter(
+            student=request.user,
+        )
+    )
+
+    error_distribution = (
+        error_qs
+        .values(
+            "category",
+        )
+        .annotate(
+            total=Count("id"),
+        )
+        .order_by(
+            "-total",
+            "category",
+        )
+    )
+
+    unresolved_distribution = (
+        error_qs
+        .filter(
+            resolved=False,
+        )
+        .values(
+            "category",
+        )
+        .annotate(
+            total=Count("id"),
+        )
+        .order_by(
+            "-total",
+            "category",
+        )[:10]
+    )
+
+    # ==========================================
+    # Aerospace Domain statistics
+    # ==========================================
+
+    domain_data = {}
+
+    aerospace_progress = (
+        progress_qs
+        .filter(
+            learning_item__module__course__program__program_type=(
+                LearningProgram
+                .ProgramType
+                .AEROSPACE_ESP
+            )
+        )
+    )
+
+    for progress in aerospace_progress:
+
+        item = progress.learning_item
+
+        if item.aerospace_domain:
+
+            key = (
+                item.aerospace_domain.name
+            )
+
+        else:
+
+            key = (
+                item.module.title
+            )
+
+        data = domain_data.setdefault(
+            key,
+            {
+                "name": key,
+                "correct": 0,
+                "incorrect": 0,
+                "tracked": 0,
+                "mastered": 0,
+            },
+        )
+
+        data["correct"] += (
+            progress.correct_count
+        )
+
+        data["incorrect"] += (
+            progress.incorrect_count
+        )
+
+        data["tracked"] += 1
+
+        if (
+            progress.status
+            == LearningProgress
+            .Status
+            .MASTERED
+        ):
+            data["mastered"] += 1
+
+    domain_stats = []
+
+    for data in domain_data.values():
+
+        attempts = (
+            data["correct"]
+            + data["incorrect"]
+        )
+
+        data["accuracy"] = (
+            round(
+                data["correct"]
+                / attempts
+                * 100,
+                1,
+            )
+            if attempts
+            else 0
+        )
+
+        data["mastery"] = (
+            round(
+                data["mastered"]
+                / data["tracked"]
+                * 100,
+                1,
+            )
+            if data["tracked"]
+            else 0
+        )
+
+        domain_stats.append(
+            data
+        )
+
+    domain_stats.sort(
+        key=lambda x: (
+            x["accuracy"],
+            x["name"],
+        )
+    )
+
+    # ==========================================
+    # Aerospace Topic statistics
+    # ==========================================
+
+    topic_data = {}
+
+    for progress in aerospace_progress:
+
+        topic = (
+            progress
+            .learning_item
+            .aerospace_topic
+        )
+
+        if topic is None:
+            continue
+
+        key = topic.name
+
+        data = topic_data.setdefault(
+            key,
+            {
+                "name": key,
+                "correct": 0,
+                "incorrect": 0,
+                "tracked": 0,
+            },
+        )
+
+        data["correct"] += (
+            progress.correct_count
+        )
+
+        data["incorrect"] += (
+            progress.incorrect_count
+        )
+
+        data["tracked"] += 1
+
+    topic_stats = []
+
+    for data in topic_data.values():
+
+        attempts = (
+            data["correct"]
+            + data["incorrect"]
+        )
+
+        data["accuracy"] = (
+            round(
+                data["correct"]
+                / attempts
+                * 100,
+                1,
+            )
+            if attempts
+            else 0
+        )
+
+        topic_stats.append(
+            data
+        )
+
+    topic_stats.sort(
+        key=lambda x: (
+            x["accuracy"],
+            x["name"],
+        )
+    )
+
+    # ==========================================
+    # Placement
+    # ==========================================
+
+    latest_placement = (
+        PlacementAttempt.objects
+        .filter(
+            student=request.user,
+            status=(
+                PlacementAttempt
+                .Status
+                .COMPLETED
+            ),
+        )
+        .order_by(
+            "-completed_at",
+        )
+        .first()
+    )
+
+    return render(
+        request,
+        "learning/analytics.html",
+        {
+            "overall_accuracy": (
+                overall_accuracy
+            ),
+            "tracked_count": (
+                tracked_count
+            ),
+            "mastered_count": (
+                mastered_count
+            ),
+            "mastery_percent": (
+                mastery_percent
+            ),
+            "due_count": (
+                due_count
+            ),
+            "total_attempts": (
+                total_attempts
+            ),
+            "general_stats": (
+                general_stats
+            ),
+            "aerospace_stats": (
+                aerospace_stats
+            ),
+            "error_distribution": (
+                error_distribution
+            ),
+            "unresolved_distribution": (
+                unresolved_distribution
+            ),
+            "domain_stats": (
+                domain_stats
+            ),
+            "topic_stats": (
+                topic_stats
             ),
             "latest_placement": (
                 latest_placement
