@@ -1,0 +1,174 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Placement Test | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="program-header">
+
+    <h1>
+        English Placement Test
+    </h1>
+
+    <p>
+        This diagnostic test estimates
+        your current English level and
+        helps personalize your learning path.
+    </p>
+
+    <p>
+        Questions:
+        <strong>
+            {{ question_count }}
+        </strong>
+    </p>
+
+</div>
+
+
+{% if error_message %}
+
+<div class="card">
+
+    <strong>
+        {{ error_message }}
+    </strong>
+
+</div>
+
+{% endif %}
+
+
+{% if pool %}
+
+<form method="post">
+
+{% csrf_token %}
+
+
+{% for item in pool %}
+
+<div class="module">
+
+    <span class="badge">
+        {{ item.question.get_skill_display }}
+    </span>
+
+    <p>
+        Question {{ forloop.counter }}
+    </p>
+
+    <h3>
+        {{ item.question.question_text }}
+    </h3>
+
+
+    <p>
+
+        <label>
+
+            <input
+                type="radio"
+                name="question_{{ item.question.pk }}"
+                value="A"
+                required
+            >
+
+            A.
+            {{ item.question.option_a }}
+
+        </label>
+
+    </p>
+
+
+    <p>
+
+        <label>
+
+            <input
+                type="radio"
+                name="question_{{ item.question.pk }}"
+                value="B"
+            >
+
+            B.
+            {{ item.question.option_b }}
+
+        </label>
+
+    </p>
+
+
+    <p>
+
+        <label>
+
+            <input
+                type="radio"
+                name="question_{{ item.question.pk }}"
+                value="C"
+            >
+
+            C.
+            {{ item.question.option_c }}
+
+        </label>
+
+    </p>
+
+
+    <p>
+
+        <label>
+
+            <input
+                type="radio"
+                name="question_{{ item.question.pk }}"
+                value="D"
+            >
+
+            D.
+            {{ item.question.option_d }}
+
+        </label>
+
+    </p>
+
+</div>
+
+{% endfor %}
+
+
+<button
+    type="submit"
+    class="button"
+>
+    Submit Placement Test
+</button>
+
+
+</form>
+
+
+{% else %}
+
+<div class="card empty-state">
+
+    <h3>
+        Placement question bank is empty.
+    </h3>
+
+    <p>
+        Questions can be added from the
+        central Question Bank.
+    </p>
+
+</div>
+
+{% endif %}
+
+
+{% endblock %}

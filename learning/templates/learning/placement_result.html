@@ -1,0 +1,174 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Placement Result | AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<div class="program-header">
+
+    <h1>
+        Placement Result
+    </h1>
+
+    <p>
+        Your diagnostic English profile
+        has been created.
+    </p>
+
+</div>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            CEFR Estimate
+        </h3>
+
+        <div class="stat-number">
+            {{ attempt.cefr_level }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            IELTS Estimate
+        </h3>
+
+        <div class="stat-number">
+            {{ attempt.ielts_estimate }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Overall
+        </h3>
+
+        <div class="stat-number">
+            {{ attempt.overall_score }}%
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Correct Answers
+        </h3>
+
+        <div class="stat-number">
+            {{ correct_count }}
+            /
+            {{ total_count }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<h2>
+    Skill Profile
+</h2>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Vocabulary
+        </h3>
+
+        <div class="stat-number">
+            {{ attempt.vocabulary_score }}%
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Grammar
+        </h3>
+
+        <div class="stat-number">
+            {{ attempt.grammar_score }}%
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Reading
+        </h3>
+
+        <div class="stat-number">
+            {{ attempt.reading_score }}%
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Listening
+        </h3>
+
+        <div class="stat-number">
+            {{ attempt.listening_score }}%
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    <p>
+        <strong>
+            Important:
+        </strong>
+
+        This IELTS estimate is an internal
+        diagnostic approximation and is not
+        an official IELTS score.
+    </p>
+
+</div>
+
+
+<a
+    class="button"
+    href="{% url 'learning:dashboard' %}"
+>
+    Learning Dashboard
+</a>
+
+
+<a
+    class="button"
+    href="{% url 'learning:daily_practice' %}"
+>
+    Start Learning
+</a>
+
+
+{% endblock %}

@@ -161,3 +161,5 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:role_redirect"
 
 LOGOUT_REDIRECT_URL = "accounts:login"
+
+LOGIN_REDIRECT_URL = "accounts:role_redirect"

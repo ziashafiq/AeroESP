@@ -81,9 +81,8 @@ def user_logout(request):
 @student_required
 def student_dashboard(request):
 
-    return render(
-        request,
-        "accounts/student_dashboard.html",
+    return redirect(
+        "learning:dashboard"
     )
 
 

@@ -940,3 +940,244 @@ class LearnerError(models.Model):
             f"{self.student} - "
             f"{self.get_category_display()}"
         )
+
+
+class PlacementAttempt(models.Model):
+    """
+    Records a student's attempt at a placement test.
+    """
+
+    class Status(models.TextChoices):
+        IN_PROGRESS = "IN_PROGRESS", "In Progress"
+        COMPLETED = "COMPLETED", "Completed"
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="placement_attempts",
+    )
+
+    program = models.ForeignKey(
+        LearningProgram,
+        on_delete=models.CASCADE,
+        related_name="placement_attempts",
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.IN_PROGRESS,
+    )
+
+    vocabulary_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    grammar_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    reading_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    listening_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    overall_score = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+    )
+
+    cefr_level = models.CharField(
+        max_length=10,
+        blank=True,
+        default="",
+    )
+
+    ielts_estimate = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        null=True,
+        blank=True,
+    )
+
+    started_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-started_at",
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "student",
+                    "program",
+                    "status",
+                ],
+                name="placement_student_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.student} - "
+            f"{self.program} - "
+            f"{self.status}"
+        )
+
+
+class PlacementQuestion(models.Model):
+    """
+    Links a question to a placement test pool for a specific program.
+    """
+
+    program = models.ForeignKey(
+        LearningProgram,
+        on_delete=models.CASCADE,
+        related_name="placement_questions",
+    )
+
+    question = models.ForeignKey(
+        "assessment.Question",
+        on_delete=models.PROTECT,
+        related_name="placement_questions",
+    )
+
+    order = models.PositiveIntegerField(
+        default=0,
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        ordering = [
+            "order",
+            "id",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "program",
+                    "question",
+                ],
+                name="uq_placement_question",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "program",
+                    "is_active",
+                    "order",
+                ],
+                name="placement_pool_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.program} -> "
+            f"Question {self.question_id}"
+        )
+
+
+class PlacementResponse(models.Model):
+    """
+    Records a student's answer to a placement question.
+    """
+
+    attempt = models.ForeignKey(
+        PlacementAttempt,
+        on_delete=models.CASCADE,
+        related_name="responses",
+    )
+
+    question = models.ForeignKey(
+        "assessment.Question",
+        on_delete=models.PROTECT,
+        related_name="placement_responses",
+    )
+
+    selected_answer = models.CharField(
+        max_length=1,
+    )
+
+    correct_answer_snapshot = models.CharField(
+        max_length=1,
+    )
+
+    skill_snapshot = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+    )
+
+    is_correct = models.BooleanField(
+        default=False,
+    )
+
+    answered_at = models.DateTimeField(
+        default=timezone.now,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "attempt",
+                    "question",
+                ],
+                name="uq_placement_response",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "attempt",
+                    "skill_snapshot",
+                ],
+                name="placement_resp_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"Attempt {self.attempt_id} - "
+            f"Question {self.question_id}"
+        )

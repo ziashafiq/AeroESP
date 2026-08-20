@@ -102,4 +102,16 @@ urlpatterns = [
         views.practice_answer,
         name="practice_answer",
     ),
+
+    path(
+        "placement/",
+        views.placement_test,
+        name="placement_test",
+    ),
+
+    path(
+        "placement/result/<int:attempt_id>/",
+        views.placement_result,
+        name="placement_result",
+    ),
 ]

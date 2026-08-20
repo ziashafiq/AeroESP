@@ -1,180 +1,486 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Dashboard | AeroESP
+Learning Dashboard | AeroESP
 {% endblock %}
 
 {% block content %}
 
-<h1 class="page-title">
-    Learning Dashboard
-</h1>
 
-<div class="cards section">
+<div class="program-header">
+
+    <h1>
+        Learning Dashboard
+    </h1>
+
+    <p>
+        Track your progress, review weak areas,
+        and continue your learning plan.
+    </p>
+
+</div>
+
+
+<div class="cards">
 
     <div class="card">
+
         <h3>
-            Learning Items
+            Due Reviews
         </h3>
-        <h2>
-            {{ learned_count }}
-        </h2>
+
+        <div class="stat-number">
+            {{ due_review_count }}
+        </div>
+
         <a
             class="button"
-            href="{% url 'learning:learning_item_create' %}"
-        >
-            Add Learning Item
-        </a>
-    </div>
-
-    <div class="card">
-        <h3>
-            Review Due
-        </h3>
-        <h2>
-            {{ review_due_count }}
-        </h2>
-        <a
-            class="button button-secondary"
             href="{% url 'learning:review_due' %}"
         >
-            Review
+            Review Now
         </a>
+
     </div>
 
+
     <div class="card">
+
+        <h3>
+            Mastered Items
+        </h3>
+
+        <div class="stat-number">
+            {{ mastered_total }}
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
         <h3>
             Unresolved Errors
         </h3>
-        <h2>
-            {{ unresolved_errors }}
-        </h2>
+
+        <div class="stat-number">
+            {{ unresolved_error_count }}
+        </div>
+
         <a
-            class="button button-secondary"
+            class="button"
             href="{% url 'learning:my_errors' %}"
         >
             View Errors
         </a>
+
     </div>
 
 </div>
 
 
-<div class="section">
-
 <h2>
-    Learning Programs
+    My Learning Programs
 </h2>
+
 
 <div class="cards">
 
-{% for program in programs %}
-
-    {% if program.is_active %}
-
-    <div class="card course-card">
+    <div class="card">
 
         <span class="badge">
-            {{ program.get_program_type_display }}
+            General English & IELTS
         </span>
 
-        <h3>
-            {{ program.title }}
-        </h3>
+        <h2>
+            General English
+        </h2>
+
+
+        {% if general_enrollment %}
 
         <p>
-            {{ program.description|truncatewords:20 }}
+            <strong>
+                Your Level:
+            </strong>
+
+            {% if general_enrollment.assigned_level %}
+                {{ general_enrollment.assigned_level }}
+            {% else %}
+                Not assessed yet
+            {% endif %}
         </p>
 
-        {% if program.program_type == "IELTS" %}
-            <a
-                class="button"
-                href="{% url 'learning:ielts_dashboard' %}"
-            >
-                Open IELTS
-            </a>
-        {% elif program.program_type == "AEROSPACE_ESP" %}
-            <a
-                class="button"
-                href="{% url 'learning:aerospace_dashboard' %}"
-            >
-                Open Aerospace English
-            </a>
+
+        <p>
+            <strong>
+                Class:
+            </strong>
+
+            {% if general_enrollment.class_name %}
+                {{ general_enrollment.class_name }}
+            {% else %}
+                Not assigned
+            {% endif %}
+        </p>
+
+
+        <p>
+            <strong>
+                Placement:
+            </strong>
+
+            {{ general_enrollment.get_placement_status_display }}
+        </p>
+
         {% else %}
-            <a
-                class="button"
-                href="#"
-            >
-                View Program
-            </a>
+
+        <p>
+            No active enrollment.
+        </p>
+
         {% endif %}
+
+
+        <hr>
+
+
+        <p>
+            Tracked Items:
+            <strong>
+                {{ general_progress.tracked }}
+            </strong>
+        </p>
+
+        <p>
+            Mastered:
+            <strong>
+                {{ general_progress.mastered }}
+            </strong>
+        </p>
+
+        <p>
+            Accuracy:
+            <strong>
+                {{ general_progress.accuracy }}%
+            </strong>
+        </p>
+
+        <p>
+            Due:
+            <strong>
+                {{ general_progress.due }}
+            </strong>
+        </p>
+
+
+        <div class="progress-track">
+
+            <div
+                class="progress-fill"
+                style="width: {{ general_progress.mastery_percent }}%;"
+            >
+            </div>
+
+        </div>
+
+        <p>
+            {{ general_progress.mastery_percent }}%
+            Mastery
+        </p>
+
+        {% if not general_enrollment or not general_enrollment.assigned_level %}
+
+        <a
+            class="button"
+            href="{% url 'learning:placement_test' %}"
+        >
+            Take Placement Test
+        </a>
+
+        {% else %}
+
+        <a
+            class="button"
+            href="{% url 'learning:placement_test' %}"
+        >
+            Retake Placement Test
+        </a>
+
+        {% endif %}
+
+        <a
+            class="button"
+            href="{% url 'learning:ielts_dashboard' %}"
+        >
+            Open Program
+        </a>
 
     </div>
 
-    {% endif %}
+
+    <div class="card">
+
+        <span class="badge">
+            Aerospace English & ESP
+        </span>
+
+        <h2>
+            Aerospace English
+        </h2>
+
+
+        {% if aerospace_enrollment %}
+
+        <p>
+            <strong>
+                Your Level:
+            </strong>
+
+            {% if aerospace_enrollment.assigned_level %}
+                {{ aerospace_enrollment.assigned_level }}
+            {% else %}
+                Not assessed yet
+            {% endif %}
+        </p>
+
+
+        <p>
+            <strong>
+                Class:
+            </strong>
+
+            {% if aerospace_enrollment.class_name %}
+                {{ aerospace_enrollment.class_name }}
+            {% else %}
+                Not assigned
+            {% endif %}
+        </p>
+
+
+        <p>
+            <strong>
+                Placement:
+            </strong>
+
+            {{ aerospace_enrollment.get_placement_status_display }}
+        </p>
+
+        {% else %}
+
+        <p>
+            No active enrollment.
+        </p>
+
+        {% endif %}
+
+
+        <hr>
+
+
+        <p>
+            Tracked Items:
+            <strong>
+                {{ aerospace_progress.tracked }}
+            </strong>
+        </p>
+
+        <p>
+            Mastered:
+            <strong>
+                {{ aerospace_progress.mastered }}
+            </strong>
+        </p>
+
+        <p>
+            Accuracy:
+            <strong>
+                {{ aerospace_progress.accuracy }}%
+            </strong>
+        </p>
+
+        <p>
+            Due:
+            <strong>
+                {{ aerospace_progress.due }}
+            </strong>
+        </p>
+
+
+        <div class="progress-track">
+
+            <div
+                class="progress-fill"
+                style="width: {{ aerospace_progress.mastery_percent }}%;"
+            >
+            </div>
+
+        </div>
+
+        <p>
+            {{ aerospace_progress.mastery_percent }}%
+            Mastery
+        </p>
+
+
+        <a
+            class="button"
+            href="{% url 'learning:aerospace_dashboard' %}"
+        >
+            Open Program
+        </a>
+
+    </div>
+
+</div>
+
+
+<h2>
+    Quick Actions
+</h2>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Daily Practice
+        </h3>
+
+        <p>
+            Practice due, new, and weak-area questions.
+        </p>
+
+        <a
+            class="button"
+            href="{% url 'learning:daily_practice' %}"
+        >
+            Start Practice
+        </a>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Review Queue
+        </h3>
+
+        <p>
+            Continue your spaced-repetition schedule.
+        </p>
+
+        <a
+            class="button"
+            href="{% url 'learning:review_due' %}"
+        >
+            Open Queue
+        </a>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Error Analysis
+        </h3>
+
+        <p>
+            Review recurring mistakes and weak areas.
+        </p>
+
+        <a
+            class="button"
+            href="{% url 'learning:my_errors' %}"
+        >
+            Analyze Errors
+        </a>
+
+    </div>
+
+</div>
+
+
+<h2>
+    Weak Areas
+</h2>
+
+
+<div class="cards">
+
+{% for area in weak_areas %}
+
+<div class="card">
+
+    <h3>
+        {{ area.category }}
+    </h3>
+
+    <div class="stat-number">
+        {{ area.total }}
+    </div>
+
+</div>
 
 {% empty %}
 
-    <p>No learning programs available.</p>
+<div class="card">
+
+    <p>
+        No unresolved weak areas yet.
+    </p>
+
+</div>
 
 {% endfor %}
 
 </div>
 
-</div>
-
-
-<div class="section">
 
 <h2>
-    Recent Learning
+    Recent Errors
 </h2>
 
-{% if recent_items %}
 
-<table>
+{% for error in recent_errors %}
 
-<tr>
-    <th>Item</th>
-    <th>Type</th>
-    <th>Course</th>
-    <th>Date</th>
-</tr>
+<div class="module">
 
-{% for item in recent_items %}
+    <span class="badge">
+        {{ error.get_category_display }}
+    </span>
 
-<tr>
+    {% if error.learning_item %}
 
-    <td>
-        {{ item.title }}
-    </td>
+    <strong>
+        {{ error.learning_item.title }}
+    </strong>
 
-    <td>
-        {{ item.get_item_type_display }}
-    </td>
+    {% endif %}
 
-    <td>
-        {{ item.module.course.title }}
-    </td>
+    <p>
+        Your answer:
+        {{ error.student_response }}
+    </p>
 
-    <td>
-        {{ item.created_at|date:"Y-m-d" }}
-    </td>
+    <p>
+        Expected:
+        {{ error.expected_response }}
+    </p>
 
-</tr>
+</div>
+
+{% empty %}
+
+<div class="card">
+
+    No recent errors.
+
+</div>
 
 {% endfor %}
 
-</table>
-
-{% else %}
-
-<p>
-    No learning items recorded yet.
-</p>
-
-{% endif %}
-
-</div>
 
 {% endblock %}

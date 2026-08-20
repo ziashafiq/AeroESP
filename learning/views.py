@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import (
@@ -33,95 +34,86 @@ from .models import (
     LearningItemQuestion,
     LearningProgress,
     LearningProgram,
+    PlacementAttempt,
+    PlacementQuestion,
+    PlacementResponse,
 )
 
 
 @login_required
 def dashboard(request):
+    # Enrollments
+    general_enrollment = Enrollment.objects.filter(
+        student=request.user,
+        course__program__program_type=LearningProgram.ProgramType.IELTS,
+        status=Enrollment.Status.ACTIVE
+    ).first()
 
-    programs = (
-        LearningProgram.objects
-        .filter(
-            is_active=True,
-        )
-        .prefetch_related(
-            "courses",
-        )
-        .order_by(
-            "order",
-        )
-    )
+    aerospace_enrollment = Enrollment.objects.filter(
+        student=request.user,
+        course__program__program_type=LearningProgram.ProgramType.AEROSPACE_ESP,
+        status=Enrollment.Status.ACTIVE
+    ).first()
 
-    enrollments = (
-        Enrollment.objects
-        .filter(
+    # Progress per program
+    def get_progress(program_type):
+        qs = LearningProgress.objects.filter(
             student=request.user,
-            status=Enrollment.Status.ACTIVE,
+            learning_item__module__course__program__program_type=program_type
         )
-        .select_related(
-            "course",
-            "course__program",
-        )
+        tracked = qs.count()
+        mastered = qs.filter(status=LearningProgress.Status.MASTERED).count()
+        return round(mastered / tracked * 100) if tracked else 0
+
+    general_progress = get_progress(LearningProgram.ProgramType.IELTS)
+    aerospace_progress = get_progress(LearningProgram.ProgramType.AEROSPACE_ESP)
+
+    # Overall progress
+    progress_qs = LearningProgress.objects.filter(student=request.user)
+    due_review_count = progress_qs.filter(
+        next_review_at__lte=timezone.now()
+    ).exclude(
+        status=LearningProgress.Status.MASTERED
+    ).count()
+
+    mastered_total = progress_qs.filter(
+        status=LearningProgress.Status.MASTERED
+    ).count()
+
+    # Error analysis
+    unresolved_errors = LearnerError.objects.filter(
+        student=request.user,
+        resolved=False,
     )
 
-    recent_items = (
-        LearningItem.objects
-        .filter(
-            created_by=request.user,
-        )
-        .select_related(
-            "module",
-            "module__course",
-        )
-        .order_by(
-            "-created_at",
-        )[:5]
+    weak_areas = (
+        unresolved_errors
+        .values("category")
+        .annotate(total=Count("id"))
+        .order_by("-total", "category")[:5]
     )
 
-    review_due_count = (
-        LearningProgress.objects
-        .filter(
-            student=request.user,
-            next_review_at__lte=timezone.now(),
-        )
-        .exclude(
-            status=(
-                LearningProgress.Status.MASTERED
-            )
-        )
-        .count()
-    )
-
-    unresolved_errors = (
+    recent_errors = (
         LearnerError.objects
-        .filter(
-            student=request.user,
-            resolved=False,
-        )
-        .count()
+        .filter(student=request.user)
+        .select_related("learning_item", "question")
+        .order_by("-occurred_at")[:5]
     )
-
-    learned_count = (
-        LearningItem.objects
-        .filter(
-            created_by=request.user,
-        )
-        .count()
-    )
-
-    context = {
-        "programs": programs,
-        "enrollments": enrollments,
-        "recent_items": recent_items,
-        "review_due_count": review_due_count,
-        "unresolved_errors": unresolved_errors,
-        "learned_count": learned_count,
-    }
 
     return render(
         request,
         "learning/dashboard.html",
-        context,
+        {
+            "general_enrollment": general_enrollment,
+            "aerospace_enrollment": aerospace_enrollment,
+            "general_progress": general_progress,
+            "aerospace_progress": aerospace_progress,
+            "due_review_count": due_review_count,
+            "mastered_total": mastered_total,
+            "unresolved_error_count": unresolved_errors.count(),
+            "weak_areas": weak_areas,
+            "recent_errors": recent_errors,
+        },
     )
 
 
@@ -1682,5 +1674,528 @@ def module_detail(
             "tracked_count": tracked_count,
             "mastered_count": mastered_count,
             "progress_percent": progress_percent,
+        },
+    )
+
+
+# =========================================================
+# Helper to build course dashboard (used above)
+# =========================================================
+
+def _build_course_dashboard(
+    request,
+    program_type,
+):
+
+    program = get_object_or_404(
+        LearningProgram,
+        program_type=program_type,
+        is_active=True,
+    )
+
+    course = (
+        LearningCourse.objects
+        .filter(
+            program=program,
+            is_active=True,
+        )
+        .order_by("order")
+        .first()
+    )
+
+    if course is None:
+        return {
+            "program": program,
+            "course": None,
+            "enrollment": None,
+            "module_cards": [],
+            "course_progress": 0,
+            "total_items": 0,
+            "mastered_items": 0,
+        }
+
+    enrollment = (
+        Enrollment.objects
+        .filter(
+            student=request.user,
+            course=course,
+        )
+        .first()
+    )
+
+    modules = (
+        course.modules
+        .filter(
+            is_active=True,
+        )
+        .order_by("order")
+    )
+
+    module_cards = []
+
+    total_tracked = 0
+    total_mastered = 0
+
+    for module in modules:
+
+        progress_qs = (
+            LearningProgress.objects
+            .filter(
+                student=request.user,
+                learning_item__module=module,
+            )
+        )
+
+        tracked = progress_qs.count()
+
+        mastered = (
+            progress_qs
+            .filter(
+                status=(
+                    LearningProgress
+                    .Status
+                    .MASTERED
+                )
+            )
+            .count()
+        )
+
+        progress_percent = (
+            round(
+                mastered
+                / tracked
+                * 100
+            )
+            if tracked
+            else 0
+        )
+
+        personal_items = (
+            LearningItem.objects
+            .filter(
+                module=module,
+                created_by=request.user,
+            )
+            .count()
+        )
+
+        public_items = (
+            LearningItem.objects
+            .filter(
+                module=module,
+                is_public=True,
+            )
+            .exclude(
+                created_by=request.user,
+            )
+            .count()
+        )
+
+        module_cards.append(
+            {
+                "module": module,
+                "tracked": tracked,
+                "mastered": mastered,
+                "progress_percent": (
+                    progress_percent
+                ),
+                "personal_items": (
+                    personal_items
+                ),
+                "public_items": (
+                    public_items
+                ),
+            }
+        )
+
+        total_tracked += tracked
+        total_mastered += mastered
+
+    course_progress = (
+        round(
+            total_mastered
+            / total_tracked
+            * 100
+        )
+        if total_tracked
+        else 0
+    )
+
+    return {
+        "program": program,
+        "course": course,
+        "enrollment": enrollment,
+        "module_cards": module_cards,
+        "course_progress": course_progress,
+        "total_items": total_tracked,
+        "mastered_items": total_mastered,
+    }
+
+
+# =========================================================
+# Placement Test Helpers and Views
+# =========================================================
+
+PLACEMENT_SKILLS = (
+    Question.Skill.VOCABULARY,
+    Question.Skill.GRAMMAR,
+    Question.Skill.READING,
+    Question.Skill.LISTENING,
+)
+
+
+def _placement_level_from_score(
+    score,
+):
+    """
+    Internal development mapping.
+
+    This is NOT an official IELTS-to-CEFR
+    conversion.
+    """
+
+    value = float(
+        score
+    )
+
+    if value < 30:
+        return (
+            "A1",
+            Decimal("3.0"),
+        )
+
+    if value < 45:
+        return (
+            "A2",
+            Decimal("4.0"),
+        )
+
+    if value < 60:
+        return (
+            "B1",
+            Decimal("5.0"),
+        )
+
+    if value < 75:
+        return (
+            "B2",
+            Decimal("6.0"),
+        )
+
+    if value < 90:
+        return (
+            "C1",
+            Decimal("7.0"),
+        )
+
+    return (
+        "C2",
+        Decimal("8.0"),
+    )
+
+
+@login_required
+def placement_test(request):
+    """
+    Show a page to choose which program to take the placement test for.
+    """
+    programs = LearningProgram.objects.filter(is_active=True)
+    return render(
+        request,
+        "learning/placement_select.html",
+        {"programs": programs},
+    )
+
+
+@login_required
+def placement_test_start(
+    request,
+    program_type,
+):
+
+    program = get_object_or_404(
+        LearningProgram,
+        program_type=program_type,
+        is_active=True,
+    )
+
+    # Check if there's an in-progress attempt
+    attempt = (
+        PlacementAttempt.objects
+        .filter(
+            student=request.user,
+            program=program,
+            status=PlacementAttempt.Status.IN_PROGRESS,
+        )
+        .first()
+    )
+
+    if attempt is None:
+        # Create a new attempt
+        attempt = PlacementAttempt.objects.create(
+            student=request.user,
+            program=program,
+        )
+
+        # Select questions for this attempt
+        question_ids = (
+            PlacementQuestion.objects
+            .filter(
+                program=program,
+                is_active=True,
+                question__status=Question.Status.APPROVED,
+            )
+            .values_list("question_id", flat=True)
+            .order_by("order", "?")
+        )
+
+        # Shuffle and limit to e.g. 20 questions
+        question_ids = list(question_ids)
+        # We'll take up to 20 questions, ensuring we have some from each skill
+        # For simplicity, we'll take the first 20 or all
+        selected_ids = question_ids[:20]
+
+        # Create placement responses for each question (empty, not answered yet)
+        for q_id in selected_ids:
+            question = Question.objects.get(pk=q_id)
+            PlacementResponse.objects.create(
+                attempt=attempt,
+                question=question,
+                selected_answer="",  # empty until answered
+                correct_answer_snapshot=question.correct_answer or "",
+                skill_snapshot=question.skill or "",
+                is_correct=False,
+            )
+
+    # Get the first unanswered question (if any)
+    next_response = (
+        attempt.responses
+        .filter(selected_answer="")
+        .order_by("question_id")
+        .first()
+    )
+
+    if next_response is None:
+        # All questions answered? Then we should auto-submit? Or redirect to result.
+        # For now, redirect to submit.
+        return redirect(
+            "learning:placement_test_submit",
+            attempt_id=attempt.pk,
+        )
+
+    return render(
+        request,
+        "learning/placement_question.html",
+        {
+            "attempt": attempt,
+            "response": next_response,
+            "question": next_response.question,
+            "total": attempt.responses.count(),
+            "answered": attempt.responses.exclude(selected_answer="").count(),
+        },
+    )
+
+
+@login_required
+def placement_test_question(
+    request,
+    attempt_id,
+):
+
+    attempt = get_object_or_404(
+        PlacementAttempt,
+        pk=attempt_id,
+        student=request.user,
+        status=PlacementAttempt.Status.IN_PROGRESS,
+    )
+
+    # Get the first unanswered question
+    next_response = (
+        attempt.responses
+        .filter(selected_answer="")
+        .order_by("question_id")
+        .first()
+    )
+
+    if next_response is None:
+        # All answered, redirect to submit
+        return redirect(
+            "learning:placement_test_submit",
+            attempt_id=attempt.pk,
+        )
+
+    if request.method == "POST":
+        selected = request.POST.get("answer", "").strip().upper()
+        if selected in ("A", "B", "C", "D"):
+            next_response.selected_answer = selected
+            next_response.is_correct = (
+                selected == next_response.correct_answer_snapshot
+            )
+            next_response.answered_at = timezone.now()
+            next_response.save()
+
+            # Mark attempt as in progress (already)
+
+            # Redirect to next question
+            return redirect(
+                "learning:placement_test_question",
+                attempt_id=attempt.pk,
+            )
+
+    return render(
+        request,
+        "learning/placement_question.html",
+        {
+            "attempt": attempt,
+            "response": next_response,
+            "question": next_response.question,
+            "total": attempt.responses.count(),
+            "answered": attempt.responses.exclude(selected_answer="").count(),
+        },
+    )
+
+
+@login_required
+def placement_test_submit(
+    request,
+    attempt_id,
+):
+
+    attempt = get_object_or_404(
+        PlacementAttempt,
+        pk=attempt_id,
+        student=request.user,
+        status=PlacementAttempt.Status.IN_PROGRESS,
+    )
+
+    # Ensure all questions are answered
+    unanswered = attempt.responses.filter(selected_answer="")
+    if unanswered.exists():
+        messages.warning(request, "Please answer all questions before submitting.")
+        return redirect(
+            "learning:placement_test_question",
+            attempt_id=attempt.pk,
+        )
+
+    # Compute scores
+    responses = attempt.responses.all()
+    total = responses.count()
+
+    # Skill breakdown
+    skills = {}
+    for skill in PLACEMENT_SKILLS:
+        skill_responses = responses.filter(skill_snapshot=skill)
+        total_skill = skill_responses.count()
+        correct_skill = skill_responses.filter(is_correct=True).count()
+        score = (correct_skill / total_skill * 100) if total_skill else 0
+        skills[skill] = score
+
+    vocabulary_score = skills.get(Question.Skill.VOCABULARY, 0)
+    grammar_score = skills.get(Question.Skill.GRAMMAR, 0)
+    reading_score = skills.get(Question.Skill.READING, 0)
+    listening_score = skills.get(Question.Skill.LISTENING, 0)
+
+    # Overall score (average of skill scores)
+    overall_score = (
+        vocabulary_score + grammar_score + reading_score + listening_score
+    ) / 4
+
+    # Determine level
+    cefr_level, ielts_estimate = _placement_level_from_score(
+        overall_score
+    )
+
+    attempt.vocabulary_score = vocabulary_score
+    attempt.grammar_score = grammar_score
+    attempt.reading_score = reading_score
+    attempt.listening_score = listening_score
+    attempt.overall_score = overall_score
+    attempt.cefr_level = cefr_level
+    attempt.ielts_estimate = ielts_estimate
+    attempt.status = PlacementAttempt.Status.COMPLETED
+    attempt.completed_at = timezone.now()
+    attempt.save()
+
+    # Update enrollment
+    program = attempt.program
+    course = (
+        program.courses
+        .filter(is_active=True)
+        .order_by("order", "pk")
+        .first()
+    )
+
+    if course is not None:
+        enrollment, _ = Enrollment.objects.get_or_create(
+            student=request.user,
+            course=course,
+        )
+        enrollment.status = Enrollment.Status.ACTIVE
+        enrollment.assigned_level = cefr_level
+        enrollment.placement_status = Enrollment.PlacementStatus.PLACEMENT_TEST
+        enrollment.placement_updated_at = timezone.now()
+        enrollment.save()
+
+    return redirect(
+        "learning:placement_result",
+        attempt_id=attempt.pk,
+    )
+
+
+@login_required
+def placement_result(
+    request,
+    attempt_id,
+):
+
+    attempt = get_object_or_404(
+        PlacementAttempt.objects
+        .select_related(
+            "program",
+        ),
+        pk=attempt_id,
+        student=request.user,
+        status=(
+            PlacementAttempt
+            .Status
+            .COMPLETED
+        ),
+    )
+
+    responses = (
+        attempt.responses
+        .select_related(
+            "question",
+        )
+        .order_by(
+            "question__skill",
+            "question_id",
+        )
+    )
+
+    correct_count = (
+        responses
+        .filter(
+            is_correct=True,
+        )
+        .count()
+    )
+
+    total_count = (
+        responses.count()
+    )
+
+    return render(
+        request,
+        "learning/placement_result.html",
+        {
+            "attempt": attempt,
+            "responses": responses,
+            "correct_count": (
+                correct_count
+            ),
+            "total_count": (
+                total_count
+            ),
         },
     )
