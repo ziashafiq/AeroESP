@@ -1,0 +1,116 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+AI Intelligence | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="program-header">
+
+    <h1>
+        AI Intelligence
+    </h1>
+
+    <p>
+        Explainable AI assistance for
+        question analysis and learner insights.
+    </p>
+
+</div>
+
+
+<h2>
+    Recent Question Suggestions
+</h2>
+
+{% for item in suggestions %}
+
+<div class="module">
+
+    <h3>
+        Question {{ item.question_id }}
+    </h3>
+
+    <p>
+        Track:
+        {{ item.suggested_track }}
+    </p>
+
+    <p>
+        Skill:
+        {{ item.suggested_skill }}
+    </p>
+
+    <p>
+        Difficulty:
+        {{ item.suggested_difficulty }}
+    </p>
+
+    <p>
+        Confidence:
+        {{ item.confidence }}
+    </p>
+
+    <p>
+        Status:
+        {{ item.get_status_display }}
+    </p>
+
+    <a
+        class="button"
+        href="{% url 'intelligence:suggestion_detail' item.pk %}"
+    >
+        Review
+    </a>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No AI question analyses yet.
+</div>
+
+{% endfor %}
+
+
+<h2>
+    Recent Learner Insights
+</h2>
+
+{% for insight in insights %}
+
+<div class="module">
+
+    <h3>
+        {{ insight.student.username }}
+    </h3>
+
+    <p>
+        Scope:
+        {{ insight.get_scope_display }}
+    </p>
+
+    <p>
+        Risk:
+        {{ insight.risk_band }}
+        /
+        {{ insight.risk_score }}
+    </p>
+
+    <p>
+        {{ insight.summary }}
+    </p>
+
+</div>
+
+{% empty %}
+
+<div class="card">
+    No learner insight snapshots yet.
+</div>
+
+{% endfor %}
+
+{% endblock %}

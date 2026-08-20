@@ -1,0 +1,49 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+AI Question Analysis | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>
+    AI Question Analysis
+</h1>
+
+<div class="card">
+
+    <h3>
+        {{ question.question_text }}
+    </h3>
+
+    <p>
+        Current Track:
+        {{ question.track }}
+    </p>
+
+    <p>
+        Current Skill:
+        {{ question.skill }}
+    </p>
+
+    <p>
+        Current Difficulty:
+        {{ question.difficulty }}
+    </p>
+
+</div>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <button
+        type="submit"
+        class="button"
+    >
+        Analyze Question
+    </button>
+
+</form>
+
+{% endblock %}

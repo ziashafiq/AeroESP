@@ -1,0 +1,72 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+AI Learner Insight | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>
+    Learner Insight
+</h1>
+
+<h2>
+    {{ student_object.username }}
+</h2>
+
+
+<div class="cards">
+
+    <div class="card">
+
+        <h3>
+            Risk Score
+        </h3>
+
+        <div class="stat-number">
+            {{ snapshot.risk_score }}
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h3>
+            Risk Band
+        </h3>
+
+        <div class="stat-number">
+            {{ snapshot.risk_band }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    <h3>
+        Evidence-based Summary
+    </h3>
+
+    <p>
+        {{ snapshot.summary }}
+    </p>
+
+</div>
+
+
+<h2>
+    Recommended Actions
+</h2>
+
+{% for recommendation in snapshot.recommendations %}
+
+<div class="module">
+    {{ recommendation }}
+</div>
+
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+AI Suggestion | AeroESP
+{% endblock %}
+
+{% block content %}
+
+<h1>
+    AI Question Suggestion
+</h1>
+
+
+<div class="card">
+
+    <h3>
+        {{ suggestion.question.question_text }}
+    </h3>
+
+    <p>
+        <strong>Track:</strong>
+        {{ suggestion.suggested_track }}
+    </p>
+
+    <p>
+        <strong>Skill:</strong>
+        {{ suggestion.suggested_skill }}
+    </p>
+
+    <p>
+        <strong>Difficulty:</strong>
+        {{ suggestion.suggested_difficulty }}
+    </p>
+
+    <p>
+        <strong>Domain:</strong>
+
+        {% if suggestion.suggested_domain %}
+            {{ suggestion.suggested_domain.name }}
+        {% else %}
+            Not suggested
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Topic:</strong>
+
+        {% if suggestion.suggested_topic %}
+            {{ suggestion.suggested_topic.name }}
+        {% else %}
+            Not suggested
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Confidence:</strong>
+        {{ suggestion.confidence }}
+    </p>
+
+    <p>
+        <strong>Reasoning:</strong>
+        {{ suggestion.rationale }}
+    </p>
+
+</div>
+
+
+{% if suggestion.status == "PENDING" %}
+
+<form
+    method="post"
+    action="{% url 'intelligence:review_suggestion' suggestion.pk 'accept' %}"
+    style="display:inline;"
+>
+    {% csrf_token %}
+
+    <button
+        class="button"
+        type="submit"
+    >
+        Accept Suggestion
+    </button>
+
+</form>
+
+
+<form
+    method="post"
+    action="{% url 'intelligence:review_suggestion' suggestion.pk 'reject' %}"
+    style="display:inline;"
+>
+    {% csrf_token %}
+
+    <button
+        class="button"
+        type="submit"
+    >
+        Reject Suggestion
+    </button>
+
+</form>
+
+{% else %}
+
+<p>
+    Review status:
+    <strong>
+        {{ suggestion.get_status_display }}
+    </strong>
+</p>
+
+{% endif %}
+
+{% endblock %}

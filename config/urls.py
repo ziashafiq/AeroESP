@@ -52,4 +52,9 @@ urlpatterns = [
         "",
         include("assessment.urls"),
     ),
+
+    path(
+        "ai/",
+        include("intelligence.urls"),
+    ),
 ]
