@@ -6,13 +6,13 @@ from django.core.management import call_command
 from django.test import TestCase, SimpleTestCase
 from django.urls import reverse
 
-from learning.models import LearningCourse
-from learning.views import _course_level_from_cefr
-
-from .models import (
+from accounts.models import (
     StudentProfile,
     TeacherProfile,
 )
+
+from learning.models import LearningCourse
+from learning.views import _course_level_from_cefr
 
 
 class AccountsFoundationTests(TestCase):
