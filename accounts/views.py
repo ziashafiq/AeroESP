@@ -89,9 +89,8 @@ def student_dashboard(request):
 @approved_teacher_required
 def teacher_dashboard(request):
 
-    return render(
-        request,
-        "accounts/teacher_dashboard.html",
+    return redirect(
+        "learning:teacher_learning_dashboard"
     )
 
 

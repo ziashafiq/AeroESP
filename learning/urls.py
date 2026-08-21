@@ -122,6 +122,12 @@ urlpatterns = [
     ),
 
     path(
+        "analytics/",
+        views.learning_analytics,
+        name="learning_analytics",
+    ),
+
+    path(
         "teacher/",
         views.teacher_learning_dashboard,
         name="teacher_learning_dashboard",
