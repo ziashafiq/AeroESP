@@ -9,6 +9,7 @@ from .models import (
     LearningItemQuestion,
     LearningProgram,
     LearningProgress,
+    Resource,
 )
 
 
@@ -182,4 +183,34 @@ class LearnerErrorAdmin(
         "student_response",
         "expected_response",
         "note",
+    )
+
+
+@admin.register(Resource)
+class ResourceAdmin(
+    admin.ModelAdmin
+):
+    list_display = (
+        "title",
+        "resource_type",
+        "visibility",
+        "course",
+        "module",
+        "uploaded_by",
+        "is_active",
+        "created_at",
+    )
+
+    list_filter = (
+        "resource_type",
+        "visibility",
+        "is_active",
+        "course",
+        "module",
+    )
+
+    search_fields = (
+        "title",
+        "description",
+        "uploaded_by__username",
     )
