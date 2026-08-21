@@ -1,9 +1,8 @@
 <h2>My Resources</h2>
 
 <a href="{% url 'learning:teacher_resource_create' %}">
-Add Resource
+    Add Resource
 </a>
-
 
 {% for resource in resources %}
 
@@ -12,14 +11,23 @@ Add Resource
 <h3>{{ resource.title }}</h3>
 
 <p>
-{{ resource.description }}
+    {{ resource.description }}
 </p>
 
 <p>
-Visibility:
-{{ resource.visibility }}
+    Visibility: {{ resource.visibility }}
 </p>
 
+<p>
+    <a href="{% url 'learning:teacher_resource_edit' resource.id %}">Edit</a>
+
+    <form method="post"
+          action="{% url 'learning:teacher_resource_delete' resource.id %}"
+          style="display:inline">
+        {% csrf_token %}
+        <button type="submit">Delete</button>
+    </form>
+</p>
 
 {% empty %}
 

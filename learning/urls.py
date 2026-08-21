@@ -140,6 +140,18 @@ urlpatterns = [
     ),
 
     path(
+        "teacher/resources/<int:resource_id>/edit/",
+        views.teacher_resource_edit,
+        name="teacher_resource_edit",
+    ),
+
+    path(
+        "teacher/resources/<int:resource_id>/delete/",
+        views.teacher_resource_delete,
+        name="teacher_resource_delete",
+    ),
+
+    path(
         "teacher/courses/<int:course_id>/class/",
         views.teacher_class_detail,
         name="teacher_class_detail",

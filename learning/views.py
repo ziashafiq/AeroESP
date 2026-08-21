@@ -3540,6 +3540,68 @@ def teacher_resource_list(request):
 
 
 # =========================================================
+# Teacher Resource Edit
+# =========================================================
+
+@login_required
+@approved_teacher_required
+def teacher_resource_edit(request, resource_id):
+    resource = get_object_or_404(
+        Resource,
+        id=resource_id,
+        uploaded_by=request.user,
+    )
+
+    if request.method == "POST":
+        form = ResourceForm(
+            request.POST,
+            request.FILES,
+            instance=resource,
+        )
+
+        if form.is_valid():
+            form.save()
+            return redirect(
+                "learning:teacher_resource_list"
+            )
+
+    else:
+        form = ResourceForm(
+            instance=resource
+        )
+
+    return render(
+        request,
+        "learning/teacher_resource_form.html",
+        {
+            "form": form,
+            "resource": resource,
+        },
+    )
+
+
+# =========================================================
+# Teacher Resource Delete
+# =========================================================
+
+@login_required
+@approved_teacher_required
+def teacher_resource_delete(request, resource_id):
+    resource = get_object_or_404(
+        Resource,
+        id=resource_id,
+        uploaded_by=request.user,
+    )
+
+    if request.method == "POST":
+        resource.delete()
+
+    return redirect(
+        "learning:teacher_resource_list"
+    )
+
+
+# =========================================================
 # Guide Hub
 # =========================================================
 
