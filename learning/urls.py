@@ -156,4 +156,10 @@ urlpatterns = [
         views.teacher_resource_create,
         name="teacher_resource_create",
     ),
+
+    path(
+        "teacher/resources/",
+        views.teacher_resource_list,
+        name="teacher_resource_list",
+    ),
 ]

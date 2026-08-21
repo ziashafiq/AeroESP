@@ -1,0 +1,28 @@
+<h2>My Resources</h2>
+
+<a href="{% url 'learning:teacher_resource_create' %}">
+Add Resource
+</a>
+
+
+{% for resource in resources %}
+
+<hr>
+
+<h3>{{ resource.title }}</h3>
+
+<p>
+{{ resource.description }}
+</p>
+
+<p>
+Visibility:
+{{ resource.visibility }}
+</p>
+
+
+{% empty %}
+
+<p>No resources uploaded.</p>
+
+{% endfor %}

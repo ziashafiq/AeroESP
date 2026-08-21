@@ -3515,3 +3515,24 @@ def resource_list(request):
             "resources": resources,
         },
     )
+
+
+# =========================================================
+# Teacher Resource List
+# =========================================================
+
+@login_required
+def teacher_resource_list(request):
+    resources = Resource.objects.filter(
+        uploaded_by=request.user
+    ).order_by(
+        "-created_at"
+    )
+
+    return render(
+        request,
+        "learning/teacher_resource_list.html",
+        {
+            "resources": resources,
+        },
+    )
