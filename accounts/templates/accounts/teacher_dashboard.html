@@ -36,6 +36,28 @@
 
     <hr>
 
+    <h2>Learning Management</h2>
+
+    <p>
+        <a href="{% url 'learning:teacher_learning_dashboard' %}">
+            Learning Dashboard
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'learning:teacher_resource_list' %}">
+            Manage Resources
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'learning:guide_hub' %}">
+            Guide Hub
+        </a>
+    </p>
+
+    <hr>
+
     <form
         method="post"
         action="{% url 'accounts:logout' %}"

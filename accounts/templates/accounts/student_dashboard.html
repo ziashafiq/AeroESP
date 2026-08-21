@@ -18,6 +18,40 @@
         {{ request.user.student_profile.get_primary_aerospace_field_display }}
     </p>
 
+    <hr>
+
+    <h2>Learning</h2>
+
+    <p>
+        <a href="{% url 'learning:dashboard' %}">
+            Learning Dashboard
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'learning:my_courses' %}">
+            My Courses
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'learning:guide_hub' %}">
+            Language & Aerospace Guide Hub
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'learning:resource_list' %}">
+            Learning Resources
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'learning:placement_test' %}">
+            Placement Test
+        </a>
+    </p>
+
     <form
         method="post"
         action="{% url 'accounts:logout' %}"
