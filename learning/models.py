@@ -1364,3 +1364,90 @@ class LearningEvent(models.Model):
             f"{self.event_type} - "
             f"{self.occurred_at}"
         )
+
+
+class Resource(models.Model):
+
+    class ResourceType(models.TextChoices):
+        PDF = "PDF", "PDF"
+        VIDEO = "VIDEO", "Video"
+        AUDIO = "AUDIO", "Audio"
+        SLIDE = "SLIDE", "Slide"
+        LINK = "LINK", "External Link"
+        OTHER = "OTHER", "Other"
+
+    class Visibility(models.TextChoices):
+        PUBLIC = "PUBLIC", "Public"
+        COURSE = "COURSE", "Course Students"
+        MODULE = "MODULE", "Module Students"
+
+    title = models.CharField(
+        max_length=250,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    resource_type = models.CharField(
+        max_length=20,
+        choices=ResourceType.choices,
+    )
+
+    file = models.FileField(
+        upload_to="learning/resources/",
+        blank=True,
+        null=True,
+    )
+
+    external_url = models.URLField(
+        blank=True,
+    )
+
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="uploaded_learning_resources",
+    )
+
+    course = models.ForeignKey(
+        LearningCourse,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="resources",
+    )
+
+    module = models.ForeignKey(
+        CourseModule,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="resources",
+    )
+
+    visibility = models.CharField(
+        max_length=20,
+        choices=Visibility.choices,
+        default=Visibility.COURSE,
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        ordering = [
+            "-created_at",
+        ]
+
+    def __str__(self):
+        return self.title

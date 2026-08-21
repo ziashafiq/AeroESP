@@ -17,6 +17,8 @@ from django.shortcuts import (
 )
 from django.utils import timezone
 
+from accounts.decorators import approved_teacher_required
+
 from assessment.models import (
     AerospaceTopic,
     Question,
@@ -25,6 +27,7 @@ from assessment.models import (
 from .forms import (
     LearningItemForm,
     LearningQuestionForm,
+    ResourceForm,
 )
 
 from .models import (
@@ -40,6 +43,7 @@ from .models import (
     PlacementAttempt,
     PlacementQuestion,
     PlacementResponse,
+    Resource,
 )
 
 
@@ -3444,5 +3448,46 @@ def teacher_student_detail(request, student_id):
             "latest_placement": latest_placement,
             "errors": errors,
             "weak_areas": weak_areas,
+        },
+    )
+
+
+# =========================================================
+# Teacher Resource Creation
+# =========================================================
+
+@approved_teacher_required
+def teacher_resource_create(request):
+
+    if request.method == "POST":
+
+        form = ResourceForm(
+            request.POST,
+            request.FILES
+        )
+
+        if form.is_valid():
+
+            resource = form.save(
+                commit=False
+            )
+
+            resource.uploaded_by = request.user
+
+            resource.save()
+
+            return redirect(
+                "learning:teacher_learning_dashboard"
+            )
+
+    else:
+
+        form = ResourceForm()
+
+    return render(
+        request,
+        "learning/teacher_resource_form.html",
+        {
+            "form": form,
         },
     )

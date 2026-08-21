@@ -9,6 +9,7 @@ from assessment.models import (
 from .models import (
     CourseModule,
     LearningItem,
+    Resource,
 )
 
 # =========================================================
@@ -590,3 +591,30 @@ class LearningQuestionForm(forms.ModelForm):
                 "name",
             )
         )
+
+
+# =========================================================
+# Resource Form
+# =========================================================
+
+class ResourceForm(forms.ModelForm):
+    class Meta:
+        model = Resource
+        fields = [
+            "title",
+            "description",
+            "resource_type",
+            "course",
+            "module",
+            "file",
+            "external_url",
+            "visibility",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "external_url": forms.URLInput(attrs={"placeholder": "https://..."}),
+        }
+        labels = {
+            "external_url": "External URL",
+            "visibility": "Visibility",
+        }

@@ -144,4 +144,10 @@ urlpatterns = [
         views.teacher_student_detail,
         name="teacher_student_detail",
     ),
+
+    path(
+        "teacher/resources/add/",
+        views.teacher_resource_create,
+        name="teacher_resource_create",
+    ),
 ]
