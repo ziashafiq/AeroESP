@@ -20,6 +20,12 @@ urlpatterns = [
     ),
 
     path(
+        "resources/",
+        views.resource_list,
+        name="resource_list",
+    ),
+
+    path(
         "ielts/",
         views.ielts_dashboard,
         name="ielts_dashboard",

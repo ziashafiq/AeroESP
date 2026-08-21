@@ -3491,3 +3491,17 @@ def teacher_resource_create(request):
             "form": form,
         },
     )
+
+
+# =========================================================
+# Resource List
+# =========================================================
+
+@login_required
+def resource_list(request):
+    resources = Resource.objects.filter(is_public=True).order_by("-created_at")
+    return render(
+        request,
+        "learning/resource_list.html",
+        {"resources": resources},
+    )
