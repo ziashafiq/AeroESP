@@ -96,6 +96,7 @@ class Command(BaseCommand):
 
         created = 0
         errors = 0
+        skipped = 0
 
         with path.open(
             "r",
@@ -196,14 +197,48 @@ class Command(BaseCommand):
                             topic.pk
                         )
 
+                # Extract field values for duplicate check and form
+                question_text = (
+                    row.get(
+                        "question_text",
+                        "",
+                    ).strip()
+                )
+
+                skill = (
+                    row.get(
+                        "skill",
+                        "",
+                    ).strip()
+                )
+
+                source_reference = (
+                    row.get(
+                        "source_reference",
+                        "",
+                    ).strip()
+                )
+
+                # Duplicate check
+                duplicate_exists = (
+                    Question.objects
+                    .filter(
+                        owner=owner,
+                        track=track,
+                        skill=skill,
+                        question_text=question_text,
+                        source_reference=source_reference,
+                    )
+                    .exists()
+                )
+
+                if duplicate_exists:
+                    skipped += 1
+                    continue
+
                 form_data = {
 
-                    "question_text": (
-                        row.get(
-                            "question_text",
-                            "",
-                        ).strip()
-                    ),
+                    "question_text": question_text,
 
                     "option_a": (
                         row.get(
@@ -259,12 +294,7 @@ class Command(BaseCommand):
 
                     "track": track,
 
-                    "skill": (
-                        row.get(
-                            "skill",
-                            "",
-                        ).strip()
-                    ),
+                    "skill": skill,
 
                     "domain_ref": (
                         domain_ref
@@ -281,12 +311,7 @@ class Command(BaseCommand):
                         ).strip()
                     ),
 
-                    "source_reference": (
-                        row.get(
-                            "source_reference",
-                            "",
-                        ).strip()
-                    ),
+                    "source_reference": source_reference,
 
                     "visibility": (
                         Question.Visibility.PRIVATE
@@ -341,6 +366,7 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f"{created} question(s) "
                 f"{mode}; "
+                f"{skipped} skipped; "
                 f"{errors} error(s)."
             )
         )
