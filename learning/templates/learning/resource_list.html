@@ -3,37 +3,56 @@
 
 {% for resource in resources %}
 
-<div>
+<hr>
 
-<h3>
-{{ resource.title }}
-</h3>
+<h3>{{ resource.title }}</h3>
 
 <p>
 {{ resource.description }}
 </p>
 
+<p>
+Type:
+{{ resource.resource_type }}
+</p>
+
+
+{% if resource.course %}
+
+<p>
+Course:
+{{ resource.course.title }}
+</p>
+
+{% endif %}
+
+
+{% if resource.module %}
+
+<p>
+Module:
+{{ resource.module.title }}
+</p>
+
+{% endif %}
+
 
 {% if resource.file %}
 
 <a href="{{ resource.file.url }}">
-Open File
+Download File
 </a>
 
 {% endif %}
 
 
-{% if resource.url %}
+{% if resource.external_url %}
 
-<a href="{{ resource.url }}">
-External Link
+<a href="{{ resource.external_url }}">
+Open External Resource
 </a>
 
 {% endif %}
-
-</div>
-
-<hr>
 
 
 {% empty %}
