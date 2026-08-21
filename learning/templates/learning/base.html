@@ -409,11 +409,15 @@
             Daily Practice
         </a>
 
-        {% if request.user.is_staff or request.user.teacher_profile %}
+        {% if request.user.is_superuser or request.user.teacher_profile.is_approved %}
 
         <div class="sidebar-title">
             TEACHER / ANALYTICS
         </div>
+
+        <a href="{% url 'learning:teacher_learning_dashboard' %}">
+            Teacher Analytics
+        </a>
 
         <a href="{% url 'intelligence:dashboard' %}">
             AI Intelligence
