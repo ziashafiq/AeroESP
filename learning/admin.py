@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     CourseModule,
     Enrollment,
+    GuideResource,
     LearnerError,
     LearningCourse,
     LearningItem,
@@ -213,4 +214,26 @@ class ResourceAdmin(
         "title",
         "description",
         "uploaded_by__username",
+    )
+
+
+@admin.register(GuideResource)
+class GuideResourceAdmin(
+    admin.ModelAdmin
+):
+    list_display = (
+        "title",
+        "category",
+        "recommended_level",
+        "is_public",
+    )
+
+    list_filter = (
+        "category",
+        "is_public",
+    )
+
+    search_fields = (
+        "title",
+        "description",
     )

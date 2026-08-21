@@ -1451,3 +1451,48 @@ class Resource(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class GuideResource(models.Model):
+    CATEGORY_CHOICES = [
+        ("ENGLISH", "English Learning"),
+        ("IELTS", "IELTS"),
+        ("AEROSPACE", "Aerospace English"),
+        ("AI", "AI Tools"),
+        ("RESEARCH", "Research Tools"),
+    ]
+
+    title = models.CharField(
+        max_length=200
+    )
+
+    category = models.CharField(
+        max_length=30,
+        choices=CATEGORY_CHOICES
+    )
+
+    description = models.TextField()
+
+    website_url = models.URLField(
+        blank=True
+    )
+
+    usage_instruction = models.TextField(
+        blank=True
+    )
+
+    recommended_level = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    is_public = models.BooleanField(
+        default=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return self.title
