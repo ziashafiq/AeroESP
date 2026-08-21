@@ -162,4 +162,10 @@ urlpatterns = [
         views.teacher_resource_list,
         name="teacher_resource_list",
     ),
+
+    path(
+        "guide-hub/",
+        views.guide_hub,
+        name="guide_hub",
+    ),
 ]

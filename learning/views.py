@@ -33,6 +33,7 @@ from .forms import (
 from .models import (
     CourseModule,
     Enrollment,
+    GuideResource,
     LearnerError,
     LearningCourse,
     LearningEvent,
@@ -3534,5 +3535,27 @@ def teacher_resource_list(request):
         "learning/teacher_resource_list.html",
         {
             "resources": resources,
+        },
+    )
+
+
+# =========================================================
+# Guide Hub
+# =========================================================
+
+@login_required
+def guide_hub(request):
+    guides = GuideResource.objects.filter(
+        is_public=True
+    ).order_by(
+        "category",
+        "title"
+    )
+
+    return render(
+        request,
+        "learning/guide_hub.html",
+        {
+            "guides": guides,
         },
     )

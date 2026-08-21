@@ -1,0 +1,59 @@
+<h2>AeroESP Guide Hub</h2>
+
+
+{% for guide in guides %}
+
+<hr>
+
+<h3>
+{{ guide.title }}
+</h3>
+
+
+<p>
+Category:
+{{ guide.category }}
+</p>
+
+
+<p>
+{{ guide.description }}
+</p>
+
+
+{% if guide.recommended_level %}
+
+<p>
+Level:
+{{ guide.recommended_level }}
+</p>
+
+{% endif %}
+
+
+{% if guide.website_url %}
+
+<a href="{{ guide.website_url }}">
+Open Website
+</a>
+
+{% endif %}
+
+
+{% if guide.usage_instruction %}
+
+<p>
+How to use:
+{{ guide.usage_instruction }}
+</p>
+
+{% endif %}
+
+
+{% empty %}
+
+<p>
+No guides available.
+</p>
+
+{% endfor %}
