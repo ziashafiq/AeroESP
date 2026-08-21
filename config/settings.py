@@ -19,19 +19,62 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=o@(75m$9a*1+r9i*15w21$9-eeehb)wswh6=iiu6!+*8(6b#c'
+# =========================================================
+# Environment / Security
+# =========================================================
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DJANGO_ENV = os.getenv(
+    "DJANGO_ENV",
+    "development",
+).strip().lower()
+
+IS_PRODUCTION = (
+    DJANGO_ENV == "production"
+)
+
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-aeroesp-local-development-only",
+)
+
+DEBUG = (
+    os.getenv(
+        "DJANGO_DEBUG",
+        "0" if IS_PRODUCTION else "1",
+    )
+    .strip()
+    .lower()
+    in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+)
+
+_default_hosts = (
+    "127.0.0.1,localhost"
+    if not IS_PRODUCTION
+    else ""
+)
 
 ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "192.168.1.100",
+    host.strip()
+    for host in os.getenv(
+        "DJANGO_ALLOWED_HOSTS",
+        _default_hosts,
+    ).split(",")
+    if host.strip()
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        "",
+    ).split(",")
+    if origin.strip()
 ]
 
 
@@ -149,6 +192,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = (
+    BASE_DIR
+    / "staticfiles"
+)
 
 
 # Email
@@ -177,7 +224,7 @@ AEROESP_AI_PROVIDER = os.getenv(
 
 AEROESP_OPENAI_MODEL = os.getenv(
     "AEROESP_OPENAI_MODEL",
-    "gpt-5.5",
+    "gpt-5.6-luna",
 )
 
 AEROESP_OPENAI_TIMEOUT = int(
@@ -186,3 +233,109 @@ AEROESP_OPENAI_TIMEOUT = int(
         "45",
     )
 )
+
+
+# =========================================================
+# Production security
+# =========================================================
+
+if IS_PRODUCTION:
+
+    SECURE_SSL_REDIRECT = True
+
+    SESSION_COOKIE_SECURE = True
+
+    CSRF_COOKIE_SECURE = True
+
+    SECURE_HSTS_SECONDS = int(
+        os.getenv(
+            "DJANGO_SECURE_HSTS_SECONDS",
+            "31536000",
+        )
+    )
+
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+    SECURE_HSTS_PRELOAD = True
+
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    SECURE_PROXY_SSL_HEADER = (
+        "HTTP_X_FORWARDED_PROTO",
+        "https",
+    )
+
+else:
+
+    SECURE_SSL_REDIRECT = False
+
+    SESSION_COOKIE_SECURE = False
+
+    CSRF_COOKIE_SECURE = False
+
+    SECURE_HSTS_SECONDS = 0
+
+
+# =========================================================
+# Logging
+# =========================================================
+
+LOG_LEVEL = os.getenv(
+    "DJANGO_LOG_LEVEL",
+    "INFO",
+).upper()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": (
+                "{levelname} "
+                "{asctime} "
+                "{name} "
+                "{message}"
+            ),
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": (
+                "logging.StreamHandler"
+            ),
+            "formatter": (
+                "standard"
+            ),
+        },
+    },
+    "root": {
+        "handlers": [
+            "console",
+        ],
+        "level": LOG_LEVEL,
+    },
+    "loggers": {
+        "django": {
+            "handlers": [
+                "console",
+            ],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+        "learning": {
+            "handlers": [
+                "console",
+            ],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+        "intelligence": {
+            "handlers": [
+                "console",
+            ],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+    },
+}

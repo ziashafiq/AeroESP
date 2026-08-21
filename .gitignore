@@ -1,10 +1,80 @@
-.venv/
+# Python
 __pycache__/
 *.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 *.sqlite3
-.vscode/
+*.db
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Media and static files
 media/
-staticfiles
+staticfiles/
 /backups/
 /research_exports/
+
+# Logs
+*.log
+
+# Django
+*.sqlite3-journal
+db.sqlite3
+db.sqlite3-shm
+db.sqlite3-wal
+
+# Coverage and testing
+.coverage
+htmlcov/
+.tox/
+.nox/
+*.cover
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pytest
+.pytest_cache/
+
+# Environment specific
+.env.local
+.env.production
+.env.development
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Node (if any)
+node_modules/
+
+# Other
+*.bak
+*.tmp
