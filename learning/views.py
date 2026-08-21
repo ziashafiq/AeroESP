@@ -227,6 +227,13 @@ def course_detail(
         .first()
     )
 
+    resources = Resource.objects.filter(
+        course=course,
+        is_active=True,
+    ).order_by(
+        "-created_at"
+    )
+
     if request.method == "POST":
 
         if enrollment is None:
@@ -252,6 +259,7 @@ def course_detail(
         {
             "course": course,
             "enrollment": enrollment,
+            "resources": resources,
         },
     )
 
@@ -1850,6 +1858,13 @@ def module_detail(
         is_active=True,
     )
 
+    resources = Resource.objects.filter(
+        module=module,
+        is_active=True,
+    ).order_by(
+        "-created_at"
+    )
+
     items = (
         LearningItem.objects
         .filter(
@@ -1909,6 +1924,7 @@ def module_detail(
         "learning/module_detail.html",
         {
             "module": module,
+            "resources": resources,
             "items": items,
             "personal_count": personal_count,
             "tracked_count": tracked_count,

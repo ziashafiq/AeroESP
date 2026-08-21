@@ -60,4 +60,31 @@
 
 {% endfor %}
 
+<h3>Resources</h3>
+
+{% for resource in resources %}
+
+<p>
+    {{ resource.title }}
+
+    {% if resource.file %}
+    <a href="{{ resource.file.url }}">
+        Download
+    </a>
+    {% endif %}
+
+    {% if resource.external_url %}
+    <a href="{{ resource.external_url }}">
+        Open Link
+    </a>
+    {% endif %}
+
+</p>
+
+{% empty %}
+
+<p>No resources available.</p>
+
+{% endfor %}
+
 {% endblock %}
