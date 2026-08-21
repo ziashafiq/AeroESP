@@ -168,4 +168,10 @@ urlpatterns = [
         views.guide_hub,
         name="guide_hub",
     ),
+
+    path(
+        "guides/",
+        views.guide_hub,
+        name="guide_hub",
+    ),
 ]
