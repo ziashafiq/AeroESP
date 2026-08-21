@@ -246,9 +246,17 @@ class AccountsFoundationTests(TestCase):
             )
         )
 
+        # Teacher dashboard now redirects to learning:teacher_learning_dashboard
         self.assertEqual(
             response.status_code,
-            200,
+            302,
+        )
+
+        self.assertEqual(
+            response.url,
+            reverse(
+                "learning:teacher_learning_dashboard"
+            ),
         )
 
         response = self.client.get(
