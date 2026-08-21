@@ -43,6 +43,18 @@ from .models import (
 )
 
 
+# =========================================================
+# Helper: require approved teacher or superuser
+# =========================================================
+
+def _require_learning_teacher(user):
+    if user.is_superuser:
+        return
+    profile = getattr(user, "teacher_profile", None)
+    if profile is None or not profile.is_approved:
+        raise PermissionDenied("You are not an approved teacher.")
+
+
 @login_required
 def dashboard(request):
     # Enrollments
@@ -3105,15 +3117,12 @@ def _student_course_summary(student, course):
 def teacher_learning_dashboard(request):
     """
     Dashboard for approved teachers to monitor student progress.
-    Requires teacher profile with is_approved=True.
     """
-    user = request.user
-    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
-        raise PermissionDenied("You are not an approved teacher.")
+    _require_learning_teacher(request.user)
 
     # Get all courses taught by this teacher
     courses = LearningCourse.objects.filter(
-        created_by=user,
+        created_by=request.user,
         is_active=True,
     ).select_related('program')
 
@@ -3235,14 +3244,12 @@ def teacher_class_detail(request, course_id, class_name):
     """
     Detailed view for a specific class within a course.
     """
-    user = request.user
-    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
-        raise PermissionDenied("You are not an approved teacher.")
+    _require_learning_teacher(request.user)
 
     course = get_object_or_404(
         LearningCourse.objects.select_related('program'),
         pk=course_id,
-        created_by=user,
+        created_by=request.user,
         is_active=True,
     )
 
@@ -3358,15 +3365,13 @@ def teacher_student_detail(request, student_id):
     """
     Detailed view for a specific student, visible to teachers.
     """
-    user = request.user
-    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
-        raise PermissionDenied("You are not an approved teacher.")
+    _require_learning_teacher(request.user)
 
     student = get_object_or_404(get_user_model(), pk=student_id)
 
     # Get courses that this student is enrolled in and that the teacher teaches
     teacher_courses = LearningCourse.objects.filter(
-        created_by=user,
+        created_by=request.user,
         is_active=True,
     )
     teacher_course_ids = list(teacher_courses.values_list('id', flat=True))
