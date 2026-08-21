@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>AeroESP</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                Inter,
+                Arial,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #07172c,
+                    #0c2848 55%,
+                    #123b64
+                );
+
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .nav {
+            max-width: 1180px;
+            margin: auto;
+            padding: 24px 28px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .brand span {
+            color: #57b8ff;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+
+            transition:
+                transform 0.15s ease,
+                opacity 0.15s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.94;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #0a2746;
+        }
+
+        .btn-outline {
+            border: 1px solid
+                rgba(255,255,255,.35);
+
+            color: #ffffff;
+        }
+
+        .hero {
+            max-width: 1180px;
+            margin: auto;
+
+            padding:
+                100px 28px
+                70px;
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1.15fr)
+                minmax(320px, .85fr);
+
+            gap: 70px;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+
+            background:
+                rgba(87,184,255,.13);
+
+            border:
+                1px solid
+                rgba(87,184,255,.35);
+
+            color: #8bd0ff;
+
+            padding: 8px 14px;
+            border-radius: 100px;
+
+            font-size: 13px;
+            font-weight: 700;
+
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size:
+                clamp(
+                    42px,
+                    6vw,
+                    72px
+                );
+
+            line-height: 1.04;
+            margin: 0 0 26px;
+
+            max-width: 760px;
+        }
+
+        .accent {
+            color: #65c3ff;
+        }
+
+        .lead {
+            font-size: 19px;
+            line-height: 1.75;
+
+            max-width: 680px;
+
+            color:
+                rgba(255,255,255,.76);
+
+            margin-bottom: 34px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .panel {
+            background:
+                rgba(255,255,255,.08);
+
+            border:
+                1px solid
+                rgba(255,255,255,.14);
+
+            backdrop-filter: blur(15px);
+
+            border-radius: 22px;
+            padding: 28px;
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .panel-sub {
+            color:
+                rgba(255,255,255,.65);
+
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .feature {
+            padding: 17px 0;
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,.10);
+        }
+
+        .feature:last-child {
+            border-bottom: none;
+        }
+
+        .feature strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .feature span {
+            color:
+                rgba(255,255,255,.62);
+
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .features {
+            max-width: 1180px;
+            margin: auto;
+
+            padding:
+                30px 28px
+                90px;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 20px;
+        }
+
+        .card {
+            background: #ffffff;
+            color: #10253b;
+
+            padding: 28px;
+
+            border-radius: 18px;
+        }
+
+        .card-label {
+            font-size: 12px;
+            font-weight: 800;
+
+            color: #53708c;
+
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .card h3 {
+            font-size: 21px;
+            margin: 10px 0;
+        }
+
+        .card p {
+            color: #5a6d80;
+            line-height: 1.65;
+            margin-bottom: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+
+            color:
+                rgba(255,255,255,.48);
+
+            font-size: 13px;
+        }
+
+        @media (
+            max-width: 850px
+        ) {
+
+            .hero {
+                grid-template-columns: 1fr;
+                padding-top: 65px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="nav">
+
+    <div class="brand">
+        Aero<span>ESP</span>
+    </div>
+
+    <div class="nav-actions">
+
+        {% if user.is_authenticated %}
+
+            <a
+                href="{% url 'accounts:account_center' %}"
+                class="btn btn-outline"
+            >
+                Account
+            </a>
+
+            {% if dashboard_target %}
+
+                <a
+                    href="{{ dashboard_target }}"
+                    class="btn btn-primary"
+                >
+                    Open Dashboard
+                </a>
+
+            {% endif %}
+
+        {% else %}
+
+            <a
+                href="{% url 'accounts:login' %}"
+                class="btn btn-primary"
+            >
+                Sign In
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</nav>
+
+
+<main>
+
+<section class="hero">
+
+    <div>
+
+        <div class="badge">
+            Aerospace English Learning
+            & Assessment Platform
+        </div>
+
+        <h1>
+            English for
+            <span class="accent">
+                Aerospace Engineering
+            </span>
+        </h1>
+
+        <p class="lead">
+            AeroESP combines General English,
+            IELTS preparation, Aerospace ESP,
+            adaptive practice, assessment,
+            learning analytics and
+            AI-assisted educational tools
+            in one integrated platform.
+        </p>
+
+        <div class="hero-actions">
+
+            {% if user.is_authenticated %}
+
+                {% if dashboard_target %}
+
+                    <a
+                        href="{{ dashboard_target }}"
+                        class="btn btn-primary"
+                    >
+                        Continue to Dashboard
+                    </a>
+
+                {% endif %}
+
+            {% else %}
+
+                <a
+                    href="{% url 'accounts:login' %}"
+                    class="btn btn-primary"
+                >
+                    Get Started
+                </a>
+
+            {% endif %}
+
+            <a
+                href="{% url 'quiz' %}"
+                class="btn btn-outline"
+            >
+                Try Assessment
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <h2>
+            One learning ecosystem
+        </h2>
+
+        <div class="panel-sub">
+            Learning, assessment,
+            analytics and research.
+        </div>
+
+        <div class="feature">
+            <strong>
+                General English & IELTS
+            </strong>
+
+            <span>
+                Vocabulary, grammar,
+                reading, listening,
+                writing and speaking.
+            </span>
+        </div>
+
+        <div class="feature">
+            <strong>
+                Aerospace ESP
+            </strong>
+
+            <span>
+                Domain-aware technical
+                English organized by
+                aerospace disciplines.
+            </span>
+        </div>
+
+        <div class="feature">
+            <strong>
+                Adaptive Learning
+            </strong>
+
+            <span>
+                Personalized review,
+                error analysis and
+                learning paths.
+            </span>
+        </div>
+
+        <div class="feature">
+            <strong>
+                AI & Analytics
+            </strong>
+
+            <span>
+                Teacher-assisted question
+                generation and explainable
+                learner insights.
+            </span>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="features">
+
+    <div class="card">
+
+        <div class="card-label">
+            Placement
+        </div>
+
+        <h3>
+            Start at the right level
+        </h3>
+
+        <p>
+            Placement assessment evaluates
+            core language skills and supports
+            initial learning-path assignment.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-label">
+            Learning
+        </div>
+
+        <h3>
+            Practice with purpose
+        </h3>
+
+        <p>
+            Progress tracking, review queues,
+            personalized practice and
+            aerospace-specific learning
+            content work together.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-label">
+            Assessment
+        </div>
+
+        <h3>
+            Structured exam workflows
+        </h3>
+
+        <p>
+            Teachers build controlled
+            assessments while students
+            receive managed attempts,
+            scoring and feedback.
+        </p>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<footer>
+    AeroESP · Aerospace English Learning
+    & Assessment Platform
+</footer>
+
+</body>
+</html>

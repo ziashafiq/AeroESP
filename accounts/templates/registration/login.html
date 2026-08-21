@@ -1,37 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
-    <title>AeroESP Login</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Sign In · AeroESP
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+
+            font-family:
+                Inter,
+                Arial,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #07172c,
+                    #123b64
+                );
+
+            min-height: 100vh;
+
+            display: grid;
+            place-items: center;
+
+            padding: 24px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 430px;
+
+            background: #ffffff;
+
+            border-radius: 22px;
+
+            padding:
+                38px 36px;
+
+            box-shadow:
+                0 25px 70px
+                rgba(0,0,0,.25);
+        }
+
+        .brand {
+            text-align: center;
+
+            font-size: 28px;
+            font-weight: 800;
+
+            color: #0b2948;
+
+            margin-bottom: 6px;
+        }
+
+        .brand span {
+            color: #258bd0;
+        }
+
+        .subtitle {
+            text-align: center;
+
+            color: #728293;
+
+            margin-bottom: 30px;
+
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+
+            color: #263c51;
+
+            font-size: 13px;
+            font-weight: 700;
+
+            margin-bottom: 7px;
+        }
+
+        input {
+            width: 100%;
+
+            border:
+                1px solid #d5dee7;
+
+            border-radius: 10px;
+
+            padding: 13px 14px;
+
+            font-size: 15px;
+
+            margin-bottom: 18px;
+
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #258bd0;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(37,139,208,.11);
+        }
+
+        button {
+            border: none;
+
+            width: 100%;
+
+            background: #0c355b;
+
+            color: #ffffff;
+
+            padding: 14px;
+
+            border-radius: 10px;
+
+            font-size: 15px;
+            font-weight: 800;
+
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #124776;
+        }
+
+        .error {
+            background: #fff0f0;
+            color: #a92d2d;
+
+            padding: 12px 14px;
+
+            border-radius: 9px;
+
+            margin-bottom: 20px;
+
+            font-size: 13px;
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 22px;
+        }
+
+        .back a {
+            color: #5f7488;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back a:hover {
+            color: #258bd0;
+        }
+
+        .role-note {
+            margin-top: 24px;
+
+            padding-top: 18px;
+
+            border-top:
+                1px solid #edf1f5;
+
+            text-align: center;
+
+            color: #8a98a6;
+
+            font-size: 12px;
+
+            line-height: 1.6;
+        }
+
+    </style>
+
 </head>
 
 <body>
 
-    <h1>AeroESP</h1>
-    <h2>Login</h2>
+<div class="login-card">
+
+    <div class="brand">
+        Aero<span>ESP</span>
+    </div>
+
+    <div class="subtitle">
+        Sign in to your learning
+        or teaching workspace.
+    </div>
+
 
     {% if form.errors %}
-        <p>Username or password is incorrect.</p>
+
+        <div class="error">
+            Username or password
+            is incorrect.
+        </div>
+
     {% endif %}
 
+
     <form method="post">
+
         {% csrf_token %}
 
-        {{ form.as_p }}
-
         {% if next %}
+
             <input
                 type="hidden"
                 name="next"
                 value="{{ next }}"
             >
+
         {% endif %}
 
+
+        <label for="id_username">
+            Username
+        </label>
+
+        {{ form.username }}
+
+
+        <label for="id_password">
+            Password
+        </label>
+
+        {{ form.password }}
+
+
         <button type="submit">
-            Login
+            Sign In
         </button>
 
     </form>
+
+
+    <div class="role-note">
+        Students, approved teachers
+        and administrators are routed
+        automatically to the appropriate
+        AeroESP workspace.
+    </div>
+
+
+    <div class="back">
+
+        <a href="{% url 'home' %}">
+            ← Back to AeroESP
+        </a>
+
+    </div>
+
+</div>
 
 </body>
 </html>

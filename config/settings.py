@@ -205,12 +205,8 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 LOGIN_URL = "accounts:login"
-
 LOGIN_REDIRECT_URL = "accounts:role_redirect"
-
 LOGOUT_REDIRECT_URL = "accounts:login"
-
-LOGIN_REDIRECT_URL = "accounts:role_redirect"
 
 
 # =========================================================

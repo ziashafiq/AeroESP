@@ -9,6 +9,37 @@ from .decorators import (
 )
 
 
+def home(request):
+    dashboard_target = None
+    role = None
+
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            role = "Administrator"
+            dashboard_target = "/admin/"
+
+        elif hasattr(request.user, "teacher_profile"):
+            if request.user.teacher_profile.is_approved:
+                role = "Teacher"
+                dashboard_target = "/learn/teacher/"
+            else:
+                role = "Teacher"
+                dashboard_target = "/accounts/teacher/pending/"
+
+        elif hasattr(request.user, "student_profile"):
+            role = "Student"
+            dashboard_target = "/learn/"
+
+    return render(
+        request,
+        "accounts/home.html",
+        {
+            "dashboard_target": dashboard_target,
+            "role": role,
+        },
+    )
+
+
 @login_required
 def role_redirect(request):
 
