@@ -3499,9 +3499,19 @@ def teacher_resource_create(request):
 
 @login_required
 def resource_list(request):
-    resources = Resource.objects.filter(is_public=True).order_by("-created_at")
+    from django.db.models import Q
+
+    resources = Resource.objects.filter(
+        Q(visibility="PUBLIC") |
+        Q(visibility="COURSE", course__enrollment__student=request.user) |
+        Q(visibility="MODULE", module__course__enrollment__student=request.user),
+        is_active=True,
+    ).distinct().order_by("-created_at")
+
     return render(
         request,
         "learning/resource_list.html",
-        {"resources": resources},
+        {
+            "resources": resources,
+        },
     )
