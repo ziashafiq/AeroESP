@@ -2205,6 +2205,35 @@ def module_detail(
         is_active=True,
     )
 
+    # =====================================================
+    # Runtime access control
+    # =====================================================
+
+    if not request.user.is_superuser:
+
+        owns_course = (
+            module.course.created_by_id
+            == request.user.id
+        )
+
+        has_active_enrollment = (
+            Enrollment.objects
+            .filter(
+                student=request.user,
+                course=module.course,
+                status=Enrollment.Status.ACTIVE,
+            )
+            .exists()
+        )
+
+        if (
+            not owns_course
+            and not has_active_enrollment
+        ):
+            raise PermissionDenied(
+                "You do not have access to this course."
+            )
+
     resources = Resource.objects.filter(
         module=module,
         is_active=True,
@@ -2222,8 +2251,35 @@ def module_detail(
             | Q(is_public=True)
         )
         .distinct()
-        .order_by("-created_at")
+        .order_by("pk")
     )
+
+    # =====================================================
+    # Aerospace taxonomy navigation
+    # =====================================================
+
+    aerospace_topics = (
+        AerospaceTopic.objects.none()
+    )
+
+    if module.aerospace_domain_id:
+
+        aerospace_topics = (
+            AerospaceTopic.objects
+            .filter(
+                domain_id=module.aerospace_domain_id,
+                is_active=True,
+                approval_status="APPROVED",
+            )
+            .select_related(
+                "parent",
+                "domain",
+            )
+            .order_by(
+                "order",
+                "name",
+            )
+        )
 
     personal_count = (
         items
@@ -2237,7 +2293,7 @@ def module_detail(
         LearningProgress.objects
         .filter(
             student=request.user,
-            learning_item__module=module,
+            learning_item__in=items,
         )
     )
 
@@ -2278,6 +2334,7 @@ def module_detail(
             "module": module,
             "resources": resources,
             "items": items,
+            "aerospace_topics": aerospace_topics,
             "personal_count": personal_count,
             "tracked_count": tracked_count,
             "mastered_count": mastered_count,
@@ -2297,16 +2354,42 @@ def learning_item_detail(
     item_id,
 ):
 
-    learning_item = get_object_or_404(
+    item_queryset = (
         LearningItem.objects
         .select_related(
             "module",
             "module__course",
             "module__course__program",
             "created_by",
-        ),
-        Q(created_by=request.user)
-        | Q(is_public=True),
+            "aerospace_domain",
+            "aerospace_topic",
+        )
+    )
+
+    if not request.user.is_superuser:
+
+        item_queryset = (
+            item_queryset
+            .filter(
+                Q(
+                    created_by=request.user
+                )
+                |
+                Q(
+                    is_public=True,
+                    module__course__enrollments__student=(
+                        request.user
+                    ),
+                    module__course__enrollments__status=(
+                        Enrollment.Status.ACTIVE
+                    ),
+                )
+            )
+            .distinct()
+        )
+
+    learning_item = get_object_or_404(
+        item_queryset,
         pk=item_id,
     )
 
