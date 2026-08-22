@@ -242,6 +242,17 @@
         {{ item.title }}
     </h3>
 
+    <div style="margin-top: 15px;">
+
+        <a
+            class="button"
+            href="{% url 'learning:learning_item_detail' item.pk %}"
+        >
+            Study Item
+        </a>
+
+    </div>
+
 
     {% if item.definition_en %}
 

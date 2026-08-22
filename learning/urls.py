@@ -186,4 +186,9 @@ urlpatterns = [
         views.guide_hub,
         name="guide_hub",
     ),
+    path(
+        "items/<int:item_id>/",
+        views.learning_item_detail,
+        name="learning_item_detail",
+    ),
 ]

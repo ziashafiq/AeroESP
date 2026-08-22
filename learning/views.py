@@ -1514,9 +1514,28 @@ def practice_answer(
 ):
 
     link = get_object_or_404(
-        LearningItemQuestion,
+        LearningItemQuestion.objects
+        .select_related(
+            "learning_item",
+            "learning_item__module",
+            "learning_item__module__course",
+            "learning_item__module__course__program",
+            "question",
+        )
+        .filter(
+            Q(learning_item__created_by=request.user)
+            | Q(learning_item__is_public=True)
+        )
+        .filter(
+            question__status__in=[
+                "APPROVED",
+                "DEMO",
+            ],
+        )
+        .exclude(
+            question__visibility="EXAM_ONLY",
+        ),
         pk=link_id,
-        learning_item__created_by=request.user,
     )
 
     question = link.question
@@ -1932,7 +1951,130 @@ def module_detail(
             "progress_percent": progress_percent,
         },
     )
+# =========================================================
+# LEARNING ITEM DETAIL / STUDY PAGE
+# =========================================================
 
+@login_required
+def learning_item_detail(
+    request,
+    item_id,
+):
+
+    learning_item = get_object_or_404(
+        LearningItem.objects
+        .select_related(
+            "module",
+            "module__course",
+            "module__course__program",
+            "created_by",
+        ),
+        Q(created_by=request.user)
+        | Q(is_public=True),
+        pk=item_id,
+    )
+
+    progress, created = (
+        LearningProgress.objects
+        .get_or_create(
+            student=request.user,
+            learning_item=learning_item,
+            defaults={
+                "status": (
+                    LearningProgress
+                    .Status
+                    .NEW
+                ),
+            },
+        )
+    )
+
+    question_links = (
+        LearningItemQuestion.objects
+        .filter(
+            learning_item=learning_item,
+        )
+        .select_related(
+            "question",
+        )
+        .filter(
+            question__status__in=[
+                "APPROVED",
+                "DEMO",
+            ],
+        )
+        .exclude(
+            question__visibility="EXAM_ONLY",
+        )
+        .order_by(
+            "pk",
+        )
+    )
+
+    module_items = list(
+        LearningItem.objects
+        .filter(
+            module=learning_item.module,
+        )
+        .filter(
+            Q(created_by=request.user)
+            | Q(is_public=True)
+        )
+        .order_by(
+            "pk",
+        )
+        .values_list(
+            "pk",
+            flat=True,
+        )
+    )
+
+    previous_item = None
+    next_item = None
+
+    if learning_item.pk in module_items:
+
+        current_index = module_items.index(
+            learning_item.pk
+        )
+
+        if current_index > 0:
+
+            previous_item = (
+                LearningItem.objects
+                .filter(
+                    pk=module_items[
+                        current_index - 1
+                    ]
+                )
+                .first()
+            )
+
+        if current_index < (
+            len(module_items) - 1
+        ):
+
+            next_item = (
+                LearningItem.objects
+                .filter(
+                    pk=module_items[
+                        current_index + 1
+                    ]
+                )
+                .first()
+            )
+
+    return render(
+        request,
+        "learning/learning_item_detail.html",
+        {
+            "learning_item": learning_item,
+            "progress": progress,
+            "question_links": question_links,
+            "previous_item": previous_item,
+            "next_item": next_item,
+        },
+    )
 
 # =========================================================
 # Helper to build course dashboard (used above)
