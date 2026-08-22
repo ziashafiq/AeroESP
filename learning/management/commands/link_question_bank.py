@@ -11,8 +11,8 @@ from learning.models import (
 class Command(BaseCommand):
 
     help = (
-        "Safely link eligible question-bank questions "
-        "to compatible learning items."
+        "Safely link eligible aerospace questions "
+        "to learning items using exact taxonomy topic matches."
     )
 
     def add_arguments(self, parser):
@@ -21,7 +21,7 @@ class Command(BaseCommand):
             "--apply",
             action="store_true",
             help=(
-                "Create links. Without this option, "
+                "Create links. Without this option "
                 "the command runs in dry-run mode."
             ),
         )
@@ -39,6 +39,8 @@ class Command(BaseCommand):
                     "APPROVED",
                     "DEMO",
                 ],
+                topic_ref__isnull=False,
+                domain_ref__isnull=False,
             )
             .exclude(
                 visibility="EXAM_ONLY",
@@ -54,6 +56,8 @@ class Command(BaseCommand):
             LearningItem.objects
             .filter(
                 is_public=True,
+                aerospace_topic__isnull=False,
+                aerospace_domain__isnull=False,
             )
             .select_related(
                 "aerospace_domain",
@@ -62,91 +66,43 @@ class Command(BaseCommand):
             .order_by("pk")
         )
 
+        candidate_count = 0
         created_count = 0
         existing_count = 0
+        no_match_count = 0
+        ambiguous_count = 0
+        domain_mismatch_count = 0
 
-        topic_match_count = 0
-        domain_match_count = 0
-
-        skipped_no_match = 0
-        skipped_ambiguous = 0
-
-        examples = []
+        samples = []
 
         for question in questions:
 
-            candidates = []
-
-            match_type = None
-
-            # ---------------------------------------------
-            # LEVEL 1:
-            # Exact aerospace topic match
-            # ---------------------------------------------
-
-            if question.topic_ref_id:
-
-                candidates = [
-                    item
-                    for item in learning_items
-                    if (
-                        item.aerospace_topic_id
-                        == question.topic_ref_id
-                    )
-                ]
-
-                if candidates:
-                    match_type = "TOPIC"
-
-            # ---------------------------------------------
-            # LEVEL 2:
-            # Aerospace domain fallback
-            # ---------------------------------------------
-
-            if (
-                not candidates
-                and question.domain_ref_id
-            ):
-
-                candidates = [
-                    item
-                    for item in learning_items
-                    if (
-                        item.aerospace_domain_id
-                        == question.domain_ref_id
-                    )
-                ]
-
-                if candidates:
-                    match_type = "DOMAIN"
-
-            # ---------------------------------------------
-            # No compatible LearningItem
-            # ---------------------------------------------
+            candidates = [
+                item
+                for item in learning_items
+                if (
+                    item.aerospace_topic_id
+                    == question.topic_ref_id
+                )
+            ]
 
             if not candidates:
 
-                skipped_no_match += 1
+                no_match_count += 1
                 continue
-
-            # ---------------------------------------------
-            # Avoid arbitrary selection
-            # ---------------------------------------------
 
             if len(candidates) != 1:
 
-                skipped_ambiguous += 1
+                ambiguous_count += 1
 
-                if len(examples) < 10:
-
-                    examples.append(
+                if len(samples) < 15:
+                    samples.append(
                         (
                             question.pk,
                             "AMBIGUOUS",
                             [
                                 item.pk
-                                for item
-                                in candidates
+                                for item in candidates
                             ],
                         )
                     )
@@ -155,11 +111,29 @@ class Command(BaseCommand):
 
             learning_item = candidates[0]
 
-            if match_type == "TOPIC":
-                topic_match_count += 1
+            # Extra safety:
+            # exact topic should also belong to
+            # the same aerospace domain.
+            if (
+                learning_item.aerospace_domain_id
+                != question.domain_ref_id
+            ):
 
-            elif match_type == "DOMAIN":
-                domain_match_count += 1
+                domain_mismatch_count += 1
+
+                if len(samples) < 15:
+                    samples.append(
+                        (
+                            question.pk,
+                            "DOMAIN_MISMATCH",
+                            question.domain_ref_id,
+                            learning_item.aerospace_domain_id,
+                        )
+                    )
+
+                continue
+
+            candidate_count += 1
 
             exists = (
                 LearningItemQuestion.objects
@@ -182,29 +156,20 @@ class Command(BaseCommand):
                     question=question,
                 )
 
-                created_count += 1
+            created_count += 1
 
-            else:
+            if len(samples) < 15:
 
-                created_count += 1
-
-            if len(examples) < 10:
-
-                examples.append(
+                samples.append(
                     (
                         question.pk,
-                        match_type,
+                        "EXACT_TOPIC",
                         learning_item.pk,
                         learning_item.title,
                     )
                 )
 
-        # ---------------------------------------------
-        # Dry-run rollback safeguard
-        # ---------------------------------------------
-
         if not apply_changes:
-
             transaction.set_rollback(True)
 
         mode = (
@@ -221,38 +186,43 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            f"Eligible questions: {questions.count()}"
+            f"Eligible topic-tagged questions: "
+            f"{questions.count()}"
         )
 
         self.stdout.write(
-            f"Public learning items: "
+            f"Taxonomy learning items: "
             f"{len(learning_items)}"
         )
 
         self.stdout.write(
-            f"Topic matches: {topic_match_count}"
+            f"Exact topic candidates: "
+            f"{candidate_count}"
         )
 
         self.stdout.write(
-            f"Domain matches: {domain_match_count}"
+            f"New links: "
+            f"{created_count}"
         )
 
         self.stdout.write(
-            f"New link candidates: {created_count}"
+            f"Existing links: "
+            f"{existing_count}"
         )
 
         self.stdout.write(
-            f"Existing links: {existing_count}"
+            f"No topic match: "
+            f"{no_match_count}"
         )
 
         self.stdout.write(
-            f"Skipped - no safe match: "
-            f"{skipped_no_match}"
+            f"Ambiguous matches: "
+            f"{ambiguous_count}"
         )
 
         self.stdout.write(
-            f"Skipped - ambiguous: "
-            f"{skipped_ambiguous}"
+            f"Domain mismatches: "
+            f"{domain_mismatch_count}"
         )
 
         self.stdout.write("")
@@ -260,9 +230,9 @@ class Command(BaseCommand):
             "Sample decisions:"
         )
 
-        for example in examples:
+        for sample in samples:
             self.stdout.write(
-                f"  {example}"
+                f"  {sample}"
             )
 
         if apply_changes:
@@ -270,7 +240,7 @@ class Command(BaseCommand):
             self.stdout.write("")
             self.stdout.write(
                 self.style.SUCCESS(
-                    "Question-bank linking completed."
+                    "Exact taxonomy linking completed."
                 )
             )
 
@@ -280,6 +250,6 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(
                     "Dry run only. "
-                    "No database changes were saved."
+                    "No links were saved."
                 )
             )
