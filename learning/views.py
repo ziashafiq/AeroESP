@@ -234,6 +234,132 @@ def course_detail(
         "-created_at"
     )
 
+    # =========================================================
+    # بلوک محاسبات ماژول‌ها، آیتم‌ها و پیشرفت
+    # =========================================================
+    modules = (
+        CourseModule.objects
+        .filter(
+            course=course,
+            is_active=True,
+        )
+        .prefetch_related(
+            "items",
+        )
+        .order_by(
+            "order",
+            "title",
+        )
+    )
+
+    accessible_items = (
+        LearningItem.objects
+        .filter(
+            module__course=course,
+            module__is_active=True,
+        )
+        .filter(
+            Q(created_by=request.user)
+            | Q(is_public=True)
+        )
+        .select_related(
+            "module",
+        )
+        .order_by(
+            "module__order",
+            "module__title",
+            "pk",
+        )
+    )
+
+    total_module_count = (
+        modules.count()
+    )
+
+    total_item_count = (
+        accessible_items.count()
+    )
+
+    progress_records = (
+        LearningProgress.objects
+        .filter(
+            student=request.user,
+            learning_item__module__course=course,
+        )
+        .select_related(
+            "learning_item",
+            "learning_item__module",
+        )
+    )
+
+    mastered_item_ids = set(
+        progress_records
+        .filter(
+            status=(
+                LearningProgress
+                .Status
+                .MASTERED
+            )
+        )
+        .values_list(
+            "learning_item_id",
+            flat=True,
+        )
+    )
+
+    mastered_item_count = (
+        accessible_items
+        .filter(
+            pk__in=mastered_item_ids,
+        )
+        .count()
+    )
+
+    if total_item_count:
+        course_progress_percent = round(
+            mastered_item_count
+            / total_item_count
+            * 100
+        )
+    else:
+        course_progress_percent = 0
+
+    completed_module_count = 0
+
+    for module in modules:
+        module_item_ids = list(
+            accessible_items
+            .filter(
+                module=module,
+            )
+            .values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        if (
+            module_item_ids
+            and all(
+                item_id in mastered_item_ids
+                for item_id in module_item_ids
+            )
+        ):
+            completed_module_count += 1
+
+    continue_item = (
+        accessible_items
+        .exclude(
+            pk__in=mastered_item_ids,
+        )
+        .first()
+    )
+
+    if continue_item is None:
+        continue_item = (
+            accessible_items.first()
+        )
+
     if request.method == "POST":
 
         if enrollment is None:
@@ -260,6 +386,13 @@ def course_detail(
             "course": course,
             "enrollment": enrollment,
             "resources": resources,
+            "modules": modules,
+            "total_module_count": total_module_count,
+            "completed_module_count": completed_module_count,
+            "total_item_count": total_item_count,
+            "mastered_item_count": mastered_item_count,
+            "course_progress_percent": course_progress_percent,
+            "continue_item": continue_item,
         },
     )
 
@@ -1958,6 +2091,8 @@ def module_detail(
             "progress_percent": progress_percent,
         },
     )
+
+
 # =========================================================
 # LEARNING ITEM DETAIL / STUDY PAGE
 # =========================================================
@@ -2082,6 +2217,7 @@ def learning_item_detail(
             "next_item": next_item,
         },
     )
+
 
 # =========================================================
 # Helper to build course dashboard (used above)
