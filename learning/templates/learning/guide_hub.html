@@ -1,59 +1,119 @@
-<h2>AeroESP Guide Hub</h2>
+{% extends "learning/base.html" %}
+
+{% block title %}
+Guide Hub · AeroESP
+{% endblock %}
+
+{% block content %}
 
 
-{% for guide in guides %}
+<section class="app-hero">
 
-<hr>
+    <div class="page-eyebrow">
+        Curated knowledge
+    </div>
 
-<h3>
-{{ guide.title }}
-</h3>
+    <h1 class="page-title">
+        AeroESP Guide Hub
+    </h1>
 
+    <p class="page-lead">
+        Carefully selected tools and references
+        for language learning, aerospace English,
+        technical reading and academic development.
+    </p>
 
-<p>
-Category:
-{{ guide.category }}
-</p>
-
-
-<p>
-{{ guide.description }}
-</p>
-
-
-{% if guide.recommended_level %}
-
-<p>
-Level:
-{{ guide.recommended_level }}
-</p>
-
-{% endif %}
+</section>
 
 
-{% if guide.website_url %}
 
-<a href="{{ guide.website_url }}">
-Open Website
-</a>
+<section class="guide-grid">
 
-{% endif %}
+    {% for guide in guides %}
 
+    <article class="guide-card">
 
-{% if guide.usage_instruction %}
+        <div class="guide-context">
 
-<p>
-How to use:
-{{ guide.usage_instruction }}
-</p>
-
-{% endif %}
+            <span class="app-badge">
+                {{ guide.category }}
+            </span>
 
 
-{% empty %}
+            {% if guide.recommended_level %}
 
-<p>
-No guides available.
-</p>
+                <span class="app-badge">
+                    {{ guide.recommended_level }}
+                </span>
 
-{% endfor %}
+            {% endif %}
+
+        </div>
+
+
+        <h3>
+            {{ guide.title }}
+        </h3>
+
+
+        <p class="guide-description">
+            {{ guide.description }}
+        </p>
+
+
+        {% if guide.usage_instruction %}
+
+            <div class="study-block-important">
+
+                <div class="study-block-label">
+                    How to use
+                </div>
+
+                <div class="text-secondary">
+                    {{ guide.usage_instruction }}
+                </div>
+
+            </div>
+
+        {% endif %}
+
+
+        <div class="guide-actions">
+
+            {% if guide.website_url %}
+
+                <a
+                    class="button"
+                    href="{{ guide.website_url }}"
+                    target="_blank"
+                >
+                    Open Resource
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </article>
+
+
+    {% empty %}
+
+        <div class="empty-state">
+
+            <div>
+
+                <h3>
+                    No guides available
+                </h3>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</section>
+
+
+{% endblock %}

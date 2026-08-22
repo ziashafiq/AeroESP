@@ -1,7 +1,7 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-{{ course.title }} | AeroESP
+{{ course.title }} · AeroESP
 {% endblock %}
 
 {% block content %}
@@ -13,294 +13,394 @@
         Dashboard
     </a>
 
-    /
+    <span>/</span>
 
     <a href="{% url 'learning:my_courses' %}">
         My Courses
     </a>
 
-    /
+    <span>/</span>
 
-    {{ course.title }}
-
-</div>
-
-
-<div class="program-header">
-
-    <span class="badge">
-        {{ course.program.title }}
+    <span>
+        {{ course.title }}
     </span>
 
-    <h1>
-        {{ course.title }}
-    </h1>
-
-    {% if course.description %}
-
-    <p>
-        {{ course.description }}
-    </p>
-
-    {% endif %}
-
-
-    {% if not enrollment %}
-
-    <form method="post">
-
-        {% csrf_token %}
-
-        <button class="button">
-            Add to My Courses
-        </button>
-
-    </form>
-
-    {% endif %}
-
 </div>
 
 
-{% if enrollment %}
+<section class="program-header learning-hero">
 
-<div class="section">
+    <div class="learning-hero-copy">
 
-    <div class="course-progress">
+        <div class="page-eyebrow">
+            {{ course.program.title }}
+        </div>
 
-        <div class="course-progress-header">
+        <h1 class="page-title">
+            {{ course.title }}
+        </h1>
 
-            <strong>
-                Course Progress
-            </strong>
 
-            <strong>
-                {{ course_progress_percent }}%
-            </strong>
+        {% if course.description %}
+
+            <p class="page-lead">
+                {{ course.description }}
+            </p>
+
+        {% endif %}
+
+
+        <div class="learning-hero-meta">
+
+            <span class="app-badge">
+                {{ total_module_count }} Modules
+            </span>
+
+            {% if enrollment %}
+
+                <span class="app-badge badge-success">
+                    Active enrollment
+                </span>
+
+            {% endif %}
 
         </div>
 
-        <div class="progress-track">
 
-            <div
-                class="progress-fill"
-                style="
-                    width:
-                    {{ course_progress_percent }}%;
-                "
-            >
+        {% if enrollment %}
+
+        <div class="course-progress">
+
+            <div class="course-progress-header">
+
+                <span>
+                    Course mastery
+                </span>
+
+                <strong>
+                    {{ course_progress_percent }}%
+                </strong>
+
+            </div>
+
+            <div class="progress-track">
+
+                <div
+                    class="progress-fill"
+                    style="width: {{ course_progress_percent }}%;"
+                ></div>
+
             </div>
 
         </div>
 
+        {% endif %}
+
     </div>
 
-</div>
+
+    {% if not enrollment %}
+
+        <div class="learning-hero-action">
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <button
+                    class="button button-primary"
+                    type="submit"
+                >
+                    Add to My Courses
+                </button>
+
+            </form>
+
+        </div>
+
+    {% endif %}
+
+</section>
 
 
-<div class="cards section">
 
-    <div class="card">
+{% if enrollment %}
 
-        <h3>
+<section class="metric-grid section">
+
+    <div class="metric-card">
+
+        <div class="metric-caption">
             Modules
-        </h3>
+        </div>
 
-        <div class="stat-number">
+        <div class="metric-value">
             {{ total_module_count }}
         </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="metric-card">
 
-        <h3>
-            Completed Modules
-        </h3>
+        <div class="metric-caption">
+            Completed
+        </div>
 
-        <div class="stat-number">
+        <div class="metric-value">
             {{ completed_module_count }}
         </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="metric-card">
 
-        <h3>
-            Learning Items
-        </h3>
+        <div class="metric-caption">
+            Learning items
+        </div>
 
-        <div class="stat-number">
+        <div class="metric-value">
             {{ total_item_count }}
         </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="metric-card">
 
-        <h3>
-            Mastered Items
-        </h3>
+        <div class="metric-caption">
+            Mastered
+        </div>
 
-        <div class="stat-number">
+        <div class="metric-value">
             {{ mastered_item_count }}
         </div>
 
     </div>
 
-</div>
+</section>
 
 
 {% if continue_item %}
 
-<div class="card section">
+<section class="continue-panel section">
 
-    <span class="badge">
-        Continue Learning
-    </span>
+    <div>
 
-    <h2>
-        {{ continue_item.title }}
-    </h2>
+        <span class="app-badge">
+            Continue learning
+        </span>
 
-    <p>
-        {{ continue_item.module.title }}
-    </p>
+        <h2>
+            {{ continue_item.title }}
+        </h2>
+
+        <p>
+            {{ continue_item.module.title }}
+        </p>
+
+    </div>
+
 
     <a
-        class="button"
+        class="button button-primary"
         href="{% url 'learning:learning_item_detail' continue_item.pk %}"
     >
-        Continue
+        Resume Study
     </a>
 
-</div>
+</section>
 
 {% endif %}
 
 {% endif %}
 
 
-<div class="section">
 
-    <h2>
-        Course Modules
-    </h2>
+<section class="section">
 
-</div>
+    <div class="section-header">
 
+        <div>
 
-{% for module in modules %}
+            <div class="page-eyebrow">
+                Curriculum
+            </div>
 
-<div class="module">
+            <h2>
+                Course Modules
+            </h2>
 
-    <span class="badge">
-        {{ module.get_module_type_display }}
-    </span>
+            <div class="section-description">
+                Work through each module and
+                its learning content.
+            </div>
 
-    <h3>
-        {{ forloop.counter }}.
-        {{ module.title }}
-    </h3>
+        </div>
 
-    {% if module.description %}
-
-    <p>
-        {{ module.description }}
-    </p>
-
-    {% endif %}
-
-    <p>
-        Learning items:
-        {{ module.items.count }}
-    </p>
-
-    <a
-        class="button"
-        href="{% url 'learning:module_detail' module.pk %}"
-    >
-        Open Module
-    </a>
-
-</div>
-
-{% empty %}
-
-<div class="card empty-state">
-
-    <h3>
-        No modules available.
-    </h3>
-
-</div>
-
-{% endfor %}
+    </div>
 
 
-<div class="section">
+    <div class="module-list">
 
-    <h2>
-        Resources
-    </h2>
+        {% for module in modules %}
 
-</div>
+        <article class="module-row">
+
+            <div class="module-index">
+                {{ forloop.counter|stringformat:"02d" }}
+            </div>
 
 
-{% for resource in resources %}
+            <div>
 
-<div class="card">
+                <span class="app-badge">
+                    {{ module.get_module_type_display }}
+                </span>
 
-    <h3>
-        {{ resource.title }}
-    </h3>
+                <h3>
+                    {{ module.title }}
+                </h3>
 
-    {% if resource.description %}
+                {% if module.description %}
 
-    <p>
-        {{ resource.description }}
-    </p>
+                    <p>
+                        {{ module.description|truncatewords:25 }}
+                    </p>
 
-    {% endif %}
+                {% endif %}
 
-    {% if resource.file %}
+                <div class="module-row-meta">
+                    {{ module.items.count }}
+                    learning items
+                </div>
 
-    <a
-        class="button"
-        href="{{ resource.file.url }}"
-    >
-        Download
-    </a>
+            </div>
 
-    {% endif %}
 
-    {% if resource.external_url %}
+            <a
+                class="button button-secondary"
+                href="{% url 'learning:module_detail' module.pk %}"
+            >
+                Open Module
+            </a>
 
-    <a
-        class="button"
-        href="{{ resource.external_url }}"
-    >
-        Open Link
-    </a>
+        </article>
 
-    {% endif %}
+        {% empty %}
 
-</div>
+            <div class="empty-state">
 
-{% empty %}
+                <div>
 
-<div class="card">
+                    <h3>
+                        No modules available
+                    </h3>
 
-    <p>
-        No resources available.
-    </p>
+                </div>
 
-</div>
+            </div>
 
-{% endfor %}
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="page-eyebrow">
+                Course library
+            </div>
+
+            <h2>
+                Resources
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="resource-grid">
+
+        {% for resource in resources %}
+
+            <article class="resource-card">
+
+                <span class="app-badge">
+                    {{ resource.resource_type }}
+                </span>
+
+                <h3>
+                    {{ resource.title }}
+                </h3>
+
+                {% if resource.description %}
+
+                    <p class="resource-description">
+                        {{ resource.description }}
+                    </p>
+
+                {% endif %}
+
+
+                <div class="resource-actions">
+
+                    {% if resource.file %}
+
+                        <a
+                            class="button"
+                            href="{{ resource.file.url }}"
+                        >
+                            Download
+                        </a>
+
+                    {% endif %}
+
+
+                    {% if resource.external_url %}
+
+                        <a
+                            class="button button-secondary"
+                            href="{{ resource.external_url }}"
+                            target="_blank"
+                        >
+                            Open Resource
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+
+                <div>
+
+                    <h3>
+                        No course resources yet
+                    </h3>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
 
 
 {% endblock %}

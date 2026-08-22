@@ -1,7 +1,7 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-{{ module.title }} | AeroESP
+{{ module.title }} · AeroESP
 {% endblock %}
 
 {% block content %}
@@ -13,390 +13,427 @@
         Dashboard
     </a>
 
-    /
+    <span>/</span>
 
-    {% if module.course.program.program_type == "IELTS" %}
-
-    <a href="{% url 'learning:ielts_dashboard' %}">
-        IELTS
+    <a href="{% url 'learning:course_detail' module.course.pk %}">
+        {{ module.course.title }}
     </a>
 
-    {% else %}
-
-    <a href="{% url 'learning:aerospace_dashboard' %}">
-        Aerospace English
-    </a>
-
-    {% endif %}
-
-    /
+    <span>/</span>
 
     {{ module.title }}
 
 </div>
 
 
-<div class="program-header">
 
-    <div class="module-header">
+<section class="program-header learning-hero">
 
-        <div>
+    <div class="learning-hero-copy">
 
-            <span class="badge">
-                {{ module.course.program.title }}
+        <div class="page-eyebrow">
+            {{ module.course.program.title }}
+        </div>
+
+        <h1 class="page-title">
+            {{ module.title }}
+        </h1>
+
+        <p class="page-lead">
+            {{ module.get_module_type_display }}
+            learning module.
+        </p>
+
+
+        <div class="learning-hero-meta">
+
+            <span class="app-badge">
+                {{ total_item_count }}
+                learning items
             </span>
 
-            <h1>
-                {{ module.title }}
-            </h1>
-
-            <p>
-                {{ module.get_module_type_display }}
-            </p>
+            <span class="app-badge badge-success">
+                {{ mastered_count }}
+                mastered
+            </span>
 
         </div>
 
 
-        <a
-            class="button"
-            href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
-        >
-            + Add Learning Item
-        </a>
+        <div class="course-progress">
 
-    </div>
+            <div class="course-progress-header">
 
+                <span>
+                    Module mastery
+                </span>
 
-    <div class="course-progress">
+                <strong>
+                    {{ progress_percent }}%
+                </strong>
 
-        <div class="course-progress-header">
+            </div>
 
-            <strong>
-                Your Progress
-            </strong>
+            <div class="progress-track">
 
-            <strong>
-                {{ progress_percent }}%
-            </strong>
+                <div
+                    class="progress-fill"
+                    style="width: {{ progress_percent }}%;"
+                ></div>
 
-        </div>
-
-        <div class="progress-track">
-
-            <div
-                class="progress-fill"
-                style="
-                    width:
-                    {{ progress_percent }}%;
-                "
-            >
             </div>
 
         </div>
 
     </div>
 
-</div>
+
+    <div class="learning-hero-action">
+
+        <a
+            class="button button-primary"
+            href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
+        >
+            Add Personal Item
+        </a>
+
+    </div>
+
+</section>
 
 
-<div class="cards section">
 
-    <div class="card">
+<section class="metric-grid section">
 
-        <h3>
-            My Learning Items
-        </h3>
+    <div class="metric-card">
 
-        <div class="stat-number">
+        <div class="metric-caption">
+            Personal items
+        </div>
+
+        <div class="metric-value">
             {{ personal_count }}
         </div>
 
     </div>
 
-    <div class="card">
 
-        <h3>
-            Total Learning Items
-        </h3>
+    <div class="metric-card">
 
-        <div class="stat-number">
+        <div class="metric-caption">
+            Total items
+        </div>
+
+        <div class="metric-value">
             {{ total_item_count }}
         </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="metric-card">
 
-        <h3>
-            Items Tracked
-        </h3>
+        <div class="metric-caption">
+            Tracked
+        </div>
 
-        <div class="stat-number">
+        <div class="metric-value">
             {{ tracked_count }}
         </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="metric-card">
 
-        <h3>
+        <div class="metric-caption">
             Mastered
-        </h3>
+        </div>
 
-        <div class="stat-number">
+        <div class="metric-value">
             {{ mastered_count }}
         </div>
 
     </div>
 
-</div>
+</section>
+
 
 
 {% if aerospace_topics %}
 
-<div class="section">
+<section class="section">
 
-    <h2>
-        Aerospace Topics
-    </h2>
-
-    <p>
-        Choose a specialized topic inside
-        {{ module.title }}.
-    </p>
-
-</div>
-
-<div class="cards">
-
-    {% for topic in aerospace_topics %}
-
-    <div class="card">
-
-        {% if topic.parent %}
-
-        <span class="badge">
-            {{ topic.parent.name }}
-        </span>
-
-        {% else %}
-
-        <span class="badge">
-            Main Topic
-        </span>
-
-        {% endif %}
-
-        <h3>
-            {{ topic.name }}
-        </h3>
-
-        {% if topic.description %}
-
-        <p>
-            {{ topic.description|truncatewords:25 }}
-        </p>
-
-        {% endif %}
-
-        <a
-            class="button"
-            href="{% url 'learning:aerospace_topic_detail' module.pk topic.pk %}"
-        >
-            Open Topic
-        </a>
-
-    </div>
-
-    {% endfor %}
-
-</div>
-
-{% endif %}
-
-
-<div class="section">
-
-    <div class="module-header">
+    <div class="section-header">
 
         <div>
 
+            <div class="page-eyebrow">
+                Aerospace taxonomy
+            </div>
+
             <h2>
-                Learning Content
+                Specialized Topics
             </h2>
 
-            <p>
-                Your notes and shared
-                learning materials for
-                this section.
-            </p>
+            <div class="section-description">
+                Explore the technical areas
+                inside {{ module.title }}.
+            </div>
 
         </div>
 
     </div>
 
-</div>
+
+    <div class="topic-grid">
+
+        {% for topic in aerospace_topics %}
+
+        <article class="topic-card">
+
+            {% if topic.parent %}
+
+                <span class="app-badge">
+                    {{ topic.parent.name }}
+                </span>
+
+            {% else %}
+
+                <span class="app-badge">
+                    Core topic
+                </span>
+
+            {% endif %}
 
 
-{% if items %}
+            <h3>
+                {{ topic.name }}
+            </h3>
 
-{% for item in items %}
 
-<div class="module">
+            {% if topic.description %}
 
-    <span class="badge">
-        {{ item.get_item_type_display }}
-    </span>
+                <p>
+                    {{ topic.description|truncatewords:22 }}
+                </p>
 
-    <h3>
-        {{ item.title }}
-    </h3>
+            {% endif %}
 
-    <div style="margin-top: 15px;">
 
-        <a
-            class="button"
-            href="{% url 'learning:learning_item_detail' item.pk %}"
-        >
-            Study Item
-        </a>
+            <a
+                class="button button-secondary"
+                href="{% url 'learning:aerospace_topic_detail' module.pk topic.pk %}"
+            >
+                Explore Topic
+            </a>
+
+        </article>
+
+        {% endfor %}
 
     </div>
 
-
-    {% if item.definition_en %}
-
-    <p>
-        <strong>
-            Definition
-        </strong>
-        <br>
-        {{ item.definition_en }}
-    </p>
-
-    {% endif %}
-
-
-    {% if item.explanation %}
-
-    <p>
-        <strong>
-            Notes
-        </strong>
-        <br>
-        {{ item.explanation }}
-    </p>
-
-    {% endif %}
-
-
-    {% if item.example %}
-
-    <p>
-        <strong>
-            Example
-        </strong>
-        <br>
-        {{ item.example }}
-    </p>
-
-    {% endif %}
-
-
-    {% if item.common_mistake %}
-
-    <p>
-        <strong>
-            Common Mistake
-        </strong>
-        <br>
-        {{ item.common_mistake }}
-    </p>
-
-    {% endif %}
-
-
-    {% if item.correct_form %}
-
-    <p>
-        <strong>
-            Correct Form
-        </strong>
-        <br>
-        {{ item.correct_form }}
-    </p>
-
-    {% endif %}
-
-    {% if item.created_by == request.user %}
-
-    <div style="margin-top: 15px;">
-        <a
-            class="button"
-            href="{% url 'learning:learning_question_create' item.pk %}"
-        >
-            Create Practice Question
-        </a>
-    </div>
-
-    {% endif %}
-
-</div>
-
-{% endfor %}
-
-
-{% else %}
-
-<div class="card empty-state">
-
-    <h3>
-        This section is empty.
-    </h3>
-
-    <p>
-        Add the first item you learn
-        in this section.
-    </p>
-
-    <a
-        class="button"
-        href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
-    >
-        Add First Learning Item
-    </a>
-
-</div>
+</section>
 
 {% endif %}
 
-<h3>Resources</h3>
 
-{% for resource in resources %}
 
-<p>
-    {{ resource.title }}
+<section class="section">
 
-    {% if resource.file %}
-    <a href="{{ resource.file.url }}">
-        Download
-    </a>
-    {% endif %}
+    <div class="section-header">
 
-    {% if resource.external_url %}
-    <a href="{{ resource.external_url }}">
-        Open Link
-    </a>
-    {% endif %}
+        <div>
 
-</p>
+            <div class="page-eyebrow">
+                Study
+            </div>
 
-{% empty %}
+            <h2>
+                Learning Content
+            </h2>
 
-<p>No resources available.</p>
+            <div class="section-description">
+                Shared course content and
+                your own personal learning items.
+            </div>
 
-{% endfor %}
+        </div>
+
+    </div>
+
+
+    <div class="learning-content-grid">
+
+        {% for item in items %}
+
+        <article class="learning-content-card">
+
+            <span class="app-badge">
+                {{ item.get_item_type_display }}
+            </span>
+
+            <h3>
+                {{ item.title }}
+            </h3>
+
+
+            {% if item.definition_en %}
+
+                <p class="learning-content-preview">
+                    {{ item.definition_en|truncatewords:24 }}
+                </p>
+
+            {% elif item.explanation %}
+
+                <p class="learning-content-preview">
+                    {{ item.explanation|truncatewords:24 }}
+                </p>
+
+            {% endif %}
+
+
+            <div class="course-card-actions">
+
+                <a
+                    class="button"
+                    href="{% url 'learning:learning_item_detail' item.pk %}"
+                >
+                    Study Item
+                </a>
+
+
+                {% if item.created_by == request.user %}
+
+                    <a
+                        class="button button-secondary"
+                        href="{% url 'learning:learning_question_create' item.pk %}"
+                    >
+                        Add Question
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+
+                <div>
+
+                    <h3>
+                        No learning content yet
+                    </h3>
+
+                    <p>
+                        Add the first personal
+                        learning item to this module.
+                    </p>
+
+                    <a
+                        class="button"
+                        href="{% url 'learning:learning_item_create' %}?module={{ module.pk }}"
+                    >
+                        Add Learning Item
+                    </a>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="page-eyebrow">
+                Supporting material
+            </div>
+
+            <h2>
+                Module Resources
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="resource-grid">
+
+        {% for resource in resources %}
+
+        <article class="resource-card">
+
+            <span class="app-badge">
+                Resource
+            </span>
+
+            <h3>
+                {{ resource.title }}
+            </h3>
+
+
+            <div class="resource-actions">
+
+                {% if resource.file %}
+
+                    <a
+                        class="button"
+                        href="{{ resource.file.url }}"
+                    >
+                        Download
+                    </a>
+
+                {% endif %}
+
+
+                {% if resource.external_url %}
+
+                    <a
+                        class="button button-secondary"
+                        href="{{ resource.external_url }}"
+                        target="_blank"
+                    >
+                        Open Link
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+
+                <div>
+                    <h3>
+                        No module resources
+                    </h3>
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
 
 {% endblock %}

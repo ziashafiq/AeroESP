@@ -115,6 +115,24 @@ urlpatterns = [
         name="placement_test",
     ),
 
+        path(
+        "placement/start/<str:program_type>/",
+        views.placement_test_start,
+        name="placement_test_start",
+    ),
+
+    path(
+        "placement/attempt/<int:attempt_id>/",
+        views.placement_test_question,
+        name="placement_test_question",
+    ),
+
+    path(
+        "placement/attempt/<int:attempt_id>/submit/",
+        views.placement_test_submit,
+        name="placement_test_submit",
+    ),
+
     path(
         "placement/result/<int:attempt_id>/",
         views.placement_result,

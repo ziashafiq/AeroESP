@@ -1,0 +1,177 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Placement Question · AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<div class="placement-shell">
+
+
+    <div class="breadcrumb">
+
+        <a href="{% url 'learning:placement_test' %}">
+            Placement
+        </a>
+
+        <span>/</span>
+
+        {{ attempt.program.title }}
+
+    </div>
+
+
+
+    {% widthratio answered total 100 as placement_percent %}
+
+
+    <div class="placement-progress">
+
+        <div class="placement-progress-meta">
+
+            <span>
+                Question {{ answered|add:"1" }}
+                of {{ total }}
+            </span>
+
+            <span>
+                {{ placement_percent }}%
+            </span>
+
+        </div>
+
+        <div class="progress-track">
+
+            <div
+                class="progress-fill"
+                style="width: {{ placement_percent }}%;"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+
+    <article class="placement-question-card">
+
+        <span class="app-badge">
+            {{ question.get_skill_display }}
+        </span>
+
+
+        <h2>
+            {{ question.question_text }}
+        </h2>
+
+
+        <form
+            method="post"
+            action="{% url 'learning:placement_test_question' attempt.pk %}"
+        >
+
+            {% csrf_token %}
+
+
+            <div class="answer-grid">
+
+                <label class="answer-option">
+
+                    <input
+                        type="radio"
+                        name="answer"
+                        value="A"
+                        required
+                    >
+
+                    <span class="answer-letter">
+                        A
+                    </span>
+
+                    <span>
+                        {{ question.option_a }}
+                    </span>
+
+                </label>
+
+
+                <label class="answer-option">
+
+                    <input
+                        type="radio"
+                        name="answer"
+                        value="B"
+                        required
+                    >
+
+                    <span class="answer-letter">
+                        B
+                    </span>
+
+                    <span>
+                        {{ question.option_b }}
+                    </span>
+
+                </label>
+
+
+                <label class="answer-option">
+
+                    <input
+                        type="radio"
+                        name="answer"
+                        value="C"
+                        required
+                    >
+
+                    <span class="answer-letter">
+                        C
+                    </span>
+
+                    <span>
+                        {{ question.option_c }}
+                    </span>
+
+                </label>
+
+
+                <label class="answer-option">
+
+                    <input
+                        type="radio"
+                        name="answer"
+                        value="D"
+                        required
+                    >
+
+                    <span class="answer-letter">
+                        D
+                    </span>
+
+                    <span>
+                        {{ question.option_d }}
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <button
+                class="button button-primary"
+                type="submit"
+            >
+                Save & Continue
+            </button>
+
+        </form>
+
+    </article>
+
+
+</div>
+
+
+{% endblock %}

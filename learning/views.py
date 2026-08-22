@@ -4079,12 +4079,36 @@ def teacher_resource_create(request):
 def resource_list(request):
     from django.db.models import Q
 
-    resources = Resource.objects.filter(
-        Q(visibility="PUBLIC") |
-        Q(visibility="COURSE", course__enrollment__student=request.user) |
-        Q(visibility="MODULE", module__course__enrollment__student=request.user),
-        is_active=True,
-    ).distinct().order_by("-created_at")
+    resources = (
+        Resource.objects
+        .filter(
+            Q(
+                visibility="PUBLIC"
+            )
+            |
+            Q(
+                visibility="COURSE",
+                course__enrollments__student=request.user,
+                course__enrollments__status=Enrollment.Status.ACTIVE,
+            )
+            |
+            Q(
+                visibility="MODULE",
+                module__course__enrollments__student=request.user,
+                module__course__enrollments__status=Enrollment.Status.ACTIVE,
+            ),
+            is_active=True,
+        )
+        .select_related(
+            "course",
+            "module",
+            "module__course",
+            "uploaded_by",
+        )
+        .distinct()
+        .order_by("-created_at")
+    )
+        
 
     return render(
         request,

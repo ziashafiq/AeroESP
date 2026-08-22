@@ -1,64 +1,137 @@
-<h2>Learning Resources</h2>
+{% extends "learning/base.html" %}
+
+{% block title %}
+Learning Resources · AeroESP
+{% endblock %}
+
+{% block content %}
 
 
-{% for resource in resources %}
+<section class="app-hero">
 
-<hr>
+    <div class="page-eyebrow">
+        Learning library
+    </div>
 
-<h3>{{ resource.title }}</h3>
+    <h1 class="page-title">
+        Resources
+    </h1>
 
-<p>
-{{ resource.description }}
-</p>
+    <p class="page-lead">
+        Course material, module references
+        and shared learning resources available
+        to your active learning programs.
+    </p>
 
-<p>
-Type:
-{{ resource.resource_type }}
-</p>
-
-
-{% if resource.course %}
-
-<p>
-Course:
-{{ resource.course.title }}
-</p>
-
-{% endif %}
+</section>
 
 
-{% if resource.module %}
 
-<p>
-Module:
-{{ resource.module.title }}
-</p>
+<section class="resource-grid">
 
-{% endif %}
+    {% for resource in resources %}
 
+    <article class="resource-card">
 
-{% if resource.file %}
+        <div>
 
-<a href="{{ resource.file.url }}">
-Download File
-</a>
+            <span class="app-badge">
+                {{ resource.resource_type }}
+            </span>
 
-{% endif %}
+        </div>
 
 
-{% if resource.external_url %}
-
-<a href="{{ resource.external_url }}">
-Open External Resource
-</a>
-
-{% endif %}
+        <h3>
+            {{ resource.title }}
+        </h3>
 
 
-{% empty %}
+        {% if resource.description %}
 
-<p>
-No resources available.
-</p>
+            <p class="resource-description">
+                {{ resource.description }}
+            </p>
 
-{% endfor %}
+        {% endif %}
+
+
+        <div class="resource-context">
+
+            {% if resource.course %}
+
+                <span class="app-badge">
+                    {{ resource.course.title }}
+                </span>
+
+            {% endif %}
+
+
+            {% if resource.module %}
+
+                <span class="app-badge">
+                    {{ resource.module.title }}
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="resource-actions">
+
+            {% if resource.file %}
+
+                <a
+                    class="button"
+                    href="{{ resource.file.url }}"
+                >
+                    Download File
+                </a>
+
+            {% endif %}
+
+
+            {% if resource.external_url %}
+
+                <a
+                    class="button button-secondary"
+                    href="{{ resource.external_url }}"
+                    target="_blank"
+                >
+                    Open Resource
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </article>
+
+
+    {% empty %}
+
+        <div class="empty-state">
+
+            <div>
+
+                <h3>
+                    No resources available
+                </h3>
+
+                <p>
+                    Resources assigned to your
+                    courses and modules will
+                    appear here.
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</section>
+
+
+{% endblock %}

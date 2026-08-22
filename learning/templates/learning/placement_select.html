@@ -1,0 +1,90 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Placement Assessment · AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<section class="app-hero">
+
+    <div class="page-eyebrow">
+        Placement assessment
+    </div>
+
+    <h1 class="page-title">
+        Find your starting point.
+    </h1>
+
+    <p class="page-lead">
+        Select a learning program.
+        AeroESP will evaluate your current
+        language performance and use the
+        result to support course-level assignment.
+    </p>
+
+</section>
+
+
+
+<section class="placement-program-grid">
+
+    {% for program in programs %}
+
+    <article class="placement-program-card">
+
+        <span class="app-badge">
+            Placement
+        </span>
+
+        <h2>
+            {{ program.title }}
+        </h2>
+
+
+        {% if program.description %}
+
+            <p>
+                {{ program.description }}
+            </p>
+
+        {% else %}
+
+            <p>
+                Assess your current proficiency
+                for this AeroESP learning program.
+            </p>
+
+        {% endif %}
+
+
+        <a
+            class="button"
+            href="{% url 'learning:placement_test_start' program.program_type %}"
+        >
+            Start Assessment
+        </a>
+
+    </article>
+
+    {% empty %}
+
+        <div class="empty-state">
+
+            <div>
+
+                <h3>
+                    No placement programs available
+                </h3>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</section>
+
+
+{% endblock %}

@@ -1,9 +1,8 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-{{ learning_item.title }} | AeroESP
+{{ learning_item.title }} · AeroESP
 {% endblock %}
-
 
 {% block content %}
 
@@ -14,387 +13,459 @@
         Dashboard
     </a>
 
-    /
+    <span>/</span>
 
     <a href="{% url 'learning:module_detail' learning_item.module.pk %}">
         {{ learning_item.module.title }}
     </a>
 
-    /
+    <span>/</span>
 
     {{ learning_item.title }}
 
 </div>
 
 
-<div class="program-header">
 
-    <span class="badge">
+<section class="program-header">
+
+    <div class="page-eyebrow">
+        Study workspace
+    </div>
+
+    <span class="app-badge">
         {{ learning_item.get_item_type_display }}
     </span>
 
-    <h1>
+    <h1 class="page-title">
         {{ learning_item.title }}
     </h1>
 
-    <p>
+    <p class="page-lead">
         {{ learning_item.module.course.program.title }}
-        /
+        ·
         {{ learning_item.module.title }}
     </p>
 
-</div>
+</section>
 
 
-<div class="cards">
 
-    <div class="card">
+<div class="study-layout">
 
-        <h3>
-            Learning Status
-        </h3>
 
-        <div class="stat-number">
-            {{ progress.get_status_display }}
-        </div>
+    <main class="study-main">
 
-    </div>
 
+        <section class="study-content">
 
-    <div class="card">
 
-        <h3>
-            Mastery
-        </h3>
+            {% if learning_item.meaning_fa %}
 
-        <div class="stat-number">
-            {{ progress.mastery_score }}%
-        </div>
+            <div class="study-block">
 
-    </div>
+                <div class="study-block-label">
+                    Persian meaning
+                </div>
 
+                <p class="rtl-content">
+                    {{ learning_item.meaning_fa }}
+                </p>
 
-    <div class="card">
-
-        <h3>
-            Correct Answers
-        </h3>
-
-        <div class="stat-number">
-            {{ progress.correct_count }}
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3>
-            Incorrect Answers
-        </h3>
-
-        <div class="stat-number">
-            {{ progress.incorrect_count }}
-        </div>
-
-    </div>
-
-</div>
-
-
-<div class="section">
-
-    <h2>
-        Learning Content
-    </h2>
-
-</div>
-
-
-<div class="module">
-
-    {% if learning_item.meaning_fa %}
-
-    <h3>
-        Persian Meaning
-    </h3>
-
-    <p>
-        {{ learning_item.meaning_fa }}
-    </p>
-
-    {% endif %}
-
-
-    {% if learning_item.definition_en %}
-
-    <h3>
-        Definition
-    </h3>
-
-    <p>
-        {{ learning_item.definition_en }}
-    </p>
-
-    {% endif %}
-
-
-    {% if learning_item.explanation %}
-
-    <h3>
-        Explanation
-    </h3>
-
-    <p>
-        {{ learning_item.explanation }}
-    </p>
-
-    {% endif %}
-
-
-    {% if learning_item.example %}
-
-    <h3>
-        Example
-    </h3>
-
-    <p>
-        {{ learning_item.example }}
-    </p>
-
-    {% endif %}
-
-
-    {% if learning_item.common_mistake %}
-
-    <h3>
-        Common Mistake
-    </h3>
-
-    <p>
-        {{ learning_item.common_mistake }}
-    </p>
-
-    {% endif %}
-
-
-    {% if learning_item.correct_form %}
-
-    <h3>
-        Correct Form
-    </h3>
-
-    <p>
-        {{ learning_item.correct_form }}
-    </p>
-
-    {% endif %}
-
-
-    {% if learning_item.tags %}
-
-    <h3>
-        Tags
-    </h3>
-
-    <p>
-        {{ learning_item.tags }}
-    </p>
-
-    {% endif %}
-
-</div>
-
-
-<div class="section">
-
-    <h2>
-        Practice Questions
-    </h2>
-
-    <p>
-        Test your understanding of this learning item.
-    </p>
-
-</div>
-
-
-{% if question_links %}
-
-{% for link in question_links %}
-
-<div class="card">
-
-    <span class="badge">
-        Practice
-    </span>
-
-    <h3>
-        Question {{ forloop.counter }}
-    </h3>
-
-    <p>
-        {{ link.question.question_text }}
-    </p>
-
-    <form
-        method="post"
-        action="{% url 'learning:practice_answer' link.pk %}"
-    >
-
-        {% csrf_token %}
-
-        <input
-            type="hidden"
-            name="mode"
-            value="mixed"
-        >
-
-
-        <p>
-            <label>
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="A"
-                    required
-                >
-
-                A.
-                {{ link.question.option_a }}
-
-            </label>
-        </p>
-
-
-        <p>
-            <label>
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="B"
-                    required
-                >
-
-                B.
-                {{ link.question.option_b }}
-
-            </label>
-        </p>
-
-
-        <p>
-            <label>
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="C"
-                    required
-                >
-
-                C.
-                {{ link.question.option_c }}
-
-            </label>
-        </p>
-
-
-        <p>
-            <label>
-
-                <input
-                    type="radio"
-                    name="answer"
-                    value="D"
-                    required
-                >
-
-                D.
-                {{ link.question.option_d }}
-
-            </label>
-        </p>
-
-
-        <button
-            class="button"
-            type="submit"
-        >
-            Submit Answer
-        </button>
-
-    </form>
-
-</div>
-
-{% endfor %}
-
-
-{% else %}
-
-<div class="card empty-state">
-
-    <h3>
-        No practice question yet.
-    </h3>
-
-    <p>
-        This learning item does not currently
-        have an available practice question.
-    </p>
-
-</div>
-
-{% endif %}
-
-
-<div class="section">
-
-    <div class="module-header">
-
-        <div>
-
-            {% if previous_item %}
-
-            <a
-                class="button"
-                href="{% url 'learning:learning_item_detail' previous_item.pk %}"
-            >
-                ← Previous Item
-            </a>
+            </div>
 
             {% endif %}
 
-        </div>
 
+            {% if learning_item.definition_en %}
 
-        <div>
+            <div class="study-block">
 
-            <a
-                class="button"
-                href="{% url 'learning:module_detail' learning_item.module.pk %}"
-            >
-                Back to Module
-            </a>
+                <div class="study-block-label">
+                    Definition
+                </div>
 
+                <p>
+                    {{ learning_item.definition_en }}
+                </p>
 
-            {% if next_item %}
-
-            <a
-                class="button"
-                href="{% url 'learning:learning_item_detail' next_item.pk %}"
-            >
-                Next Item →
-            </a>
+            </div>
 
             {% endif %}
 
+
+            {% if learning_item.explanation %}
+
+            <div class="study-block">
+
+                <div class="study-block-label">
+                    Explanation
+                </div>
+
+                <p>
+                    {{ learning_item.explanation }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+            {% if learning_item.example %}
+
+            <div class="study-block">
+
+                <div class="study-block-label">
+                    Example
+                </div>
+
+                <p>
+                    {{ learning_item.example }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+            {% if learning_item.common_mistake %}
+
+            <div class="study-block">
+
+                <div class="study-block-important">
+
+                    <div class="study-block-label">
+                        Common mistake
+                    </div>
+
+                    <p>
+                        {{ learning_item.common_mistake }}
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% endif %}
+
+
+            {% if learning_item.correct_form %}
+
+            <div class="study-block">
+
+                <div class="study-block-label">
+                    Correct form
+                </div>
+
+                <p>
+                    {{ learning_item.correct_form }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
+
+            {% if learning_item.tags %}
+
+            <div class="study-block">
+
+                <div class="study-block-label">
+                    Learning tags
+                </div>
+
+                <p class="text-secondary">
+                    {{ learning_item.tags }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+
+
+        <section class="section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <div class="page-eyebrow">
+                        Retrieval practice
+                    </div>
+
+                    <h2>
+                        Practice Questions
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            {% for link in question_links %}
+
+            <article class="practice-card">
+
+                <span class="app-badge">
+                    Question {{ forloop.counter }}
+                </span>
+
+                <div class="practice-question-text">
+                    {{ link.question.question_text }}
+                </div>
+
+
+                <form
+                    method="post"
+                    action="{% url 'learning:practice_answer' link.pk %}"
+                >
+
+                    {% csrf_token %}
+
+                    <input
+                        type="hidden"
+                        name="mode"
+                        value="mixed"
+                    >
+
+
+                    <div class="answer-grid">
+
+                        <label class="answer-option">
+
+                            <input
+                                type="radio"
+                                name="answer"
+                                value="A"
+                                required
+                            >
+
+                            <span class="answer-letter">
+                                A
+                            </span>
+
+                            <span>
+                                {{ link.question.option_a }}
+                            </span>
+
+                        </label>
+
+
+                        <label class="answer-option">
+
+                            <input
+                                type="radio"
+                                name="answer"
+                                value="B"
+                                required
+                            >
+
+                            <span class="answer-letter">
+                                B
+                            </span>
+
+                            <span>
+                                {{ link.question.option_b }}
+                            </span>
+
+                        </label>
+
+
+                        <label class="answer-option">
+
+                            <input
+                                type="radio"
+                                name="answer"
+                                value="C"
+                                required
+                            >
+
+                            <span class="answer-letter">
+                                C
+                            </span>
+
+                            <span>
+                                {{ link.question.option_c }}
+                            </span>
+
+                        </label>
+
+
+                        <label class="answer-option">
+
+                            <input
+                                type="radio"
+                                name="answer"
+                                value="D"
+                                required
+                            >
+
+                            <span class="answer-letter">
+                                D
+                            </span>
+
+                            <span>
+                                {{ link.question.option_d }}
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <button
+                        class="button"
+                        type="submit"
+                    >
+                        Submit Answer
+                    </button>
+
+                </form>
+
+            </article>
+
+
+            {% empty %}
+
+                <div class="empty-state">
+
+                    <div>
+
+                        <h3>
+                            No practice question yet
+                        </h3>
+
+                        <p>
+                            This item currently has
+                            no active practice question.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </section>
+
+
+        <nav class="study-navigation">
+
+            <div>
+
+                {% if previous_item %}
+
+                    <a
+                        class="button button-secondary"
+                        href="{% url 'learning:learning_item_detail' previous_item.pk %}"
+                    >
+                        Previous Item
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="course-card-actions">
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'learning:module_detail' learning_item.module.pk %}"
+                >
+                    Module
+                </a>
+
+
+                {% if next_item %}
+
+                    <a
+                        class="button"
+                        href="{% url 'learning:learning_item_detail' next_item.pk %}"
+                    >
+                        Next Item
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </nav>
+
+
+    </main>
+
+
+
+    <aside class="study-side">
+
+
+        <div class="metric-card">
+
+            <div class="metric-caption">
+                Learning status
+            </div>
+
+            <div class="metric-value">
+                {{ progress.get_status_display }}
+            </div>
+
         </div>
 
-    </div>
+
+        <div class="metric-card">
+
+            <div class="metric-caption">
+                Mastery
+            </div>
+
+            <div class="metric-value">
+                {{ progress.mastery_score }}%
+            </div>
+
+            <div class="progress-track">
+
+                <div
+                    class="progress-fill"
+                    style="width: {{ progress.mastery_score }}%;"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <div class="metric-caption">
+                Correct
+            </div>
+
+            <div class="metric-value">
+                {{ progress.correct_count }}
+            </div>
+
+        </div>
+
+
+        <div class="metric-card">
+
+            <div class="metric-caption">
+                Incorrect
+            </div>
+
+            <div class="metric-value">
+                {{ progress.incorrect_count }}
+            </div>
+
+        </div>
+
+
+    </aside>
+
 
 </div>
 

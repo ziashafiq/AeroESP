@@ -1,125 +1,235 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-My Courses | AeroESP
+My Courses · AeroESP
 {% endblock %}
 
 {% block content %}
 
-<h1 class="page-title">
-    My Courses
-</h1>
 
-<p>
-    Continue your learning programs
-    and track your assigned level.
-</p>
+<section class="app-hero learning-hero">
 
-<div class="cards">
+    <div class="learning-hero-copy">
 
-{% for card in course_cards %}
+        <div class="page-eyebrow">
+            Learning portfolio
+        </div>
 
-{% with course=card.course enrollment=card.enrollment %}
+        <h1 class="page-title">
+            My Courses
+        </h1>
 
-<div class="card course-card">
+        <p class="page-lead">
+            Move between General English,
+            IELTS and Aerospace ESP through
+            a single structured learning
+            environment.
+        </p>
 
-    <span class="badge">
-        {{ course.program.title }}
-    </span>
+    </div>
 
-    <h3>
-        {{ course.title }}
-    </h3>
-
-    {% if course.description %}
-
-    <p>
-        {{ course.description|truncatewords:20 }}
-    </p>
-
-    {% endif %}
-
-    <p>
-        <strong>Sections:</strong>
-        {{ course.module_count }}
-    </p>
+</section>
 
 
-    <p>
-        <strong>Your Level:</strong>
+<section class="course-library">
 
-        {% if enrollment and enrollment.assigned_level %}
+    {% for card in course_cards %}
 
-            {{ enrollment.get_assigned_level_display }}
+        {% with course=card.course enrollment=card.enrollment %}
 
-        {% else %}
+        <article class="course-premium-card">
 
-            Not assessed yet
+            <div class="course-card-index">
+                COURSE {{ forloop.counter|stringformat:"02d" }}
+            </div>
 
-        {% endif %}
-    </p>
+            <div>
 
+                <span class="app-badge">
+                    {{ course.program.title }}
+                </span>
 
-    <p>
-        <strong>Class:</strong>
+                {% if enrollment %}
 
-        {% if enrollment and enrollment.class_name %}
+                    <span class="app-badge badge-success">
+                        Enrolled
+                    </span>
 
-            {{ enrollment.class_name }}
+                {% else %}
 
-        {% else %}
+                    <span class="app-badge">
+                        Available
+                    </span>
 
-            Not assigned
+                {% endif %}
 
-        {% endif %}
-    </p>
-
-
-    {% if enrollment %}
-
-    <p>
-        <strong>Placement:</strong>
-        {{ enrollment.get_placement_status_display }}
-    </p>
-
-    {% endif %}
+            </div>
 
 
-    {% if course.program.program_type == "IELTS" %}
+            <h2>
+                {{ course.title }}
+            </h2>
 
-    <a
-        class="button"
-        href="{% url 'learning:ielts_dashboard' %}"
-    >
-        Open IELTS
-    </a>
 
-    {% elif course.program.program_type == "AEROSPACE_ESP" %}
+            {% if course.description %}
 
-    <a
-        class="button"
-        href="{% url 'learning:aerospace_dashboard' %}"
-    >
-        Open Aerospace English
-    </a>
+                <p>
+                    {{ course.description|truncatewords:26 }}
+                </p>
 
-    {% else %}
+            {% else %}
 
-    <a
-        class="button"
-        href="{% url 'learning:course_detail' course.pk %}"
-    >
-        Open Course
-    </a>
+                <p>
+                    Structured learning modules,
+                    practice and progress tracking.
+                </p>
 
-    {% endif %}
+            {% endif %}
 
-</div>
 
-{% endwith %}
+            <div class="course-card-meta">
 
-{% endfor %}
+                <div class="course-meta-cell">
 
-</div>
+                    <span class="course-meta-label">
+                        Modules
+                    </span>
+
+                    <span class="course-meta-value">
+                        {{ course.module_count }}
+                    </span>
+
+                </div>
+
+
+                <div class="course-meta-cell">
+
+                    <span class="course-meta-label">
+                        Level
+                    </span>
+
+                    <span class="course-meta-value">
+
+                        {% if enrollment and enrollment.assigned_level %}
+
+                            {{ enrollment.get_assigned_level_display }}
+
+                        {% else %}
+
+                            Not assessed
+
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+
+                <div class="course-meta-cell">
+
+                    <span class="course-meta-label">
+                        Placement
+                    </span>
+
+                    <span class="course-meta-value">
+
+                        {% if enrollment %}
+
+                            {{ enrollment.get_placement_status_display }}
+
+                        {% else %}
+
+                            Not enrolled
+
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+
+                <div class="course-meta-cell">
+
+                    <span class="course-meta-label">
+                        Class
+                    </span>
+
+                    <span class="course-meta-value">
+
+                        {% if enrollment and enrollment.class_name %}
+
+                            {{ enrollment.class_name }}
+
+                        {% else %}
+
+                            Independent
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="course-card-actions">
+
+                <a
+                    class="button"
+                    href="{% url 'learning:course_detail' course.pk %}"
+                >
+                    Open Course
+                </a>
+
+
+                {% if course.program.program_type == "IELTS" %}
+
+                    <a
+                        class="button button-secondary"
+                        href="{% url 'learning:ielts_dashboard' %}"
+                    >
+                        Program Overview
+                    </a>
+
+                {% elif course.program.program_type == "AEROSPACE_ESP" %}
+
+                    <a
+                        class="button button-secondary"
+                        href="{% url 'learning:aerospace_dashboard' %}"
+                    >
+                        Program Overview
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </article>
+
+        {% endwith %}
+
+    {% empty %}
+
+        <div class="empty-state">
+
+            <div>
+
+                <h3>
+                    No courses available
+                </h3>
+
+                <p>
+                    Active learning programs
+                    will appear here.
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</section>
+
 
 {% endblock %}
