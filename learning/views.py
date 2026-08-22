@@ -75,18 +75,178 @@ def dashboard(request):
         status=Enrollment.Status.ACTIVE
     ).first()
 
-    # Progress per program
-    def get_progress(program_type):
-        qs = LearningProgress.objects.filter(
-            student=request.user,
-            learning_item__module__course__program__program_type=program_type
-        )
-        tracked = qs.count()
-        mastered = qs.filter(status=LearningProgress.Status.MASTERED).count()
-        return round(mastered / tracked * 100) if tracked else 0
+    # =====================================================
+    # Progress per learning program
+    # =====================================================
 
-    general_progress = get_progress(LearningProgram.ProgramType.IELTS)
-    aerospace_progress = get_progress(LearningProgram.ProgramType.AEROSPACE_ESP)
+    def get_progress(program_type):
+
+        accessible_items = (
+            LearningItem.objects
+            .filter(
+                module__course__enrollments__student=request.user,
+                module__course__enrollments__status=(
+                    Enrollment.Status.ACTIVE
+                ),
+                module__course__program__program_type=program_type,
+                module__course__is_active=True,
+                module__is_active=True,
+            )
+            .filter(
+                Q(created_by=request.user)
+                | Q(is_public=True)
+            )
+            .distinct()
+        )
+
+        progress_records = (
+            LearningProgress.objects
+            .filter(
+                student=request.user,
+                learning_item__in=accessible_items,
+            )
+        )
+
+        total_items = accessible_items.count()
+
+        tracked = progress_records.count()
+
+        mastered = (
+            progress_records
+            .filter(
+                status=(
+                    LearningProgress
+                    .Status
+                    .MASTERED
+                )
+            )
+            .count()
+        )
+
+        due = (
+            progress_records
+            .filter(
+                next_review_at__lte=timezone.now(),
+            )
+            .exclude(
+                status=(
+                    LearningProgress
+                    .Status
+                    .MASTERED
+                )
+            )
+            .count()
+        )
+
+        correct_total = 0
+        incorrect_total = 0
+
+        for correct_count, incorrect_count in (
+            progress_records.values_list(
+                "correct_count",
+                "incorrect_count",
+            )
+        ):
+            correct_total += correct_count
+            incorrect_total += incorrect_count
+
+        attempt_total = (
+            correct_total
+            + incorrect_total
+        )
+
+        accuracy = (
+            round(
+                correct_total
+                / attempt_total
+                * 100
+            )
+            if attempt_total
+            else 0
+        )
+
+        mastery_percent = (
+            round(
+                mastered
+                / total_items
+                * 100
+            )
+            if total_items
+            else 0
+        )
+
+        return {
+            "total": total_items,
+            "tracked": tracked,
+            "mastered": mastered,
+            "accuracy": accuracy,
+            "due": due,
+            "mastery_percent": mastery_percent,
+        }
+
+    general_progress = get_progress(
+        LearningProgram.ProgramType.IELTS
+    )
+
+    aerospace_progress = get_progress(
+        LearningProgram.ProgramType.AEROSPACE_ESP
+    )
+
+    # =====================================================
+    # Continue Learning
+    # =====================================================
+
+    dashboard_items = (
+        LearningItem.objects
+        .filter(
+            module__course__enrollments__student=request.user,
+            module__course__enrollments__status=(
+                Enrollment.Status.ACTIVE
+            ),
+            module__course__is_active=True,
+            module__is_active=True,
+        )
+        .filter(
+            Q(created_by=request.user)
+            | Q(is_public=True)
+        )
+        .select_related(
+            "module",
+            "module__course",
+            "module__course__program",
+        )
+        .distinct()
+        .order_by(
+            "module__course__program__order",
+            "module__course__order",
+            "module__order",
+            "pk",
+        )
+    )
+
+    mastered_item_ids = (
+        LearningProgress.objects
+        .filter(
+            student=request.user,
+            status=(
+                LearningProgress
+                .Status
+                .MASTERED
+            ),
+        )
+        .values_list(
+            "learning_item_id",
+            flat=True,
+        )
+    )
+
+    continue_item = (
+        dashboard_items
+        .exclude(
+            pk__in=mastered_item_ids,
+        )
+        .first()
+    )
 
     # Overall progress
     progress_qs = LearningProgress.objects.filter(student=request.user)
@@ -133,6 +293,7 @@ def dashboard(request):
             "unresolved_error_count": unresolved_errors.count(),
             "weak_areas": weak_areas,
             "recent_errors": recent_errors,
+            "continue_item": continue_item,
         },
     )
 

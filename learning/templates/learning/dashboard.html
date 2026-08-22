@@ -78,6 +78,52 @@ Learning Dashboard | AeroESP
 </div>
 
 
+{% if continue_item %}
+
+<div class="section">
+
+    <h2>
+        Continue Learning
+    </h2>
+
+    <div class="card">
+
+        <span class="badge">
+            {{ continue_item.module.course.program.title }}
+        </span>
+
+        <h2>
+            {{ continue_item.title }}
+        </h2>
+
+        <p>
+            {{ continue_item.module.course.title }}
+            /
+            {{ continue_item.module.title }}
+        </p>
+
+        {% if continue_item.definition_en %}
+
+        <p>
+            {{ continue_item.definition_en|truncatewords:25 }}
+        </p>
+
+        {% endif %}
+
+        <a
+            class="button"
+            href="{% url 'learning:learning_item_detail' continue_item.pk %}"
+        >
+            Continue Learning
+        </a>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+
 <h2>
     My Learning Programs
 </h2>
