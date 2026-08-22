@@ -1622,23 +1622,50 @@ def _build_adaptive_practice_pool(user, mode):
     """
     now = timezone.now()
 
-    # Base queryset: all questions linked to learning items created by the user
-    qs = LearningItemQuestion.objects.filter(
-        learning_item__created_by=user
-    ).select_related(
-        "learning_item",
-        "learning_item__module",
-        "question",
+    # Base queryset: all questions linked to learning items accessible to the user
+    qs = (
+        LearningItemQuestion.objects
+        .filter(
+            Q(learning_item__created_by=user)
+            | Q(learning_item__is_public=True)
+        )
+        .filter(
+            learning_item__module__course__enrollments__student=user,
+            learning_item__module__course__enrollments__status=(
+                Enrollment.Status.ACTIVE
+            ),
+        )
+        .filter(
+            question__status__in=[
+                "APPROVED",
+                "DEMO",
+            ],
+        )
+        .exclude(
+            question__visibility="EXAM_ONLY",
+        )
+        .select_related(
+            "learning_item",
+            "learning_item__module",
+            "learning_item__module__course",
+            "learning_item__module__course__program",
+            "question",
+        )
+        .distinct()
     )
 
     # Filter by mode (general / aerospace / mixed)
     if mode == "general":
         qs = qs.filter(
-            learning_item__module__course__program__program_type=LearningProgram.ProgramType.IELTS
+            learning_item__module__course__program__program_type=(
+                LearningProgram.ProgramType.IELTS
+            )
         )
     elif mode == "aerospace":
         qs = qs.filter(
-            learning_item__module__course__program__program_type=LearningProgram.ProgramType.AEROSPACE_ESP
+            learning_item__module__course__program__program_type=(
+                LearningProgram.ProgramType.AEROSPACE_ESP
+            )
         )
     # else: mixed, no filter
 
@@ -1821,15 +1848,21 @@ def practice_answer(
             | Q(learning_item__is_public=True)
         )
         .filter(
+            learning_item__module__course__enrollments__student=request.user,
+            learning_item__module__course__enrollments__status=(
+                Enrollment.Status.ACTIVE
+            ),
+        )
+        .filter(
             question__status__in=[
                 "APPROVED",
                 "DEMO",
             ],
         )
         .exclude(
-
             question__visibility="EXAM_ONLY",
-        ),
+        )
+        .distinct(),
         pk=link_id,
     )
 
