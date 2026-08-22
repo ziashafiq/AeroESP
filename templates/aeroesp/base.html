@@ -1,0 +1,652 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#071926"
+    >
+
+    <title>
+        {% block title %}
+        AeroESP
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'aeroesp/css/app.css' %}"
+    >
+
+    {% block extra_css %}
+    {% endblock %}
+
+</head>
+
+
+<body
+    class="
+        {% block body_class %}
+        aeroesp-app
+        {% endblock %}
+    "
+>
+
+
+<div class="app-shell">
+
+
+    <!-- ==========================================
+         SIDEBAR
+         ========================================== -->
+
+    <aside
+        class="app-sidebar"
+        data-sidebar
+    >
+
+        <a
+            href="{% url 'home' %}"
+            class="app-brand"
+        >
+
+            <span class="app-brand-mark"></span>
+
+            <span class="app-brand-copy">
+
+                <span class="app-brand-name">
+                    Aero<span>ESP</span>
+                </span>
+
+                <span class="app-brand-tagline">
+                    Aerospace English
+                </span>
+
+            </span>
+
+        </a>
+
+
+        <nav class="app-sidebar-nav">
+
+
+            {% if request.user.is_superuser or request.user.teacher_profile.is_approved %}
+
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Workspace
+                    </div>
+
+
+                    <a
+                        href="{% url 'accounts:teacher_dashboard' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            H
+                        </span>
+
+                        Overview
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:teacher_learning_dashboard' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            L
+                        </span>
+
+                        Learning Analytics
+
+                    </a>
+
+                </div>
+
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Content
+                    </div>
+
+
+                    <a
+                        href="{% url 'teacher_questions:list' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            Q
+                        </span>
+
+                        Question Bank
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:teacher_resource_list' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            R
+                        </span>
+
+                        Resources
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:guide_hub' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            G
+                        </span>
+
+                        Guide Hub
+
+                    </a>
+
+                </div>
+
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Assessment
+                    </div>
+
+
+                    <a
+                        href="{% url 'exams:teacher_exam_list' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            E
+                        </span>
+
+                        Exams
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'intelligence:dashboard' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            AI
+                        </span>
+
+                        AI Intelligence
+
+                    </a>
+
+                </div>
+
+
+            {% else %}
+
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Overview
+                    </div>
+
+
+                    <a
+                        href="{% url 'learning:dashboard' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            H
+                        </span>
+
+                        Dashboard
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:my_courses' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            C
+                        </span>
+
+                        My Courses
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:learning_path' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            P
+                        </span>
+
+                        Learning Path
+
+                    </a>
+
+                </div>
+
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Practice
+                    </div>
+
+
+                    <a
+                        href="{% url 'learning:daily_practice' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            D
+                        </span>
+
+                        Daily Practice
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:review_due' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            RV
+                        </span>
+
+                        Review Queue
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:my_errors' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            ER
+                        </span>
+
+                        Error Analysis
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:learning_journal' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            J
+                        </span>
+
+                        Learning Journal
+
+                    </a>
+
+                </div>
+
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Assessment
+                    </div>
+
+
+                    <a
+                        href="{% url 'exams_student:home' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            EX
+                        </span>
+
+                        Exams
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:placement_test' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            PL
+                        </span>
+
+                        Placement
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:learning_analytics' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            AN
+                        </span>
+
+                        Analytics
+
+                    </a>
+
+                </div>
+
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Library
+                    </div>
+
+
+                    <a
+                        href="{% url 'learning:resource_list' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            R
+                        </span>
+
+                        Resources
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'learning:guide_hub' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            G
+                        </span>
+
+                        Guide Hub
+
+                    </a>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </nav>
+
+
+        <div class="sidebar-user">
+
+            <div class="sidebar-user-top">
+
+                <div class="user-avatar">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+
+
+                <div class="sidebar-user-copy">
+
+                    <div class="sidebar-user-name">
+
+                        {% if request.user.get_full_name %}
+
+                            {{ request.user.get_full_name }}
+
+                        {% else %}
+
+                            {{ request.user.username }}
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="sidebar-user-role">
+
+                        {% if request.user.is_superuser %}
+
+                            Administrator
+
+                        {% elif request.user.teacher_profile.is_approved %}
+
+                            Teacher
+
+                        {% else %}
+
+                            Student
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="sidebar-user-actions">
+
+                <a
+                    href="{% url 'accounts:account_center' %}"
+                    class="sidebar-account-link"
+                >
+                    Account
+                </a>
+
+
+                <form
+                    method="post"
+                    action="{% url 'accounts:logout' %}"
+                >
+
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="sidebar-logout"
+                    >
+                        Sign out
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+
+    <div
+        class="sidebar-overlay"
+        data-sidebar-overlay
+    ></div>
+
+
+
+    <!-- ==========================================
+         APP FRAME
+         ========================================== -->
+
+    <div class="app-frame">
+
+
+        <header class="app-topbar">
+
+
+            <div class="topbar-left">
+
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    data-sidebar-toggle
+                    aria-label="Open navigation"
+                    aria-expanded="false"
+                >
+                    <span></span>
+                </button>
+
+
+                <div class="topbar-context">
+                    {% block workspace_name %}
+                    AeroESP Workspace
+                    {% endblock %}
+                </div>
+
+            </div>
+
+
+            <div class="topbar-right">
+
+                <div class="topbar-status">
+                    Platform online
+                </div>
+
+
+                <a
+                    href="{% url 'accounts:account_center' %}"
+                    class="topbar-user"
+                >
+
+                    <span class="topbar-user-avatar">
+                        {{ request.user.username|slice:":1"|upper }}
+                    </span>
+
+
+                    <span class="topbar-user-name">
+                        {{ request.user.username }}
+                    </span>
+
+                </a>
+
+            </div>
+
+        </header>
+
+
+
+        <main class="app-main">
+
+            <div class="app-content">
+
+
+                {% if messages %}
+
+                    <div class="app-messages">
+
+                        {% for message in messages %}
+
+                            <div
+                                class="
+                                    app-alert
+                                    app-alert-{{ message.tags|default:'info' }}
+                                "
+                            >
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+
+                {% block workspace_nav %}
+                {% endblock %}
+
+
+                {% block content %}
+                {% endblock %}
+
+
+            </div>
+
+        </main>
+
+
+    </div>
+
+
+</div>
+
+
+<script
+    src="{% static 'aeroesp/js/app.js' %}"
+></script>
+
+
+{% block extra_js %}
+{% endblock %}
+
+
+</body>
+
+</html>

@@ -1,66 +1,347 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Student Dashboard</title>
-</head>
+{% extends "aeroesp/base.html" %}
 
-<body>
 
-    <h1>AeroESP Student Dashboard</h1>
+{% block title %}
+Student Workspace · AeroESP
+{% endblock %}
 
-    <p>
-        Welcome {{ request.user.username }}
-    </p>
 
-    <p>
-        Aerospace field:
-        {{ request.user.student_profile.get_primary_aerospace_field_display }}
-    </p>
+{% block workspace_name %}
+Student Workspace
+{% endblock %}
 
-    <hr>
 
-    <h2>Learning</h2>
+{% block content %}
 
-    <p>
-        <a href="{% url 'learning:dashboard' %}">
-            Learning Dashboard
+
+<section class="dashboard-welcome">
+
+    <div>
+
+        <div class="page-eyebrow">
+            Student workspace
+        </div>
+
+        <h1>
+            Build the English skills
+            behind aerospace engineering.
+        </h1>
+
+        <p>
+            Welcome back,
+            {{ request.user.username }}.
+            Continue your learning path,
+            practice intelligently and
+            track your progress across
+            General English and Aerospace ESP.
+        </p>
+
+    </div>
+
+
+    <div class="dashboard-orbit"></div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Continue learning
+            </h2>
+
+            <div class="section-description">
+                Your primary learning tools
+                in one workspace.
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="app-grid">
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                01
+            </div>
+
+            <h3>
+                Learning Dashboard
+            </h3>
+
+            <p>
+                Review your learning status,
+                active courses and personalized
+                recommendations.
+            </p>
+
+            <a
+                href="{% url 'learning:dashboard' %}"
+                class="app-button"
+            >
+                Open dashboard
+            </a>
+
+        </article>
+
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                02
+            </div>
+
+            <h3>
+                Daily Practice
+            </h3>
+
+            <p>
+                Work through adaptive questions
+                selected from your active
+                learning programs.
+            </p>
+
+            <a
+                href="{% url 'learning:daily_practice' %}"
+                class="app-button"
+            >
+                Start practice
+            </a>
+
+        </article>
+
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                03
+            </div>
+
+            <h3>
+                My Courses
+            </h3>
+
+            <p>
+                Explore your General English
+                and Aerospace ESP courses,
+                modules and topics.
+            </p>
+
+            <a
+                href="{% url 'learning:my_courses' %}"
+                class="app-button"
+            >
+                View courses
+            </a>
+
+        </article>
+
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                04
+            </div>
+
+            <h3>
+                Exams
+            </h3>
+
+            <p>
+                Join available assessments
+                and access your managed
+                AeroESP exam workspace.
+            </p>
+
+            <a
+                href="{% url 'exams_student:home' %}"
+                class="app-button"
+            >
+                Open exams
+            </a>
+
+        </article>
+
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Personal development
+            </h2>
+
+            <div class="section-description">
+                Analyze, review and strengthen
+                your language performance.
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="app-grid">
+
+
+        <article class="app-card">
+
+            <span class="app-badge">
+                Personalized
+            </span>
+
+            <h3>
+                Learning Path
+            </h3>
+
+            <p class="text-secondary">
+                Follow the learning priorities
+                identified from your current
+                progress.
+            </p>
+
+            <a
+                href="{% url 'learning:learning_path' %}"
+                class="button button-secondary"
+            >
+                View path
+            </a>
+
+        </article>
+
+
+
+        <article class="app-card">
+
+            <span class="app-badge">
+                Retention
+            </span>
+
+            <h3>
+                Review Queue
+            </h3>
+
+            <p class="text-secondary">
+                Revisit learning items scheduled
+                by the spaced-review engine.
+            </p>
+
+            <a
+                href="{% url 'learning:review_due' %}"
+                class="button button-secondary"
+            >
+                Review items
+            </a>
+
+        </article>
+
+
+
+        <article class="app-card">
+
+            <span class="app-badge">
+                Diagnostics
+            </span>
+
+            <h3>
+                Error Analysis
+            </h3>
+
+            <p class="text-secondary">
+                Inspect recurring mistakes and
+                the concepts that need more work.
+            </p>
+
+            <a
+                href="{% url 'learning:my_errors' %}"
+                class="button button-secondary"
+            >
+                Analyze errors
+            </a>
+
+        </article>
+
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <article class="aero-feature-card">
+
+        <span class="app-badge">
+            Aerospace profile
+        </span>
+
+        <h2>
+            {{ request.user.student_profile.get_primary_aerospace_field_display }}
+        </h2>
+
+        <p>
+            Your aerospace field can be used
+            by AeroESP to support increasingly
+            relevant technical-English learning
+            experiences as the adaptive layer
+            develops.
+        </p>
+
+        <a
+            href="{% url 'learning:aerospace_dashboard' %}"
+            class="button button-primary"
+        >
+            Explore Aerospace ESP
         </a>
-    </p>
 
-    <p>
-        <a href="{% url 'learning:my_courses' %}">
-            My Courses
-        </a>
-    </p>
+    </article>
 
-    <p>
-        <a href="{% url 'learning:guide_hub' %}">
-            Language & Aerospace Guide Hub
-        </a>
-    </p>
+</section>
 
-    <p>
-        <a href="{% url 'learning:resource_list' %}">
-            Learning Resources
-        </a>
-    </p>
 
-    <p>
-        <a href="{% url 'learning:placement_test' %}">
-            Placement Test
-        </a>
-    </p>
-
-    <form
-        method="post"
-        action="{% url 'accounts:logout' %}"
-    >
-        {% csrf_token %}
-        <button type="submit">
-            Logout
-        </button>
-    </form>
-
-</body>
-</html>
+{% endblock %}

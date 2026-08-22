@@ -1,73 +1,291 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>AeroESP Teacher Dashboard</title>
-</head>
+{% extends "aeroesp/base.html" %}
 
-<body>
 
-    <h1>AeroESP Teacher Dashboard</h1>
+{% block title %}
+Teacher Workspace · AeroESP
+{% endblock %}
 
-    <p>
-        Welcome {{ request.user.username }}
-    </p>
 
-    <p>
-        Status:
-        {{ request.user.teacher_profile.get_approval_status_display }}
-    </p>
+{% block workspace_name %}
+Teacher Workspace
+{% endblock %}
 
-    <hr>
 
-    <h2>Question Management</h2>
+{% block content %}
 
-    <p>
-        <a href="{% url 'teacher_questions:list' %}">
-            Open My Question Bank
-        </a>
-    </p>
 
-    <p>
-        <a href="{% url 'learning:teacher_resource_list' %}">
-            My Resources
-        </a>
-    </p>
+<section class="dashboard-welcome">
 
-    <hr>
+    <div>
 
-    <h2>Learning Management</h2>
+        <div class="page-eyebrow">
+            Teacher workspace
+        </div>
 
-    <p>
-        <a href="{% url 'learning:teacher_learning_dashboard' %}">
-            Learning Dashboard
-        </a>
-    </p>
+        <h1>
+            Teach, assess and understand
+            learner performance.
+        </h1>
 
-    <p>
-        <a href="{% url 'learning:teacher_resource_list' %}">
-            Manage Resources
-        </a>
-    </p>
+        <p>
+            Welcome back,
+            {{ request.user.username }}.
+            Manage learning content,
+            assessment workflows,
+            resources and AI-assisted
+            educational tools from one
+            AeroESP workspace.
+        </p>
 
-    <p>
-        <a href="{% url 'learning:guide_hub' %}">
-            Guide Hub
-        </a>
-    </p>
+    </div>
 
-    <hr>
 
-    <form
-        method="post"
-        action="{% url 'accounts:logout' %}"
-    >
-        {% csrf_token %}
+    <div class="dashboard-orbit"></div>
 
-        <button type="submit">
-            Logout
-        </button>
-    </form>
+</section>
 
-</body>
-</html>
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Teaching workspace
+            </h2>
+
+            <div class="section-description">
+                Core tools for learning,
+                assessment and content.
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="app-grid">
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                01
+            </div>
+
+            <h3>
+                Learning Analytics
+            </h3>
+
+            <p>
+                Review learner progress,
+                classes and learning
+                performance.
+            </p>
+
+            <a
+                href="{% url 'learning:teacher_learning_dashboard' %}"
+                class="app-button"
+            >
+                Open analytics
+            </a>
+
+        </article>
+
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                02
+            </div>
+
+            <h3>
+                Question Bank
+            </h3>
+
+            <p>
+                Create, review and manage
+                assessment questions across
+                language and aerospace domains.
+            </p>
+
+            <a
+                href="{% url 'teacher_questions:list' %}"
+                class="app-button"
+            >
+                Manage questions
+            </a>
+
+        </article>
+
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                03
+            </div>
+
+            <h3>
+                Exam Management
+            </h3>
+
+            <p>
+                Build, configure and publish
+                controlled assessments.
+            </p>
+
+            <a
+                href="{% url 'exams:teacher_exam_list' %}"
+                class="app-button"
+            >
+                Manage exams
+            </a>
+
+        </article>
+
+
+
+        <article
+            class="
+                app-card
+                app-card-interactive
+                action-card
+            "
+        >
+
+            <div class="action-card-index">
+                04
+            </div>
+
+            <h3>
+                AI Intelligence
+            </h3>
+
+            <p>
+                Access human-reviewed
+                AI-assisted question and
+                learner-insight workflows.
+            </p>
+
+            <a
+                href="{% url 'intelligence:dashboard' %}"
+                class="app-button"
+            >
+                Open AI tools
+            </a>
+
+        </article>
+
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="app-grid">
+
+
+        <article class="app-card">
+
+            <span class="app-badge">
+                Content
+            </span>
+
+            <h3>
+                Resources
+            </h3>
+
+            <p class="text-secondary">
+                Upload and manage course and
+                module learning resources.
+            </p>
+
+            <a
+                href="{% url 'learning:teacher_resource_list' %}"
+                class="button button-secondary"
+            >
+                Manage resources
+            </a>
+
+        </article>
+
+
+
+        <article class="app-card">
+
+            <span class="app-badge">
+                Reference
+            </span>
+
+            <h3>
+                Guide Hub
+            </h3>
+
+            <p class="text-secondary">
+                Access curated language,
+                research and aerospace
+                references.
+            </p>
+
+            <a
+                href="{% url 'learning:guide_hub' %}"
+                class="button button-secondary"
+            >
+                Open guides
+            </a>
+
+        </article>
+
+
+
+        <article class="aero-feature-card">
+
+            <span class="app-badge">
+                Account status
+            </span>
+
+            <h3>
+                {{ request.user.teacher_profile.get_approval_status_display }}
+            </h3>
+
+            <p>
+                Your teacher workspace uses
+                controlled permissions for
+                question, learning and
+                assessment management.
+            </p>
+
+        </article>
+
+
+    </div>
+
+</section>
+
+
+{% endblock %}
