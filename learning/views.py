@@ -1533,6 +1533,7 @@ def practice_answer(
             ],
         )
         .exclude(
+
             question__visibility="EXAM_ONLY",
         ),
         pk=link_id,
@@ -1929,13 +1930,18 @@ def module_detail(
         .count()
     )
 
-    if tracked_count:
+    total_item_count = items.count()
+
+    if total_item_count:
+
         progress_percent = round(
             mastered_count
-            / tracked_count
+            / total_item_count
             * 100
         )
+
     else:
+
         progress_percent = 0
 
     return render(
@@ -1948,6 +1954,7 @@ def module_detail(
             "personal_count": personal_count,
             "tracked_count": tracked_count,
             "mastered_count": mastered_count,
+            "total_item_count": total_item_count,
             "progress_percent": progress_percent,
         },
     )
