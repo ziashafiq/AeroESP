@@ -2269,7 +2269,6 @@ def module_detail(
             .filter(
                 domain_id=module.aerospace_domain_id,
                 is_active=True,
-                approval_status="APPROVED",
             )
             .select_related(
                 "parent",
