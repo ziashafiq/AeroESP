@@ -43,6 +43,18 @@ urlpatterns = [
         name="save_answer",
     ),
 
+
+    path(
+        (
+            "attempt/"
+            "<int:attempt_id>/"
+            "flag/"
+            "<int:exam_question_id>/"
+        ),
+        student_views.student_save_flag,
+        name="save_flag",
+    ),
+
     path(
         (
             "attempt/"

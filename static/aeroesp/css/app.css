@@ -7619,3 +7619,226 @@ html[data-theme="dark"] :where(
     }
 
 }
+
+/* ==========================================================
+   UI-05 Flag Review Notes
+   ========================================================== */
+
+.exam-flag-note-panel {
+    display: none;
+
+    margin-top: 18px;
+    padding: 17px;
+
+    border: 1px solid rgba(211,154,58,.24);
+    border-radius: 14px;
+
+    background: rgba(211,154,58,.065);
+}
+
+.exam-flag-note-panel.is-open {
+    display: block;
+}
+
+.exam-flag-note-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 12px;
+}
+
+.exam-flag-note-head strong {
+    display: block;
+
+    color: var(--theme-text);
+
+    font-size: 13px;
+}
+
+.exam-flag-note-head span {
+    display: block;
+
+    margin-top: 3px;
+
+    color: var(--theme-text-soft);
+
+    font-size: 11px;
+}
+
+.exam-flag-save-state {
+    color: var(--theme-accent-strong) !important;
+
+    font-size: 11px !important;
+    font-weight: 700;
+}
+
+.exam-flag-note {
+    display: block;
+
+    width: 100%;
+    min-height: 94px;
+
+    resize: vertical;
+
+    padding: 12px 13px;
+
+    border: 1px solid var(--theme-border-strong);
+    border-radius: 11px;
+
+    color: var(--theme-text);
+
+    background: var(--theme-surface);
+
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.55;
+
+    outline: none;
+}
+
+.exam-flag-note:focus {
+    border-color: #d39a3a;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(211,154,58,.10);
+}
+
+.exam-flag-note-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-top: 10px;
+}
+
+.exam-flag-note-actions > span {
+    color: var(--theme-text-faint);
+
+    font-size: 10px;
+}
+
+.exam-note-save-button {
+    min-height: 34px;
+
+    padding: 0 12px;
+
+    border: 1px solid rgba(211,154,58,.25);
+    border-radius: 9px;
+
+    color: #b47c21;
+
+    background: rgba(211,154,58,.10);
+
+    cursor: pointer;
+
+    font: inherit;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+
+/* Result review */
+
+.exam-flag-review-result {
+    margin: 30px 0;
+    padding-top: 26px;
+
+    border-top: 1px solid var(--theme-border);
+}
+
+.exam-result-section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 15px;
+}
+
+.exam-result-section-heading h2 {
+    margin: 0;
+}
+
+.exam-result-flag-list {
+    display: grid;
+    gap: 10px;
+}
+
+.exam-result-flag-card {
+    padding: 18px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 15px;
+
+    background: var(--theme-surface-soft);
+}
+
+.exam-result-flag-number {
+    margin-bottom: 7px;
+
+    color: #c0872b;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.exam-result-flag-question {
+    color: var(--theme-text);
+
+    font-size: 14px;
+    font-weight: 700;
+
+    line-height: 1.5;
+}
+
+.exam-result-flag-note {
+    margin-top: 13px;
+    padding: 12px;
+
+    border-left: 3px solid #d39a3a;
+    border-radius: 8px;
+
+    background: rgba(211,154,58,.07);
+}
+
+.exam-result-flag-note span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--theme-text-soft);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+}
+
+.exam-result-flag-note p {
+    margin: 0;
+
+    color: var(--theme-text);
+
+    font-size: 13px;
+}
+
+.exam-result-flag-note.is-empty {
+    color: var(--theme-text-soft);
+
+    font-size: 12px;
+}
+
+
+html[data-theme="dark"] .exam-flag-note {
+    background: #10253b;
+}

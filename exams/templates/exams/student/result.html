@@ -88,6 +88,78 @@
     {% endif %}
 
 
+    {% if flagged_answers %}
+
+    <section class="exam-flag-review-result">
+
+        <div class="exam-result-section-heading">
+
+            <div>
+
+                <span class="exam-kicker">
+                    Your Review Notes
+                </span>
+
+                <h2>
+                    Flagged Questions
+                </h2>
+
+            </div>
+
+            <span class="exam-count">
+                {{ flagged_answers|length }}
+            </span>
+
+        </div>
+
+
+        <div class="exam-result-flag-list">
+
+            {% for answer in flagged_answers %}
+
+            <article class="exam-result-flag-card">
+
+                <div class="exam-result-flag-number">
+                    Question {{ answer.exam_question.order }}
+                </div>
+
+                <div class="exam-result-flag-question">
+                    {{ answer.exam_question.question.question_text }}
+                </div>
+
+                {% if answer.flag_note %}
+
+                    <div class="exam-result-flag-note">
+
+                        <span>
+                            Your note
+                        </span>
+
+                        <p>
+                            {{ answer.flag_note }}
+                        </p>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="exam-result-flag-note is-empty">
+                        Flagged for review — no note was added.
+                    </div>
+
+                {% endif %}
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+
     <a
         href="{% url 'exams_student:home' %}"
         class="exam-open-button"

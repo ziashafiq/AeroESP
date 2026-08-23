@@ -547,6 +547,14 @@ class StudentAnswer(models.Model):
         default=0,
     )
 
+    flagged_for_review = models.BooleanField(
+        default=False,
+    )
+
+    flag_note = models.TextField(
+        blank=True,
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
     )

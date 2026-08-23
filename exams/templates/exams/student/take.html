@@ -111,10 +111,15 @@ aeroesp-app exam-focus-mode
 
                 <button
                     type="button"
-                    class="exam-flag-button"
+                    class="exam-flag-button{% if item.flagged %} is-active{% endif %}"
                     data-flag-question="{{ item.exam_question.pk }}"
+                    data-flag-url="{{ item.flag_url }}"
                 >
-                    Flag
+                    {% if item.flagged %}
+                        Flagged
+                    {% else %}
+                        Flag
+                    {% endif %}
                 </button>
 
             </header>
@@ -151,6 +156,56 @@ aeroesp-app exam-focus-mode
                 </label>
 
                 {% endfor %}
+
+            </div>
+
+
+            <div
+                class="exam-flag-note-panel{% if item.flagged %} is-open{% endif %}"
+                id="flag-note-panel-{{ item.exam_question.pk }}"
+            >
+
+                <div class="exam-flag-note-head">
+
+                    <div>
+                        <strong>
+                            Review note
+                        </strong>
+
+                        <span>
+                            Optional — describe why you want to revisit this question.
+                        </span>
+                    </div>
+
+                    <span
+                        class="exam-flag-save-state"
+                        id="flag-status-{{ item.exam_question.pk }}"
+                    ></span>
+
+                </div>
+
+                <textarea
+                    class="exam-flag-note"
+                    id="flag-note-{{ item.exam_question.pk }}"
+                    maxlength="1000"
+                    placeholder="Example: I was unsure between B and C because..."
+                >{{ item.flag_note }}</textarea>
+
+                <div class="exam-flag-note-actions">
+
+                    <span>
+                        Saved with this exam attempt
+                    </span>
+
+                    <button
+                        type="button"
+                        class="exam-note-save-button"
+                        data-save-flag-note="{{ item.exam_question.pk }}"
+                    >
+                        Save Note
+                    </button>
+
+                </div>
 
             </div>
 
@@ -312,33 +367,21 @@ const deadline =
 const eventUrl =
     "{% url 'exams_student:event_log' attempt.pk %}";
 
-const flagStorageKey =
-    "aeroesp-exam-flags-{{ attempt.pk }}";
-
 let timerFinished = false;
 
-let flaggedQuestions = new Set();
-
-
-try {
-
-    const savedFlags =
-        JSON.parse(
-            localStorage.getItem(
-                flagStorageKey
-            ) || "[]"
-        );
-
-    flaggedQuestions =
-        new Set(
-            savedFlags.map(String)
-        );
-
-} catch (error) {
-
-    flaggedQuestions =
-        new Set();
-}
+let flaggedQuestions = new Set(
+    Array.from(
+        document.querySelectorAll(
+            ".exam-flag-button.is-active"
+        )
+    ).map(
+        function(button) {
+            return String(
+                button.dataset.flagQuestion
+            );
+        }
+    )
+);
 
 
 /* =====================================================
@@ -774,8 +817,120 @@ document.querySelectorAll(
 
 
 /* =====================================================
-   Flags
+   Flag + Review Note
    ===================================================== */
+
+async function saveFlagState(
+    questionId,
+    flagged,
+    note
+) {
+
+    const button =
+        document.querySelector(
+            '[data-flag-question="'
+            + questionId
+            + '"]'
+        );
+
+    const status =
+        document.getElementById(
+            "flag-status-"
+            + questionId
+        );
+
+    if (!button) {
+        return false;
+    }
+
+    if (status) {
+        status.textContent =
+            "Saving...";
+    }
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "csrfmiddlewaretoken",
+        csrfToken
+    );
+
+    formData.append(
+        "flagged",
+        flagged
+            ? "true"
+            : "false"
+    );
+
+    formData.append(
+        "flag_note",
+        note || ""
+    );
+
+    try {
+
+        const response =
+            await fetch(
+                button.dataset.flagUrl,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok
+            || !data.ok
+        ) {
+
+            if (
+                data.expired
+            ) {
+
+                window.location.reload();
+                return false;
+            }
+
+            if (status) {
+
+                status.textContent =
+                    data.error
+                    || "Save failed";
+            }
+
+            return false;
+        }
+
+        if (status) {
+
+            status.textContent =
+                "Saved";
+
+            window.setTimeout(
+                function() {
+                    status.textContent = "";
+                },
+                1600
+            );
+        }
+
+        return true;
+
+    } catch (error) {
+
+        if (status) {
+            status.textContent =
+                "Connection error";
+        }
+
+        return false;
+    }
+}
+
 
 document.querySelectorAll(
     "[data-flag-question]"
@@ -784,37 +939,119 @@ document.querySelectorAll(
 
         button.addEventListener(
             "click",
-            function() {
+            async function() {
 
                 const questionId =
                     String(
                         button.dataset.flagQuestion
                     );
 
-                if (
+                const panel =
+                    document.getElementById(
+                        "flag-note-panel-"
+                        + questionId
+                    );
+
+                const textarea =
+                    document.getElementById(
+                        "flag-note-"
+                        + questionId
+                    );
+
+                const currentlyFlagged =
                     flaggedQuestions.has(
                         questionId
-                    )
-                ) {
+                    );
+
+                const nextFlagged =
+                    !currentlyFlagged;
+
+                const note =
+                    textarea
+                    ? textarea.value.trim()
+                    : "";
+
+                const saved =
+                    await saveFlagState(
+                        questionId,
+                        nextFlagged,
+                        note
+                    );
+
+                if (!saved) {
+                    return;
+                }
+
+                if (nextFlagged) {
+
+                    flaggedQuestions.add(
+                        questionId
+                    );
+
+                    if (panel) {
+                        panel.classList.add(
+                            "is-open"
+                        );
+                    }
+
+                    if (textarea) {
+                        textarea.focus();
+                    }
+
+                } else {
 
                     flaggedQuestions.delete(
                         questionId
                     );
 
-                } else {
+                    if (panel) {
+                        panel.classList.remove(
+                            "is-open"
+                        );
+                    }
 
-                    flaggedQuestions.add(
-                        questionId
-                    );
+                    if (textarea) {
+                        textarea.value = "";
+                    }
                 }
 
-                localStorage.setItem(
-                    flagStorageKey,
-                    JSON.stringify(
-                        Array.from(
-                            flaggedQuestions
-                        )
-                    )
+                refreshExamState();
+            }
+        );
+    }
+);
+
+
+document.querySelectorAll(
+    "[data-save-flag-note]"
+).forEach(
+    function(button) {
+
+        button.addEventListener(
+            "click",
+            async function() {
+
+                const questionId =
+                    String(
+                        button.dataset.saveFlagNote
+                    );
+
+                const textarea =
+                    document.getElementById(
+                        "flag-note-"
+                        + questionId
+                    );
+
+                await saveFlagState(
+                    questionId,
+                    true,
+                    textarea
+                        ? textarea.value.trim()
+                        : ""
+                );
+
+                flaggedQuestions.add(
+                    questionId
                 );
 
                 refreshExamState();

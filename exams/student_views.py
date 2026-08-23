@@ -1279,6 +1279,30 @@ def student_exam_take(
                     if answer
                     else ""
                 ),
+                "flagged": (
+                    answer.flagged_for_review
+                    if answer
+                    else False
+                ),
+                "flag_note": (
+                    answer.flag_note
+                    if answer
+                    else ""
+                ),
+                "flag_url": reverse(
+                    (
+                        "exams_student:"
+                        "save_flag"
+                    ),
+                    kwargs={
+                        "attempt_id": (
+                            attempt.pk
+                        ),
+                        "exam_question_id": (
+                            exam_question.pk
+                        ),
+                    },
+                ),
                 "save_url": reverse(
                     (
                         "exams_student:"
@@ -1614,6 +1638,20 @@ def student_exam_result(
         )
     )
 
+    flagged_answers = list(
+        attempt.answers
+        .filter(
+            flagged_for_review=True,
+        )
+        .select_related(
+            "exam_question",
+            "exam_question__question",
+        )
+        .order_by(
+            "exam_question__order",
+        )
+    )
+
     return render(
         request,
         "exams/student/result.html",
@@ -1623,5 +1661,128 @@ def student_exam_result(
             "show_result": (
                 show_result
             ),
+            "flagged_answers": (
+                flagged_answers
+            ),
         },
     )
+
+@student_required
+@require_POST
+def student_save_flag(
+    request,
+    attempt_id,
+    exam_question_id,
+):
+
+    attempt = get_object_or_404(
+        ExamAttempt,
+        pk=attempt_id,
+        student=request.user,
+    )
+
+    if (
+        attempt.status
+        != ExamAttempt.Status.IN_PROGRESS
+    ):
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "Attempt is no longer active.",
+            },
+            status=409,
+        )
+
+    if _deadline_passed(attempt):
+
+        _finalize_attempt(
+            attempt,
+            auto_submit=True,
+        )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "expired": True,
+            },
+            status=409,
+        )
+
+    exam_question = get_object_or_404(
+        ExamQuestion,
+        pk=exam_question_id,
+        exam=attempt.exam,
+    )
+
+    flagged_value = (
+        request.POST
+        .get(
+            "flagged",
+            "false",
+        )
+        .strip()
+        .lower()
+    )
+
+    flagged = flagged_value in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+    note = (
+        request.POST
+        .get(
+            "flag_note",
+            "",
+        )
+        .strip()
+    )
+
+    if len(note) > 1000:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "Review note must be "
+                    "1000 characters or fewer."
+                ),
+            },
+            status=400,
+        )
+
+    answer, _ = (
+        StudentAnswer.objects
+        .get_or_create(
+            attempt=attempt,
+            exam_question=exam_question,
+            defaults={
+                "selected_answer": "",
+            },
+        )
+    )
+
+    answer.flagged_for_review = flagged
+    answer.flag_note = (
+        note
+        if flagged
+        else ""
+    )
+
+    answer.save(
+        update_fields=[
+            "flagged_for_review",
+            "flag_note",
+            "updated_at",
+        ]
+    )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "flagged": answer.flagged_for_review,
+            "flag_note": answer.flag_note,
+        }
+    )
+
