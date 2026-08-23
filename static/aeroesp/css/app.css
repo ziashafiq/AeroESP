@@ -4992,3 +4992,37 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb {
     background: #29465c;
 }
 
+
+
+/* ==========================================================
+   UI-04 Final Dark Readability
+   ========================================================== */
+
+html[data-theme="dark"] .app-content :where(
+    [class*="metric"],
+    [class*="stat"],
+    [class*="summary"]
+) :where(
+    strong,
+    b,
+    .value,
+    [class*="value"],
+    [class*="number"],
+    [class*="count"]
+) {
+    color: #f5fbff !important;
+}
+
+html[data-theme="dark"] .app-content table thead,
+html[data-theme="dark"] .app-content table th {
+    color: #dce9f2 !important;
+    background: #132b40 !important;
+}
+
+html[data-theme="dark"] .app-content table tbody td {
+    color: #c4d3df !important;
+}
+
+html[data-theme="dark"] .app-content table tbody td strong {
+    color: #f2f8fc !important;
+}
