@@ -1,0 +1,243 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Recommendations · AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<nav class="adaptive-nav" aria-label="Adaptive learning navigation">
+
+    <a href="{% url 'learning:daily_practice' %}">
+        Practice
+    </a>
+
+    <a href="{% url 'learning:review_due' %}">
+        Review Queue
+    </a>
+
+    <a href="{% url 'learning:weak_topics' %}">
+        Weak Areas
+    </a>
+
+    <a href="{% url 'learning:mastery_dashboard' %}">
+        Mastery
+    </a>
+
+    <a href="{% url 'learning:learning_recommendations' %}">
+        Recommendations
+    </a>
+
+    <a href="{% url 'learning:learning_path' %}">
+        Learning Path
+    </a>
+
+</nav>
+
+
+<section class="adaptive-hero">
+
+    <div>
+
+        <span class="adaptive-kicker">
+            Adaptive Recommendation Engine
+        </span>
+
+        <h1>
+            Recommended Next Activity
+        </h1>
+
+        <p>
+            Priorities are generated from weak areas,
+            review timing, new content and mastery history.
+        </p>
+
+    </div>
+
+</section>
+
+
+<div class="adaptive-mode-switch">
+
+    <span>
+        Recommendation mode
+    </span>
+
+    <div>
+
+        <a
+            href="?mode=general"
+            class="{% if mode == 'general' %}is-active{% endif %}"
+        >
+            General / IELTS
+        </a>
+
+        <a
+            href="?mode=aerospace"
+            class="{% if mode == 'aerospace' %}is-active{% endif %}"
+        >
+            Aerospace
+        </a>
+
+        <a
+            href="?mode=mixed"
+            class="{% if mode == 'mixed' %}is-active{% endif %}"
+        >
+            Mixed
+        </a>
+
+    </div>
+
+</div>
+
+
+<div class="adaptive-metrics">
+
+    <article>
+        <span>Weak</span>
+        <strong>{{ bucket_counts.weak }}</strong>
+    </article>
+
+    <article>
+        <span>Due</span>
+        <strong>{{ bucket_counts.due }}</strong>
+    </article>
+
+    <article>
+        <span>New</span>
+        <strong>{{ bucket_counts.new }}</strong>
+    </article>
+
+    <article>
+        <span>Retention</span>
+        <strong>{{ bucket_counts.reinforcement }}</strong>
+    </article>
+
+</div>
+
+
+{% if next_activity %}
+
+<section class="adaptive-next-card">
+
+    <div>
+
+        <span class="adaptive-kicker">
+            Best Next Step
+        </span>
+
+        <span class="adaptive-reason">
+            {{ next_activity.bucket|title }}
+        </span>
+
+        <h2>
+            {{ next_activity.link.learning_item.title }}
+        </h2>
+
+        <p>
+            {{ next_activity.link.learning_item.module.title }}
+        </p>
+
+        {% if next_activity.unresolved_errors %}
+
+        <div class="adaptive-next-warning">
+
+            {{ next_activity.unresolved_errors }}
+            unresolved error{{ next_activity.unresolved_errors|pluralize }}
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <a
+        href="{% url 'learning:daily_practice' %}?mode={{ mode }}"
+        class="adaptive-primary-action"
+    >
+        Start Practice →
+    </a>
+
+</section>
+
+{% endif %}
+
+
+<section class="adaptive-section">
+
+    <div class="adaptive-section-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
+                Priority Queue
+            </span>
+
+            <h2>
+                Recommended Activities
+            </h2>
+
+        </div>
+
+        <span class="adaptive-pill">
+            {{ total_count }} available
+        </span>
+
+    </div>
+
+
+    <div class="adaptive-recommend-grid">
+
+        {% for item in recommendations %}
+
+        <article>
+
+            <header>
+
+                <span class="adaptive-reason">
+                    {{ item.bucket|title }}
+                </span>
+
+                <strong>
+                    Priority {{ item.score|floatformat:0 }}
+                </strong>
+
+            </header>
+
+            <h3>
+                {{ item.link.learning_item.title }}
+            </h3>
+
+            <p>
+                {{ item.link.learning_item.module.title }}
+            </p>
+
+            {% if item.link.learning_item.aerospace_topic %}
+
+            <span class="adaptive-pill">
+                {{ item.link.learning_item.aerospace_topic.name }}
+            </span>
+
+            {% endif %}
+
+        </article>
+
+        {% empty %}
+
+        <div class="adaptive-empty">
+
+            <h3>
+                No recommendations available
+            </h3>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -140,6 +140,24 @@ urlpatterns = [
     ),
 
     path(
+        "weak-topics/",
+        views.weak_topics,
+        name="weak_topics",
+    ),
+
+    path(
+        "mastery/",
+        views.mastery_dashboard,
+        name="mastery_dashboard",
+    ),
+
+    path(
+        "recommendations/",
+        views.learning_recommendations,
+        name="learning_recommendations",
+    ),
+
+    path(
         "path/",
         views.learning_path,
         name="learning_path",

@@ -1,143 +1,172 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Daily Practice | AeroESP
+Adaptive Practice · AeroESP
 {% endblock %}
 
 {% block content %}
 
-<div class="program-header">
 
-    <h1>
-        Daily Practice
-    </h1>
+<nav class="adaptive-nav" aria-label="Adaptive learning navigation">
 
-    <p>
-        Practice your learning items
-        and strengthen weak areas.
-    </p>
+    <a href="{% url 'learning:daily_practice' %}">
+        Practice
+    </a>
+
+    <a href="{% url 'learning:review_due' %}">
+        Review Queue
+    </a>
+
+    <a href="{% url 'learning:weak_topics' %}">
+        Weak Areas
+    </a>
+
+    <a href="{% url 'learning:mastery_dashboard' %}">
+        Mastery
+    </a>
+
+    <a href="{% url 'learning:learning_recommendations' %}">
+        Recommendations
+    </a>
+
+    <a href="{% url 'learning:learning_path' %}">
+        Learning Path
+    </a>
+
+</nav>
+
+
+<section class="adaptive-hero">
+
+    <div>
+
+        <span class="adaptive-kicker">
+            Personalized Learning
+        </span>
+
+        <h1>
+            Daily Practice
+        </h1>
+
+        <p>
+            AeroESP selects practice from weak areas,
+            due reviews, new content and retention work.
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'learning:learning_recommendations' %}?mode={{ mode }}"
+        class="adaptive-secondary-action"
+    >
+        View Recommendations
+    </a>
+
+</section>
+
+
+<div class="adaptive-metrics">
+
+    <article>
+        <span>Available</span>
+        <strong>{{ total_questions }}</strong>
+    </article>
+
+    <article>
+        <span>Due Review</span>
+        <strong>{{ due_count }}</strong>
+    </article>
+
+    <article>
+        <span>Weak Areas</span>
+        <strong>{{ weak_count }}</strong>
+    </article>
+
+    <article>
+        <span>New Content</span>
+        <strong>{{ new_count }}</strong>
+    </article>
 
 </div>
 
 
-<div class="cards">
+<div class="adaptive-mode-switch">
 
-    <div class="card">
+    <span>
+        Practice mode
+    </span>
 
-        <h3>
-            Due Today
-        </h3>
-
-        <div class="stat-number">
-            {{ due_count }}
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h3>
-            Available Questions
-        </h3>
-
-        <div class="stat-number">
-            {{ total_questions }}
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h3>
-            Weak Areas
-        </h3>
-
-        <div class="stat-number">
-            {{ weak_count }}
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h3>
-            New Content
-        </h3>
-
-        <div class="stat-number">
-            {{ new_count }}
-        </div>
-
-    </div>
-
-</div>
-
-
-<br>
-
-
-<div class="card">
-
-    <strong>
-        Practice Mode
-    </strong>
-
-    <p>
+    <div>
 
         <a
-            class="button"
             href="?mode=general"
+            class="{% if mode == 'general' %}is-active{% endif %}"
         >
-            General English
+            General / IELTS
         </a>
 
         <a
-            class="button"
             href="?mode=aerospace"
+            class="{% if mode == 'aerospace' %}is-active{% endif %}"
         >
-            Aerospace English
+            Aerospace
         </a>
 
         <a
-            class="button"
             href="?mode=mixed"
+            class="{% if mode == 'mixed' %}is-active{% endif %}"
         >
-            Mixed Practice
+            Mixed
         </a>
 
-    </p>
+    </div>
 
 </div>
 
 
 {% if current_link %}
 
-<div class="module">
+<section class="adaptive-practice-card">
 
-    <span class="badge">
-        {{ current_link.learning_item.module.course.program.title }}
-    </span>
+    <header class="adaptive-practice-meta">
 
-    <span class="badge">
-        {{ current_link.learning_item.module.title }}
-    </span>
+        <div>
 
-    {% if selection_reason %}
+            <span class="adaptive-pill">
+                {{ current_link.learning_item.module.course.program.title }}
+            </span>
 
-    <span class="badge">
-        Recommended: {{ selection_reason }}
-    </span>
+            <span class="adaptive-pill">
+                {{ current_link.learning_item.module.title }}
+            </span>
 
-    {% endif %}
+        </div>
 
-    <p>
-        Learning Item:
+        {% if selection_reason %}
+
+            <span class="adaptive-reason">
+                Recommended · {{ selection_reason }}
+            </span>
+
+        {% endif %}
+
+    </header>
+
+
+    <div class="adaptive-learning-item">
+
+        <span>
+            Learning item
+        </span>
+
         <strong>
             {{ current_link.learning_item.title }}
         </strong>
-    </p>
 
-    <h2>
+    </div>
+
+
+    <h2 class="adaptive-question">
         {{ current_link.question.question_text }}
     </h2>
 
@@ -145,6 +174,7 @@ Daily Practice | AeroESP
     <form
         method="post"
         action="{% url 'learning:practice_answer' current_link.pk %}"
+        class="adaptive-answer-form"
     >
 
         {% csrf_token %}
@@ -156,105 +186,132 @@ Daily Practice | AeroESP
         >
 
 
-        <p>
+        <label class="adaptive-option">
 
-            <label>
+            <input
+                type="radio"
+                name="answer"
+                value="A"
+                required
+            >
 
-                <input
-                    type="radio"
-                    name="answer"
-                    value="A"
-                    required
-                >
+            <span>A</span>
 
-                A.
+            <strong>
                 {{ current_link.question.option_a }}
+            </strong>
 
-            </label>
-
-        </p>
+        </label>
 
 
-        <p>
+        <label class="adaptive-option">
 
-            <label>
+            <input
+                type="radio"
+                name="answer"
+                value="B"
+            >
 
-                <input
-                    type="radio"
-                    name="answer"
-                    value="B"
-                >
+            <span>B</span>
 
-                B.
+            <strong>
                 {{ current_link.question.option_b }}
+            </strong>
 
-            </label>
-
-        </p>
+        </label>
 
 
-        <p>
+        <label class="adaptive-option">
 
-            <label>
+            <input
+                type="radio"
+                name="answer"
+                value="C"
+            >
 
-                <input
-                    type="radio"
-                    name="answer"
-                    value="C"
-                >
+            <span>C</span>
 
-                C.
+            <strong>
                 {{ current_link.question.option_c }}
+            </strong>
 
-            </label>
-
-        </p>
+        </label>
 
 
-        <p>
+        <label class="adaptive-option">
 
-            <label>
+            <input
+                type="radio"
+                name="answer"
+                value="D"
+            >
 
-                <input
-                    type="radio"
-                    name="answer"
-                    value="D"
-                >
+            <span>D</span>
 
-                D.
+            <strong>
                 {{ current_link.question.option_d }}
+            </strong>
 
-            </label>
-
-        </p>
+        </label>
 
 
-        <button
-            type="submit"
-            class="button"
-        >
-            Submit Answer
-        </button>
+        <div class="adaptive-practice-footer">
+
+            {% if current_progress %}
+
+            <div>
+
+                <span>
+                    Current mastery
+                </span>
+
+                <strong>
+                    {{ current_progress.mastery_score }}%
+                </strong>
+
+            </div>
+
+            {% endif %}
+
+
+            <button
+                type="submit"
+                class="adaptive-primary-action"
+            >
+                Check Answer →
+            </button>
+
+        </div>
 
     </form>
 
-</div>
+</section>
 
 
 {% else %}
 
-<div class="card empty-state">
+<section class="adaptive-empty">
+
+    <div class="adaptive-empty-icon">
+        ✓
+    </div>
 
     <h2>
-        No practice questions available.
+        No practice questions available
     </h2>
 
     <p>
-        Create practice questions from
-        your learning items first.
+        There are no eligible questions in this practice mode yet.
     </p>
 
-</div>
+    <a
+        href="{% url 'learning:learning_path' %}"
+        class="adaptive-secondary-action"
+    >
+        Open Learning Path
+    </a>
+
+</section>
 
 {% endif %}
 

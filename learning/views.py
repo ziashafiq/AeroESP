@@ -1,4 +1,4 @@
-﻿from datetime import timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -4318,3 +4318,349 @@ def guide_hub(request):
             "guides": guides,
         },
     )
+
+
+# =========================================================
+# UI-06 Weak Areas
+# =========================================================
+
+@login_required
+def weak_topics(request):
+
+    scope = (
+        request.GET.get(
+            "scope",
+            "all",
+        )
+        .strip()
+        .lower()
+    )
+
+    if scope not in {
+        "all",
+        "general",
+        "aerospace",
+    }:
+        scope = "all"
+
+    errors = (
+        LearnerError.objects
+        .filter(
+            student=request.user,
+            resolved=False,
+        )
+        .select_related(
+            "learning_item",
+            "learning_item__module",
+            "learning_item__module__course",
+            "question",
+        )
+    )
+
+    if scope == "general":
+
+        errors = errors.filter(
+            is_general_english_error=True,
+        )
+
+    elif scope == "aerospace":
+
+        errors = errors.filter(
+            is_esp_specific_error=True,
+        )
+
+    category_summary = (
+        errors
+        .values(
+            "category",
+        )
+        .annotate(
+            total=Count("id"),
+        )
+        .order_by(
+            "-total",
+            "category",
+        )[:12]
+    )
+
+    weak_items = (
+        errors
+        .exclude(
+            learning_item__isnull=True,
+        )
+        .values(
+            "learning_item_id",
+            "learning_item__title",
+            "learning_item__module__title",
+            (
+                "learning_item__module__course__"
+                "program__program_type"
+            ),
+        )
+        .annotate(
+            error_count=Count("id"),
+        )
+        .order_by(
+            "-error_count",
+            "learning_item__title",
+        )[:12]
+    )
+
+    recent_errors = (
+        errors
+        .order_by(
+            "-occurred_at",
+        )[:15]
+    )
+
+    return render(
+        request,
+        "learning/weak_topics.html",
+        {
+            "scope": scope,
+            "category_summary": category_summary,
+            "weak_items": weak_items,
+            "recent_errors": recent_errors,
+            "unresolved_count": errors.count(),
+        },
+    )
+
+
+# =========================================================
+# UI-06 Mastery Dashboard
+# =========================================================
+
+@login_required
+def mastery_dashboard(request):
+
+    scope = (
+        request.GET.get(
+            "scope",
+            "all",
+        )
+        .strip()
+        .lower()
+    )
+
+    if scope not in {
+        "all",
+        "general",
+        "aerospace",
+    }:
+        scope = "all"
+
+    progress_qs = (
+        LearningProgress.objects
+        .filter(
+            student=request.user,
+        )
+        .select_related(
+            "learning_item",
+            "learning_item__module",
+            "learning_item__module__course",
+            "learning_item__module__course__program",
+            "learning_item__aerospace_domain",
+            "learning_item__aerospace_topic",
+        )
+    )
+
+    if scope == "general":
+
+        progress_qs = progress_qs.filter(
+            learning_item__module__course__program__program_type=(
+                LearningProgram.ProgramType.IELTS
+            )
+        )
+
+    elif scope == "aerospace":
+
+        progress_qs = progress_qs.filter(
+            learning_item__module__course__program__program_type=(
+                LearningProgram.ProgramType.AEROSPACE_ESP
+            )
+        )
+
+    tracked_count = (
+        progress_qs.count()
+    )
+
+    mastered_count = (
+        progress_qs
+        .filter(
+            status=LearningProgress.Status.MASTERED,
+        )
+        .count()
+    )
+
+    learning_count = (
+        progress_qs
+        .filter(
+            status=LearningProgress.Status.LEARNING,
+        )
+        .count()
+    )
+
+    review_count = (
+        progress_qs
+        .filter(
+            status=LearningProgress.Status.REVIEW,
+        )
+        .count()
+    )
+
+    new_count = (
+        progress_qs
+        .filter(
+            status=LearningProgress.Status.NEW,
+        )
+        .count()
+    )
+
+    due_count = (
+        progress_qs
+        .filter(
+            next_review_at__lte=timezone.now(),
+        )
+        .exclude(
+            status=LearningProgress.Status.MASTERED,
+        )
+        .count()
+    )
+
+    scores = list(
+        progress_qs.values_list(
+            "mastery_score",
+            flat=True,
+        )
+    )
+
+    average_mastery = (
+        round(
+            sum(
+                float(value or 0)
+                for value in scores
+            )
+            / len(scores),
+            1,
+        )
+        if scores
+        else 0
+    )
+
+    strongest_items = (
+        progress_qs
+        .order_by(
+            "-mastery_score",
+            "-correct_count",
+        )[:8]
+    )
+
+    needs_attention = (
+        progress_qs
+        .exclude(
+            status=LearningProgress.Status.MASTERED,
+        )
+        .order_by(
+            "mastery_score",
+            "-incorrect_count",
+        )[:8]
+    )
+
+    return render(
+        request,
+        "learning/mastery.html",
+        {
+            "scope": scope,
+            "tracked_count": tracked_count,
+            "mastered_count": mastered_count,
+            "learning_count": learning_count,
+            "review_count": review_count,
+            "new_count": new_count,
+            "due_count": due_count,
+            "average_mastery": average_mastery,
+            "strongest_items": strongest_items,
+            "needs_attention": needs_attention,
+        },
+    )
+
+
+# =========================================================
+# UI-06 Recommendations
+# =========================================================
+
+@login_required
+def learning_recommendations(request):
+
+    mode = (
+        request.GET.get(
+            "mode",
+            "mixed",
+        )
+        .strip()
+        .lower()
+    )
+
+    if mode not in {
+        "general",
+        "aerospace",
+        "mixed",
+    }:
+        mode = "mixed"
+
+    candidates = (
+        _build_adaptive_practice_pool(
+            request.user,
+            mode,
+        )
+    )
+
+    ranked = sorted(
+        candidates,
+        key=lambda item: (
+            item["score"],
+            item["unresolved_errors"],
+        ),
+        reverse=True,
+    )
+
+    bucket_counts = {
+        "weak": sum(
+            1
+            for item in candidates
+            if item["bucket"] == "weak"
+        ),
+        "due": sum(
+            1
+            for item in candidates
+            if item["bucket"] == "due"
+        ),
+        "new": sum(
+            1
+            for item in candidates
+            if item["bucket"] == "new"
+        ),
+        "reinforcement": sum(
+            1
+            for item in candidates
+            if item["bucket"] == "reinforcement"
+        ),
+    }
+
+    next_activity = (
+        ranked[0]
+        if ranked
+        else None
+    )
+
+    return render(
+        request,
+        "learning/recommendations.html",
+        {
+            "mode": mode,
+            "recommendations": ranked[:12],
+            "next_activity": next_activity,
+            "bucket_counts": bucket_counts,
+            "total_count": len(candidates),
+        },
+    )
+

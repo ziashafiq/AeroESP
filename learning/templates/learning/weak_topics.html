@@ -1,0 +1,297 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Weak Areas · AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<nav class="adaptive-nav" aria-label="Adaptive learning navigation">
+
+    <a href="{% url 'learning:daily_practice' %}">
+        Practice
+    </a>
+
+    <a href="{% url 'learning:review_due' %}">
+        Review Queue
+    </a>
+
+    <a href="{% url 'learning:weak_topics' %}">
+        Weak Areas
+    </a>
+
+    <a href="{% url 'learning:mastery_dashboard' %}">
+        Mastery
+    </a>
+
+    <a href="{% url 'learning:learning_recommendations' %}">
+        Recommendations
+    </a>
+
+    <a href="{% url 'learning:learning_path' %}">
+        Learning Path
+    </a>
+
+</nav>
+
+
+<section class="adaptive-hero">
+
+    <div>
+
+        <span class="adaptive-kicker">
+            Error Intelligence
+        </span>
+
+        <h1>
+            Weak Areas
+        </h1>
+
+        <p>
+            Find recurring errors and the learning items that need attention.
+        </p>
+
+    </div>
+
+    <div class="adaptive-hero-number">
+
+        <span>
+            Unresolved
+        </span>
+
+        <strong>
+            {{ unresolved_count }}
+        </strong>
+
+    </div>
+
+</section>
+
+
+<div class="adaptive-scope-switch">
+
+    <a
+        href="?scope=all"
+        class="{% if scope == 'all' %}is-active{% endif %}"
+    >
+        All
+    </a>
+
+    <a
+        href="?scope=general"
+        class="{% if scope == 'general' %}is-active{% endif %}"
+    >
+        General / IELTS
+    </a>
+
+    <a
+        href="?scope=aerospace"
+        class="{% if scope == 'aerospace' %}is-active{% endif %}"
+    >
+        Aerospace
+    </a>
+
+</div>
+
+
+<div class="adaptive-two-column">
+
+    <section class="adaptive-section">
+
+        <div class="adaptive-section-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Error Categories
+                </span>
+
+                <h2>
+                    Recurring Patterns
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="adaptive-category-grid">
+
+            {% for category in category_summary %}
+
+            <article>
+
+                <span>
+                    {{ category.category|title }}
+                </span>
+
+                <strong>
+                    {{ category.total }}
+                </strong>
+
+            </article>
+
+            {% empty %}
+
+            <div class="adaptive-empty compact">
+                No unresolved error categories.
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+
+    <section class="adaptive-section">
+
+        <div class="adaptive-section-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Learning Items
+                </span>
+
+                <h2>
+                    Highest Priority
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="adaptive-list">
+
+            {% for item in weak_items %}
+
+            <article class="adaptive-list-card">
+
+                <div>
+
+                    <h3>
+                        {{ item.learning_item__title }}
+                    </h3>
+
+                    <p>
+                        {{ item.learning_item__module__title }}
+                    </p>
+
+                </div>
+
+                <div class="adaptive-error-count">
+
+                    <strong>
+                        {{ item.error_count }}
+                    </strong>
+
+                    <span>
+                        errors
+                    </span>
+
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="adaptive-empty compact">
+                No weak learning items.
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<section class="adaptive-section">
+
+    <div class="adaptive-section-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
+                Recent History
+            </span>
+
+            <h2>
+                Recent Errors
+            </h2>
+
+        </div>
+
+        <a
+            href="{% url 'learning:my_errors' %}"
+            class="adaptive-secondary-action"
+        >
+            Full Error Log
+        </a>
+
+    </div>
+
+
+    <div class="adaptive-list">
+
+        {% for error in recent_errors %}
+
+        <article class="adaptive-list-card">
+
+            <div>
+
+                <span class="adaptive-pill">
+                    {{ error.get_category_display }}
+                </span>
+
+                <h3>
+                    {{ error.learning_item.title|default:"Practice question" }}
+                </h3>
+
+                {% if error.student_response %}
+
+                <p>
+                    Your response:
+                    {{ error.student_response }}
+                </p>
+
+                {% endif %}
+
+            </div>
+
+            <div class="adaptive-due-time">
+
+                <span>
+                    Recorded
+                </span>
+
+                <strong>
+                    {{ error.occurred_at|date:"M d" }}
+                </strong>
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <div class="adaptive-empty compact">
+
+            <h3>
+                No unresolved errors
+            </h3>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endblock %}

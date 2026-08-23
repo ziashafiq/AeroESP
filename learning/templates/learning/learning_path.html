@@ -1,153 +1,253 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-My Learning Path | AeroESP
+Learning Path · AeroESP
 {% endblock %}
 
 {% block content %}
 
 
-<div class="program-header">
+<nav class="adaptive-nav" aria-label="Adaptive learning navigation">
 
-    <h1>
-        My Learning Path
-    </h1>
+    <a href="{% url 'learning:daily_practice' %}">
+        Practice
+    </a>
 
-    <p>
-        Personalized recommendations based
-        on your placement, errors, reviews,
-        and mastery history.
-    </p>
+    <a href="{% url 'learning:review_due' %}">
+        Review Queue
+    </a>
 
-</div>
+    <a href="{% url 'learning:weak_topics' %}">
+        Weak Areas
+    </a>
+
+    <a href="{% url 'learning:mastery_dashboard' %}">
+        Mastery
+    </a>
+
+    <a href="{% url 'learning:learning_recommendations' %}">
+        Recommendations
+    </a>
+
+    <a href="{% url 'learning:learning_path' %}">
+        Learning Path
+    </a>
+
+</nav>
+
+
+<section class="adaptive-hero">
+
+    <div>
+
+        <span class="adaptive-kicker">
+            Personalized Roadmap
+        </span>
+
+        <h1>
+            My Learning Path
+        </h1>
+
+        <p>
+            Your current route combines placement,
+            weak areas, review demand and mastery history.
+        </p>
+
+    </div>
+
+</section>
 
 
 {% if latest_placement %}
 
-<div class="card">
+<section class="adaptive-diagnostic-card">
 
-    <h3>
-        Current Diagnostic Profile
-    </h3>
+    <div>
 
-    <p>
-        CEFR:
-        <strong>
-            {{ latest_placement.cefr_level }}
-        </strong>
-    </p>
+        <span class="adaptive-kicker">
+            Current Diagnostic Profile
+        </span>
 
-    <p>
-        IELTS Estimate:
-        <strong>
-            {{ latest_placement.ielts_estimate }}
-        </strong>
-    </p>
+        <h2>
+            {{ latest_placement.cefr_level|default:"Assessment Complete" }}
+        </h2>
 
-    <p>
-        Overall:
+    </div>
+
+
+    <div>
+
+        <span>
+            Overall
+        </span>
+
         <strong>
             {{ latest_placement.overall_score }}%
         </strong>
-    </p>
 
-</div>
+    </div>
+
+
+    <div>
+
+        <span>
+            IELTS Estimate
+        </span>
+
+        <strong>
+            {{ latest_placement.ielts_estimate|default:"—" }}
+        </strong>
+
+    </div>
+
+</section>
 
 {% endif %}
 
 
-<h2>
-    General English Recommendations
-</h2>
+<div class="adaptive-path-columns">
+
+    <section class="adaptive-section">
+
+        <div class="adaptive-section-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Track 01
+                </span>
+
+                <h2>
+                    General / IELTS
+                </h2>
+
+            </div>
+
+            <a
+                href="{% url 'learning:daily_practice' %}?mode=general"
+                class="adaptive-secondary-action"
+            >
+                Practice
+            </a>
+
+        </div>
 
 
-{% for recommendation in general_recommendations %}
+        <div class="adaptive-path-list">
 
-<div class="module">
+            {% for recommendation in general_recommendations %}
 
-    <span class="badge">
-        {{ recommendation.bucket|title }}
-    </span>
+            <article>
 
-    <h3>
-        {{ recommendation.link.learning_item.title }}
-    </h3>
+                <span class="adaptive-path-step">
+                    {{ forloop.counter|stringformat:"02d" }}
+                </span>
 
-    <p>
-        Section:
-        {{ recommendation.link.learning_item.module.title }}
-    </p>
+                <div>
 
-    {% if recommendation.unresolved_errors %}
+                    <span class="adaptive-reason">
+                        {{ recommendation.bucket|title }}
+                    </span>
 
-    <p>
-        Unresolved errors:
-        {{ recommendation.unresolved_errors }}
-    </p>
+                    <h3>
+                        {{ recommendation.link.learning_item.title }}
+                    </h3>
 
-    {% endif %}
+                    <p>
+                        {{ recommendation.link.learning_item.module.title }}
+                    </p>
+
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="adaptive-empty compact">
+                No General / IELTS recommendations yet.
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+
+    <section class="adaptive-section">
+
+        <div class="adaptive-section-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Track 02
+                </span>
+
+                <h2>
+                    Aerospace English
+                </h2>
+
+            </div>
+
+            <a
+                href="{% url 'learning:daily_practice' %}?mode=aerospace"
+                class="adaptive-secondary-action"
+            >
+                Practice
+            </a>
+
+        </div>
+
+
+        <div class="adaptive-path-list">
+
+            {% for recommendation in aerospace_recommendations %}
+
+            <article>
+
+                <span class="adaptive-path-step">
+                    {{ forloop.counter|stringformat:"02d" }}
+                </span>
+
+                <div>
+
+                    <span class="adaptive-reason">
+                        {{ recommendation.bucket|title }}
+                    </span>
+
+                    <h3>
+                        {{ recommendation.link.learning_item.title }}
+                    </h3>
+
+                    <p>
+                        {{ recommendation.link.learning_item.module.title }}
+                    </p>
+
+                    {% if recommendation.link.learning_item.aerospace_topic %}
+
+                    <span class="adaptive-pill">
+                        {{ recommendation.link.learning_item.aerospace_topic.name }}
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="adaptive-empty compact">
+                No Aerospace recommendations yet.
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
 
 </div>
-
-{% empty %}
-
-<div class="card">
-    No General English recommendations yet.
-</div>
-
-{% endfor %}
-
-
-<h2>
-    Aerospace English Recommendations
-</h2>
-
-
-{% for recommendation in aerospace_recommendations %}
-
-<div class="module">
-
-    <span class="badge">
-        {{ recommendation.bucket|title }}
-    </span>
-
-    <h3>
-        {{ recommendation.link.learning_item.title }}
-    </h3>
-
-    <p>
-        Section:
-        {{ recommendation.link.learning_item.module.title }}
-    </p>
-
-    {% if recommendation.link.learning_item.aerospace_topic %}
-
-    <p>
-        Topic:
-        {{ recommendation.link.learning_item.aerospace_topic.name }}
-    </p>
-
-    {% endif %}
-
-</div>
-
-{% empty %}
-
-<div class="card">
-    No Aerospace recommendations yet.
-</div>
-
-{% endfor %}
-
-
-<br>
-
-<a
-    class="button"
-    href="{% url 'learning:daily_practice' %}"
->
-    Start Adaptive Practice
-</a>
-
 
 {% endblock %}

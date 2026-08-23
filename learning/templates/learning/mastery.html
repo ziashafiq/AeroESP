@@ -1,0 +1,266 @@
+{% extends "learning/base.html" %}
+
+{% block title %}
+Mastery · AeroESP
+{% endblock %}
+
+{% block content %}
+
+
+<nav class="adaptive-nav" aria-label="Adaptive learning navigation">
+
+    <a href="{% url 'learning:daily_practice' %}">
+        Practice
+    </a>
+
+    <a href="{% url 'learning:review_due' %}">
+        Review Queue
+    </a>
+
+    <a href="{% url 'learning:weak_topics' %}">
+        Weak Areas
+    </a>
+
+    <a href="{% url 'learning:mastery_dashboard' %}">
+        Mastery
+    </a>
+
+    <a href="{% url 'learning:learning_recommendations' %}">
+        Recommendations
+    </a>
+
+    <a href="{% url 'learning:learning_path' %}">
+        Learning Path
+    </a>
+
+</nav>
+
+
+<section class="adaptive-hero">
+
+    <div>
+
+        <span class="adaptive-kicker">
+            Learning Progress
+        </span>
+
+        <h1>
+            Mastery
+        </h1>
+
+        <p>
+            Track what is mastered, still learning and ready for review.
+        </p>
+
+    </div>
+
+    <div class="adaptive-hero-number">
+
+        <span>
+            Average Mastery
+        </span>
+
+        <strong>
+            {{ average_mastery }}%
+        </strong>
+
+    </div>
+
+</section>
+
+
+<div class="adaptive-scope-switch">
+
+    <a
+        href="?scope=all"
+        class="{% if scope == 'all' %}is-active{% endif %}"
+    >
+        All
+    </a>
+
+    <a
+        href="?scope=general"
+        class="{% if scope == 'general' %}is-active{% endif %}"
+    >
+        General / IELTS
+    </a>
+
+    <a
+        href="?scope=aerospace"
+        class="{% if scope == 'aerospace' %}is-active{% endif %}"
+    >
+        Aerospace
+    </a>
+
+</div>
+
+
+<div class="adaptive-metrics six">
+
+    <article>
+        <span>Tracked</span>
+        <strong>{{ tracked_count }}</strong>
+    </article>
+
+    <article>
+        <span>Mastered</span>
+        <strong>{{ mastered_count }}</strong>
+    </article>
+
+    <article>
+        <span>Learning</span>
+        <strong>{{ learning_count }}</strong>
+    </article>
+
+    <article>
+        <span>Review</span>
+        <strong>{{ review_count }}</strong>
+    </article>
+
+    <article>
+        <span>New</span>
+        <strong>{{ new_count }}</strong>
+    </article>
+
+    <article>
+        <span>Due</span>
+        <strong>{{ due_count }}</strong>
+    </article>
+
+</div>
+
+
+<div class="adaptive-two-column">
+
+    <section class="adaptive-section">
+
+        <div class="adaptive-section-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Strengths
+                </span>
+
+                <h2>
+                    Strongest Items
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="adaptive-list">
+
+            {% for progress in strongest_items %}
+
+            <article class="adaptive-mastery-card">
+
+                <div>
+
+                    <h3>
+                        {{ progress.learning_item.title }}
+                    </h3>
+
+                    <p>
+                        {{ progress.learning_item.module.title }}
+                    </p>
+
+                </div>
+
+                <strong>
+                    {{ progress.mastery_score }}%
+                </strong>
+
+                <div class="adaptive-progress">
+
+                    <span
+                        style="width: {{ progress.mastery_score }}%;"
+                    ></span>
+
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="adaptive-empty compact">
+                No mastery data yet.
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+
+    <section class="adaptive-section">
+
+        <div class="adaptive-section-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Priority
+                </span>
+
+                <h2>
+                    Needs Attention
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="adaptive-list">
+
+            {% for progress in needs_attention %}
+
+            <article class="adaptive-mastery-card">
+
+                <div>
+
+                    <h3>
+                        {{ progress.learning_item.title }}
+                    </h3>
+
+                    <p>
+                        {{ progress.incorrect_count }}
+                        incorrect ·
+                        {{ progress.get_status_display }}
+                    </p>
+
+                </div>
+
+                <strong>
+                    {{ progress.mastery_score }}%
+                </strong>
+
+                <div class="adaptive-progress">
+
+                    <span
+                        style="width: {{ progress.mastery_score }}%;"
+                    ></span>
+
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="adaptive-empty compact">
+                Nothing needs attention yet.
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

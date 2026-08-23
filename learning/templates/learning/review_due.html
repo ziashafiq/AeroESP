@@ -1,202 +1,251 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Review Queue | AeroESP
+Review Queue · AeroESP
 {% endblock %}
 
 {% block content %}
 
 
-<div class="program-header">
+<nav class="adaptive-nav" aria-label="Adaptive learning navigation">
 
-    <h1>
+    <a href="{% url 'learning:daily_practice' %}">
+        Practice
+    </a>
+
+    <a href="{% url 'learning:review_due' %}">
         Review Queue
-    </h1>
+    </a>
 
-    <p>
-        Review learning items according
-        to your spaced-repetition schedule.
-    </p>
+    <a href="{% url 'learning:weak_topics' %}">
+        Weak Areas
+    </a>
 
-</div>
+    <a href="{% url 'learning:mastery_dashboard' %}">
+        Mastery
+    </a>
 
+    <a href="{% url 'learning:learning_recommendations' %}">
+        Recommendations
+    </a>
 
-<div class="cards">
+    <a href="{% url 'learning:learning_path' %}">
+        Learning Path
+    </a>
 
-    <div class="card">
-
-        <h3>
-            Due
-        </h3>
-
-        <div class="stat-number">
-            {{ due_count }}
-        </div>
-
-    </div>
+</nav>
 
 
-    <div class="card">
+<section class="adaptive-hero">
 
-        <h3>
-            Overdue
-        </h3>
+    <div>
 
-        <div class="stat-number">
-            {{ overdue_count }}
-        </div>
+        <span class="adaptive-kicker">
+            Spaced Repetition
+        </span>
 
-    </div>
+        <h1>
+            Review Queue
+        </h1>
 
-
-    <div class="card">
-
-        <h3>
-            Mastered
-        </h3>
-
-        <div class="stat-number">
-            {{ mastered_count }}
-        </div>
+        <p>
+            Revisit material at the right time to strengthen retention.
+        </p>
 
     </div>
 
-</div>
+</section>
 
 
-<br>
-
-
-<div class="card">
-
-    <strong>
-        Review Scope
-    </strong>
-
-    <p>
-
-        <a
-            class="button"
-            href="?scope=all"
-        >
-            All
-        </a>
-
-        <a
-            class="button"
-            href="?scope=general"
-        >
-            General English
-        </a>
-
-        <a
-            class="button"
-            href="?scope=aerospace"
-        >
-            Aerospace English
-        </a>
-
-    </p>
-
-</div>
-
-
-<h2>
-    Due for Review
-</h2>
-
-
-{% if due_items %}
-
-{% for progress in due_items %}
-
-<div class="module">
-
-    <span class="badge">
-
-        {{ progress.learning_item.module.course.program.title }}
-
-    </span>
-
-    <h3>
-        {{ progress.learning_item.title }}
-    </h3>
-
-    <p>
-        Section:
-        {{ progress.learning_item.module.title }}
-    </p>
-
-    <p>
-        Mastery:
-        {{ progress.mastery_score }}%
-    </p>
-
-    <p>
-        Correct:
-        {{ progress.correct_count }}
-
-        &nbsp; | &nbsp;
-
-        Incorrect:
-        {{ progress.incorrect_count }}
-    </p>
+<div class="adaptive-scope-switch">
 
     <a
-        class="button"
-        href="{% url 'learning:daily_practice' %}"
+        href="?scope=all"
+        class="{% if scope == 'all' %}is-active{% endif %}"
     >
-        Review Now
+        All
+    </a>
+
+    <a
+        href="?scope=general"
+        class="{% if scope == 'general' %}is-active{% endif %}"
+    >
+        General / IELTS
+    </a>
+
+    <a
+        href="?scope=aerospace"
+        class="{% if scope == 'aerospace' %}is-active{% endif %}"
+    >
+        Aerospace
     </a>
 
 </div>
 
-{% endfor %}
 
-{% else %}
+<div class="adaptive-metrics">
 
-<div class="card empty-state">
+    <article>
+        <span>Due Now</span>
+        <strong>{{ due_count }}</strong>
+    </article>
 
-    <h3>
-        Nothing is due right now.
-    </h3>
+    <article>
+        <span>Overdue</span>
+        <strong>{{ overdue_count }}</strong>
+    </article>
 
-    <p>
-        Your review queue is clear.
-    </p>
+    <article>
+        <span>Mastered</span>
+        <strong>{{ mastered_count }}</strong>
+    </article>
 
 </div>
+
+
+<section class="adaptive-section">
+
+    <div class="adaptive-section-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
+                Priority
+            </span>
+
+            <h2>
+                Due for Review
+            </h2>
+
+        </div>
+
+        <a
+            href="{% url 'learning:daily_practice' %}"
+            class="adaptive-primary-action"
+        >
+            Start Review
+        </a>
+
+    </div>
+
+
+    <div class="adaptive-list">
+
+        {% for progress in due_items %}
+
+        <article class="adaptive-list-card">
+
+            <div>
+
+                <span class="adaptive-pill">
+                    {{ progress.learning_item.module.title }}
+                </span>
+
+                <h3>
+                    {{ progress.learning_item.title }}
+                </h3>
+
+                <p>
+                    Mastery {{ progress.mastery_score }}%
+                    · {{ progress.get_status_display }}
+                </p>
+
+            </div>
+
+            <div class="adaptive-due-time">
+
+                <span>
+                    Due
+                </span>
+
+                <strong>
+                    {{ progress.next_review_at|date:"M d · H:i" }}
+                </strong>
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <div class="adaptive-empty compact">
+
+            <h3>
+                Review queue is clear
+            </h3>
+
+            <p>
+                Nothing is due in this scope.
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+{% if upcoming_items %}
+
+<section class="adaptive-section">
+
+    <div class="adaptive-section-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
+                Coming Next
+            </span>
+
+            <h2>
+                Upcoming Reviews
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="adaptive-list">
+
+        {% for progress in upcoming_items %}
+
+        <article class="adaptive-list-card subtle">
+
+            <div>
+
+                <h3>
+                    {{ progress.learning_item.title }}
+                </h3>
+
+                <p>
+                    {{ progress.learning_item.module.title }}
+                </p>
+
+            </div>
+
+            <div class="adaptive-due-time">
+
+                <span>
+                    Scheduled
+                </span>
+
+                <strong>
+                    {{ progress.next_review_at|date:"M d · H:i" }}
+                </strong>
+
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+</section>
 
 {% endif %}
-
-
-<h2>
-    Upcoming Reviews
-</h2>
-
-
-{% for progress in upcoming_items %}
-
-<div class="card">
-
-    <strong>
-        {{ progress.learning_item.title }}
-    </strong>
-
-    <p>
-        Next review:
-        {{ progress.next_review_at }}
-    </p>
-
-</div>
-
-{% empty %}
-
-<p>
-    No upcoming reviews.
-</p>
-
-{% endfor %}
-
 
 {% endblock %}

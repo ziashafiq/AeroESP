@@ -1,188 +1,195 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Practice Result | AeroESP
+Practice Feedback · AeroESP
 {% endblock %}
 
 {% block content %}
 
 
-{% if error_message %}
+<nav class="adaptive-nav" aria-label="Adaptive learning navigation">
 
-<div class="card">
-
-    <h2>
-        Answer Required
-    </h2>
-
-    <p>
-        {{ error_message }}
-    </p>
-
-    <a
-        class="button"
-        href="{% url 'learning:daily_practice' %}?mode={{ mode }}"
-    >
-        Back to Practice
+    <a href="{% url 'learning:daily_practice' %}">
+        Practice
     </a>
 
-</div>
+    <a href="{% url 'learning:review_due' %}">
+        Review Queue
+    </a>
+
+    <a href="{% url 'learning:weak_topics' %}">
+        Weak Areas
+    </a>
+
+    <a href="{% url 'learning:mastery_dashboard' %}">
+        Mastery
+    </a>
+
+    <a href="{% url 'learning:learning_recommendations' %}">
+        Recommendations
+    </a>
+
+    <a href="{% url 'learning:learning_path' %}">
+        Learning Path
+    </a>
+
+</nav>
 
 
-{% else %}
-
-
-<div class="program-header">
-
+<section class="
+    adaptive-feedback
     {% if is_correct %}
-
-    <h1>
-        Correct ✓
-    </h1>
-
-    <p>
-        Good work. Your learning progress
-        has been updated.
-    </p>
-
+        is-correct
     {% else %}
+        is-incorrect
+    {% endif %}
+">
+
+    <div class="adaptive-feedback-icon">
+
+        {% if is_correct %}
+            ✓
+        {% else %}
+            ×
+        {% endif %}
+
+    </div>
+
+
+    <span class="adaptive-kicker">
+
+        {% if is_correct %}
+            Correct Answer
+        {% else %}
+            Review Required
+        {% endif %}
+
+    </span>
+
 
     <h1>
-        Needs Review
+
+        {% if is_correct %}
+            Good work.
+        {% else %}
+            Not quite.
+        {% endif %}
+
     </h1>
 
-    <p>
-        This answer has been added to
-        your error analysis and review queue.
-    </p>
 
-    {% endif %}
-
-</div>
-
-
-<div class="card">
-
-    <h3>
-        Question
-    </h3>
-
-    <p>
+    <p class="adaptive-feedback-question">
         {{ question.question_text }}
     </p>
 
 
-    <p>
-        <strong>
-            Your Answer
-        </strong>
+    <div class="adaptive-feedback-grid">
 
-        <br>
+        <div>
 
-        {{ selected_answer }}.
-        {{ selected_answer_text }}
-    </p>
+            <span>
+                Your answer
+            </span>
 
+            <strong>
+                {{ selected_answer }}.
+                {{ selected_answer_text|default:"No answer" }}
+            </strong>
 
-    <p>
-        <strong>
-            Correct Answer
-        </strong>
+        </div>
 
-        <br>
+        <div>
 
-        {{ correct_answer }}.
-        {{ correct_answer_text }}
-    </p>
+            <span>
+                Correct answer
+            </span>
+
+            <strong>
+                {{ correct_answer }}.
+                {{ correct_answer_text }}
+            </strong>
+
+        </div>
+
+    </div>
 
 
     {% if question.explanation %}
 
-    <p>
-        <strong>
+    <div class="adaptive-explanation">
+
+        <span>
             Explanation
-        </strong>
+        </span>
 
-        <br>
+        <p>
+            {{ question.explanation }}
+        </p>
 
-        {{ question.explanation }}
-    </p>
+    </div>
 
     {% endif %}
 
-</div>
 
+    <div class="adaptive-feedback-progress">
 
-<div class="cards">
+        <div>
 
-    <div class="card">
+            <span>
+                Learning status
+            </span>
 
-        <h3>
-            Correct
-        </h3>
+            <strong>
+                {{ progress.get_status_display }}
+            </strong>
 
-        <div class="stat-number">
-            {{ progress.correct_count }}
+        </div>
+
+        <div>
+
+            <span>
+                Mastery
+            </span>
+
+            <strong>
+                {{ progress.mastery_score }}%
+            </strong>
+
+        </div>
+
+        <div>
+
+            <span>
+                Successful reviews
+            </span>
+
+            <strong>
+                {{ progress.review_count }}
+            </strong>
+
         </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="adaptive-feedback-actions">
 
-        <h3>
-            Incorrect
-        </h3>
+        <a
+            href="{% url 'learning:daily_practice' %}?mode={{ mode }}"
+            class="adaptive-primary-action"
+        >
+            Next Question →
+        </a>
 
-        <div class="stat-number">
-            {{ progress.incorrect_count }}
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3>
-            Mastery
-        </h3>
-
-        <div class="stat-number">
-            {{ progress.mastery_score }}%
-        </div>
+        <a
+            href="{% url 'learning:weak_topics' %}"
+            class="adaptive-secondary-action"
+        >
+            Weak Areas
+        </a>
 
     </div>
 
-</div>
-
-
-<br>
-
-
-<a
-    class="button"
-    href="{% url 'learning:daily_practice' %}?mode={{ mode }}"
->
-    Continue Practice
-</a>
-
-
-<a
-    class="button"
-    href="{% url 'learning:review_due' %}"
->
-    Review Queue
-</a>
-
-
-<a
-    class="button"
-    href="{% url 'learning:my_errors' %}"
->
-    Error Analysis
-</a>
-
-
-{% endif %}
+</section>
 
 {% endblock %}
