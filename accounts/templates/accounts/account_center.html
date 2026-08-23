@@ -1,78 +1,158 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "aeroesp/base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>AeroESP Account</title>
-</head>
+{% block title %}
+Account Center · AeroESP
+{% endblock %}
 
-<body>
+{% block workspace_name %}
+Account Center
+{% endblock %}
 
-    <h1>AeroESP Account Center</h1>
+{% block content %}
 
-    <p>
-        Username:
-        <strong>{{ request.user.username }}</strong>
-    </p>
+<section class="account-hero">
 
-    <p>
-        Role:
-        <strong>{{ role }}</strong>
-    </p>
+    <div class="account-avatar-large">
+        {{ request.user.username|slice:":1"|upper }}
+    </div>
 
-    <hr>
+    <div>
 
-    {% if request.user.is_superuser %}
+        <span class="account-kicker">
+            Profile & Access
+        </span>
 
-        <h2>Administrator</h2>
+        <h1>
+            Account Center
+        </h1>
 
         <p>
-            <a href="/admin/">
-                Open AeroESP Administration
-            </a>
+            Manage your AeroESP account and workspace access.
         </p>
 
-    {% elif request.user.teacher_profile %}
+    </div>
 
-        <h2>Teacher</h2>
+</section>
 
-        <p>
-            <a href="{% url 'accounts:teacher_dashboard' %}">
+
+<div class="account-grid">
+
+    <section class="account-card">
+
+        <span class="account-kicker">
+            Account
+        </span>
+
+        <h2>
+            Profile information
+        </h2>
+
+        <div class="account-info-list">
+
+            <div>
+                <span>Username</span>
+                <strong>{{ request.user.username }}</strong>
+            </div>
+
+            <div>
+                <span>Name</span>
+                <strong>
+                    {% if request.user.get_full_name %}
+                        {{ request.user.get_full_name }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div>
+                <span>Role</span>
+
+                <strong>
+                    {% if request.user.is_superuser %}
+                        Administrator
+                    {% elif request.user.teacher_profile.is_approved %}
+                        Teacher
+                    {% else %}
+                        Student
+                    {% endif %}
+                </strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="account-card">
+
+        <span class="account-kicker">
+            Workspace
+        </span>
+
+        <h2>
+            Continue to dashboard
+        </h2>
+
+        <p class="account-card-copy">
+            Return to your primary AeroESP workspace.
+        </p>
+
+        {% if request.user.is_superuser or request.user.teacher_profile.is_approved %}
+
+            <a
+                href="{% url 'accounts:teacher_dashboard' %}"
+                class="account-primary-action"
+            >
                 Open Teacher Dashboard
+                <span>→</span>
             </a>
-        </p>
 
-    {% elif request.user.student_profile %}
+        {% else %}
 
-        <h2>Student</h2>
-
-        <p>
-            <a href="{% url 'accounts:student_dashboard' %}">
+            <a
+                href="{% url 'accounts:student_dashboard' %}"
+                class="account-primary-action"
+            >
                 Open Student Dashboard
+                <span>→</span>
             </a>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="account-card account-security-card">
+
+        <span class="account-kicker">
+            Session
+        </span>
+
+        <h2>
+            Switch account
+        </h2>
+
+        <p class="account-card-copy">
+            Sign out before using another AeroESP account.
         </p>
 
-    {% endif %}
+        <form
+            method="post"
+            action="{% url 'accounts:logout' %}"
+        >
+            {% csrf_token %}
 
-    <hr>
+            <button
+                type="submit"
+                class="account-secondary-action"
+            >
+                Sign out
+            </button>
+        </form>
 
-    <h2>Switch Account</h2>
+    </section>
 
-    <p>
-        Logout first, then login using another AeroESP account.
-    </p>
+</div>
 
-    <form
-        method="post"
-        action="{% url 'accounts:logout' %}"
-    >
-        {% csrf_token %}
-
-        <button type="submit">
-            Logout / Switch Account
-        </button>
-    </form>
-
-</body>
-
-</html>
+{% endblock %}
