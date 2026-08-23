@@ -1,45 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "aeroesp/base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Teacher Question Bank</title>
-</head>
+{% block title %}
+Question Bank · AeroESP
+{% endblock %}
 
-<body>
+{% block workspace_name %}
+Question Bank
+{% endblock %}
 
-    <h1>AeroESP Teacher Question Bank</h1>
+{% block content %}
 
-    <p>
-        Teacher:
-        {{ request.user.username }}
+
+<section class="app-hero">
+
+    <div class="page-eyebrow">
+        Assessment content
+    </div>
+
+    <h1 class="page-title">
+        Question Bank
+    </h1>
+
+    <p class="page-lead">
+        Create and maintain assessment
+        questions across General English
+        and Aerospace ESP.
     </p>
 
-    <p>
-        <a href="{% url 'teacher_questions:create' %}">
-            Create New Question
+
+    <div class="teacher-toolbar-actions">
+
+        <a
+            class="button"
+            href="{% url 'teacher_questions:create' %}"
+        >
+            Create Question
         </a>
-    </p>
 
-    <p>
-        <a href="{% url 'teacher_questions:topic_propose' %}">
-            Propose Missing Aerospace Topic
+        <a
+            class="button button-secondary"
+            href="{% url 'teacher_questions:topic_propose' %}"
+        >
+            Propose Aerospace Topic
         </a>
-    </p>
 
-    <p>
-        <a href="{% url 'teacher_questions:topic_proposals' %}">
-            View My Topic Proposals
+        <a
+            class="button button-secondary"
+            href="{% url 'teacher_questions:topic_proposals' %}"
+        >
+            Topic Proposals
         </a>
-    </p>
 
-    <hr>
+    </div>
+
+</section>
+
+
+
+<section class="teacher-data-card">
 
     {% if questions %}
 
-        <table border="1" cellpadding="8">
+    <div class="table-wrap">
+
+        <table>
 
             <thead>
+
                 <tr>
                     <th>ID</th>
                     <th>Question</th>
@@ -50,67 +77,74 @@
                     <th>Status</th>
                     <th>Visibility</th>
                     <th>Version</th>
-                    <th>Action</th>
+                    <th></th>
                 </tr>
+
             </thead>
+
 
             <tbody>
 
                 {% for question in questions %}
 
-                    <tr>
+                <tr>
 
-                        <td>
-                            {{ question.id }}
-                        </td>
+                    <td>
+                        #{{ question.id }}
+                    </td>
 
-                        <td>
-                            {{ question.question_text|truncatechars:80 }}
-                        </td>
+                    <td class="teacher-table-title">
+                        {{ question.question_text|truncatechars:90 }}
+                    </td>
 
-                        <td>
-                            {% if question.domain_ref %}
-                                {{ question.domain_ref.name }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
+                    <td>
+                        {% if question.domain_ref %}
+                            {{ question.domain_ref.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-                        <td>
-                            {% if question.topic_ref %}
-                                {{ question.topic_ref.name }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
+                    <td>
+                        {% if question.topic_ref %}
+                            {{ question.topic_ref.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-                        <td>
-                            {{ question.get_skill_display }}
-                        </td>
+                    <td>
+                        {{ question.get_skill_display }}
+                    </td>
 
-                        <td>
-                            {{ question.get_difficulty_display }}
-                        </td>
+                    <td>
+                        {{ question.get_difficulty_display }}
+                    </td>
 
-                        <td>
+                    <td>
+                        <span class="status-chip">
                             {{ question.get_status_display }}
-                        </td>
+                        </span>
+                    </td>
 
-                        <td>
-                            {{ question.get_visibility_display }}
-                        </td>
+                    <td>
+                        {{ question.get_visibility_display }}
+                    </td>
 
-                        <td>
-                            {{ question.version }}
-                        </td>
+                    <td>
+                        v{{ question.version }}
+                    </td>
 
-                        <td>
-                            <a href="{% url 'teacher_questions:edit' question.pk %}">
-                                Edit
-                            </a>
-                        </td>
+                    <td>
+                        <a
+                            class="button button-secondary"
+                            href="{% url 'teacher_questions:edit' question.pk %}"
+                        >
+                            Edit
+                        </a>
+                    </td>
 
-                    </tr>
+                </tr>
 
                 {% endfor %}
 
@@ -118,19 +152,33 @@
 
         </table>
 
+    </div>
+
+
     {% else %}
 
-        <p>
-            You have not created any questions yet.
-        </p>
+        <div class="empty-state">
+
+            <div>
+
+                <h3>
+                    No questions yet
+                </h3>
+
+                <a
+                    class="button"
+                    href="{% url 'teacher_questions:create' %}"
+                >
+                    Create First Question
+                </a>
+
+            </div>
+
+        </div>
 
     {% endif %}
 
-    <hr>
+</section>
 
-    <a href="/accounts/teacher/dashboard/">
-        Back to Teacher Dashboard
-    </a>
 
-</body>
-</html>
+{% endblock %}

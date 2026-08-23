@@ -1,187 +1,327 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Class Analytics | AeroESP
+Class Analytics · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+Class Analytics
 {% endblock %}
 
 {% block content %}
 
 
-<div class="program-header">
+<div class="breadcrumb">
 
-    <h1>
-        {{ course.title }}
-    </h1>
+    <a href="{% url 'learning:teacher_learning_dashboard' %}">
+        Teacher Analytics
+    </a>
 
-    <p>
-        Class:
-        {{ class_name }}
-    </p>
+    <span>/</span>
+
+    {{ class_name }}
 
 </div>
 
 
-<div class="cards">
+<section class="app-hero">
 
-    <div class="card">
+    <div class="page-eyebrow">
+        {{ course.program.title }}
+    </div>
 
-        <h3>
+    <h1 class="page-title">
+        {{ course.title }}
+    </h1>
+
+    <p class="page-lead">
+        Class {{ class_name }}
+    </p>
+
+</section>
+
+
+
+<section class="teacher-kpi-grid">
+
+    <div class="teacher-kpi">
+
+        <div class="teacher-kpi-label">
             Students
-        </h3>
+        </div>
 
-        <div class="stat-number">
+        <div class="teacher-kpi-value">
             {{ student_count }}
         </div>
 
     </div>
 
-    <div class="card">
 
-        <h3>
-            Class Accuracy
-        </h3>
+    <div class="teacher-kpi">
 
-        <div class="stat-number">
+        <div class="teacher-kpi-label">
+            Class accuracy
+        </div>
+
+        <div class="teacher-kpi-value">
             {{ class_accuracy }}%
         </div>
 
     </div>
 
-    <div class="card">
 
-        <h3>
-            Class Mastery
-        </h3>
+    <div class="teacher-kpi">
 
-        <div class="stat-number">
+        <div class="teacher-kpi-label">
+            Class mastery
+        </div>
+
+        <div class="teacher-kpi-value">
             {{ class_mastery }}%
         </div>
 
     </div>
 
-</div>
+</section>
 
 
-<h2>
-    Students
-</h2>
 
-{% for row in students %}
+<section class="section">
 
-<div class="module">
+    <div class="section-header">
 
-    <h3>
-        {{ row.student.username }}
-    </h3>
+        <div>
 
-    <p>
-        Level:
-        {% if row.enrollment.assigned_level %}
-            {{ row.enrollment.assigned_level }}
-        {% else %}
-            Not assessed
-        {% endif %}
-    </p>
+            <div class="page-eyebrow">
+                Learners
+            </div>
 
-    <p>
-        Accuracy:
-        {{ row.summary.accuracy }}%
-    </p>
+            <h2>
+                Student Performance
+            </h2>
 
-    <p>
-        Mastery:
-        {{ row.summary.mastery }}%
-    </p>
+        </div>
 
-    <p>
-        Due:
-        {{ row.summary.due }}
-    </p>
-
-    <p>
-        Errors:
-        {{ row.summary.errors }}
-    </p>
-
-    {% if row.summary.needs_attention %}
-        <span class="badge">
-            Needs Attention
-        </span>
-    {% endif %}
-
-    <a
-        class="button"
-        href="{% url 'learning:teacher_student_detail' row.student.pk %}"
-    >
-        Student Analytics
-    </a>
-
-</div>
-
-{% empty %}
-
-<div class="card">
-    No students in this class.
-</div>
-
-{% endfor %}
-
-
-<h2>
-    Weakest Areas
-</h2>
-
-<div class="cards">
-
-{% for area in weak_categories %}
-
-<div class="card">
-
-    <h3>
-        {{ area.category }}
-    </h3>
-
-    <div class="stat-number">
-        {{ area.total }}
     </div>
 
-</div>
 
-{% empty %}
+    {% for row in students %}
 
-<div class="card">
-    No error data.
-</div>
+    <article class="analytics-student-row">
 
-{% endfor %}
+        <div>
 
-</div>
+            <div class="analytics-student-name">
+                {{ row.student.username }}
+            </div>
+
+            {% if row.summary.needs_attention %}
+
+                <span class="app-badge badge-warning">
+                    Needs attention
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        <div>
+
+            <span class="analytics-cell-label">
+                Accuracy
+            </span>
+
+            <span class="analytics-cell-value">
+                {{ row.summary.accuracy }}%
+            </span>
+
+        </div>
+
+
+        <div>
+
+            <span class="analytics-cell-label">
+                Mastery
+            </span>
+
+            <span class="analytics-cell-value">
+                {{ row.summary.mastery }}%
+            </span>
+
+        </div>
+
+
+        <div>
+
+            <span class="analytics-cell-label">
+                Due
+            </span>
+
+            <span class="analytics-cell-value">
+                {{ row.summary.due }}
+            </span>
+
+        </div>
+
+
+        <div>
+
+            <span class="analytics-cell-label">
+                Errors
+            </span>
+
+            <span class="analytics-cell-value">
+                {{ row.summary.errors }}
+            </span>
+
+        </div>
+
+
+        <a
+            class="button button-secondary"
+            href="{% url 'learning:teacher_student_detail' row.student.pk %}"
+        >
+            Details
+        </a>
+
+    </article>
+
+
+    {% empty %}
+
+        <div class="empty-state">
+
+            <div>
+                <h3>
+                    No students in this class
+                </h3>
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="page-eyebrow">
+                Diagnostics
+            </div>
+
+            <h2>
+                Weakest Areas
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="weak-area-grid">
+
+        {% for area in weak_categories %}
+
+        <article class="weak-area-card">
+
+            <h3>
+                {{ area.category }}
+            </h3>
+
+            <div class="stat-number">
+                {{ area.total }}
+            </div>
+
+        </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+
+                <div>
+                    <h3>No error data</h3>
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
 
 
 {% if domain_stats %}
 
-<h2>
-    Aerospace Domain Performance
-</h2>
+<section class="section">
 
-{% for domain in domain_stats %}
+    <div class="section-header">
 
-<div class="module">
+        <div>
 
-    <h3>
-        {{ domain.name }}
-    </h3>
+            <div class="page-eyebrow">
+                Aerospace intelligence
+            </div>
 
-    <p>
-        Accuracy:
-        <strong>
-            {{ domain.accuracy }}%
-        </strong>
-    </p>
+            <h2>
+                Domain Performance
+            </h2>
 
-</div>
+        </div>
 
-{% endfor %}
+    </div>
+
+
+    <div class="teacher-class-grid">
+
+        {% for domain in domain_stats %}
+
+        <article class="teacher-data-card">
+
+            <h3>
+                {{ domain.name }}
+            </h3>
+
+            <div class="course-progress">
+
+                <div class="course-progress-header">
+
+                    <span>
+                        Accuracy
+                    </span>
+
+                    <strong>
+                        {{ domain.accuracy }}%
+                    </strong>
+
+                </div>
+
+                <div class="progress-track">
+
+                    <div
+                        class="progress-fill"
+                        style="width: {{ domain.accuracy }}%;"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+</section>
 
 {% endif %}
 

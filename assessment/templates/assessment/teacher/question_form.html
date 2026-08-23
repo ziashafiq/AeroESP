@@ -1,19 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "aeroesp/base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>{{ page_title }}</title>
-</head>
+{% block title %}
+{{ page_title }} · AeroESP
+{% endblock %}
 
-<body>
+{% block workspace_name %}
+Question Editor
+{% endblock %}
 
-    <h1>{{ page_title }}</h1>
+{% block content %}
 
-    <p>
-        Logged in as:
-        {{ request.user.username }}
+
+<div class="breadcrumb">
+
+    <a href="{% url 'teacher_questions:list' %}">
+        Question Bank
+    </a>
+
+    <span>/</span>
+
+    {{ page_title }}
+
+</div>
+
+
+<section class="app-hero">
+
+    <div class="page-eyebrow">
+        Assessment authoring
+    </div>
+
+    <h1 class="page-title">
+        {{ page_title }}
+    </h1>
+
+    <p class="page-lead">
+        Define question content,
+        taxonomy, difficulty,
+        visibility and answer data.
     </p>
+
+</section>
+
+
+<div class="teacher-form-shell">
 
     <form method="post">
 
@@ -21,17 +51,29 @@
 
         {{ form.as_p }}
 
-        <button type="submit">
-            {{ submit_label }}
-        </button>
+
+        <div class="teacher-toolbar-actions">
+
+            <button
+                type="submit"
+                class="button"
+            >
+                {{ submit_label }}
+            </button>
+
+
+            <a
+                class="button button-secondary"
+                href="{% url 'teacher_questions:list' %}"
+            >
+                Cancel
+            </a>
+
+        </div>
 
     </form>
 
-    <hr>
+</div>
 
-    <a href="{% url 'teacher_questions:list' %}">
-        Back to Question Bank
-    </a>
 
-</body>
-</html>
+{% endblock %}

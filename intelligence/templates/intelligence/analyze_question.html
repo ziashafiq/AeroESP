@@ -1,49 +1,106 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-AI Question Analysis | AeroESP
+AI Question Analysis · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+AI Question Analysis
 {% endblock %}
 
 {% block content %}
 
-<h1>
-    AI Question Analysis
-</h1>
 
-<div class="card">
+<section class="app-hero">
 
-    <h3>
+    <div class="page-eyebrow">
+        Question intelligence
+    </div>
+
+    <h1 class="page-title">
+        Analyze Question
+    </h1>
+
+    <p class="page-lead">
+        Request an explainable AI
+        analysis while preserving
+        teacher control over changes.
+    </p>
+
+</section>
+
+
+<div class="teacher-data-card">
+
+    <span class="app-badge">
+        Current question
+    </span>
+
+    <h2>
         {{ question.question_text }}
-    </h3>
+    </h2>
 
-    <p>
-        Current Track:
-        {{ question.track }}
-    </p>
 
-    <p>
-        Current Skill:
-        {{ question.skill }}
-    </p>
+    <div class="teacher-class-metrics">
 
-    <p>
-        Current Difficulty:
-        {{ question.difficulty }}
-    </p>
+        <div class="teacher-class-metric">
+
+            <span class="teacher-class-metric-label">
+                Track
+            </span>
+
+            <span class="teacher-class-metric-value">
+                {{ question.track }}
+            </span>
+
+        </div>
+
+
+        <div class="teacher-class-metric">
+
+            <span class="teacher-class-metric-label">
+                Skill
+            </span>
+
+            <span class="teacher-class-metric-value">
+                {{ question.skill }}
+            </span>
+
+        </div>
+
+
+        <div class="teacher-class-metric">
+
+            <span class="teacher-class-metric-label">
+                Difficulty
+            </span>
+
+            <span class="teacher-class-metric-value">
+                {{ question.difficulty }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="post"
+        style="margin-top: 22px;"
+    >
+
+        {% csrf_token %}
+
+        <button
+            type="submit"
+            class="button"
+        >
+            Analyze Question
+        </button>
+
+    </form>
 
 </div>
 
-<form method="post">
-
-    {% csrf_token %}
-
-    <button
-        type="submit"
-        class="button"
-    >
-        Analyze Question
-    </button>
-
-</form>
 
 {% endblock %}

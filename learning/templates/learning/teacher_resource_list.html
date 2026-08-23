@@ -1,36 +1,133 @@
-<h2>My Resources</h2>
+{% extends "learning/base.html" %}
 
-<a href="{% url 'learning:teacher_resource_create' %}">
-    Add Resource
-</a>
+{% block title %}
+Teacher Resources · AeroESP
+{% endblock %}
 
-{% for resource in resources %}
+{% block workspace_name %}
+Resource Management
+{% endblock %}
 
-<hr>
+{% block content %}
 
-<h3>{{ resource.title }}</h3>
 
-<p>
-    {{ resource.description }}
-</p>
+<section class="app-hero">
 
-<p>
-    Visibility: {{ resource.visibility }}
-</p>
+    <div class="page-eyebrow">
+        Teaching material
+    </div>
 
-<p>
-    <a href="{% url 'learning:teacher_resource_edit' resource.id %}">Edit</a>
+    <h1 class="page-title">
+        My Resources
+    </h1>
 
-    <form method="post"
-          action="{% url 'learning:teacher_resource_delete' resource.id %}"
-          style="display:inline">
-        {% csrf_token %}
-        <button type="submit">Delete</button>
-    </form>
-</p>
+    <p class="page-lead">
+        Manage files, references and
+        learning material assigned to
+        courses and modules.
+    </p>
 
-{% empty %}
 
-<p>No resources uploaded.</p>
+    <a
+        class="button"
+        href="{% url 'learning:teacher_resource_create' %}"
+    >
+        Add Resource
+    </a>
 
-{% endfor %}
+</section>
+
+
+
+<section class="resource-admin-grid">
+
+    {% for resource in resources %}
+
+    <article class="resource-admin-card">
+
+        <div>
+
+            <span class="app-badge">
+                {{ resource.visibility }}
+            </span>
+
+        </div>
+
+        <h3>
+            {{ resource.title }}
+        </h3>
+
+        {% if resource.description %}
+
+            <p>
+                {{ resource.description|truncatewords:28 }}
+            </p>
+
+        {% endif %}
+
+
+        <div class="resource-admin-actions">
+
+            <a
+                class="button button-secondary"
+                href="{% url 'learning:teacher_resource_edit' resource.id %}"
+            >
+                Edit
+            </a>
+
+
+            <form
+                method="post"
+                action="{% url 'learning:teacher_resource_delete' resource.id %}"
+                class="inline-delete-form"
+                onsubmit="return confirm('Delete this resource?');"
+            >
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="button button-danger"
+                >
+                    Delete
+                </button>
+
+            </form>
+
+        </div>
+
+    </article>
+
+
+    {% empty %}
+
+        <div class="empty-state">
+
+            <div>
+
+                <h3>
+                    No resources uploaded
+                </h3>
+
+                <p>
+                    Add course or module resources
+                    for your learners.
+                </p>
+
+                <a
+                    class="button"
+                    href="{% url 'learning:teacher_resource_create' %}"
+                >
+                    Add First Resource
+                </a>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</section>
+
+
+{% endblock %}

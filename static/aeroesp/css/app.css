@@ -3284,3 +3284,588 @@ tbody tr:hover {
     }
 
 }
+
+/* =========================================================
+   UI-03 — Teacher Workspace
+   ========================================================= */
+
+.teacher-hero {
+    position: relative;
+
+    overflow: hidden;
+
+    padding:
+        clamp(30px, 4vw, 48px);
+
+    margin-bottom: 26px;
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            125deg,
+            #071e2d,
+            #0b4059 68%,
+            #11647c
+        );
+
+    border-radius:
+        34px 34px
+        34px 12px;
+
+    box-shadow:
+        0 28px 65px
+        rgba(7,33,49,.14);
+}
+
+.teacher-hero::after {
+    content: "";
+
+    position: absolute;
+
+    width: 300px;
+    height: 300px;
+
+    right: -100px;
+    top: -150px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(121,221,250,.30),
+            transparent 68%
+        );
+}
+
+.teacher-hero > * {
+    position: relative;
+    z-index: 1;
+}
+
+.teacher-hero h1 {
+    max-width: 850px;
+
+    margin:
+        0 0
+        12px;
+
+    color: #ffffff;
+
+    font-size:
+        clamp(
+            32px,
+            4vw,
+            52px
+        );
+
+    line-height: 1.04;
+}
+
+.teacher-hero p {
+    max-width: 720px;
+
+    margin: 0;
+
+    color:
+        rgba(255,255,255,.67);
+
+    font-size: 14px;
+}
+
+
+.teacher-kpi-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: 14px;
+
+    margin-bottom: 34px;
+}
+
+
+.teacher-kpi {
+    padding: 22px;
+
+    min-height: 140px;
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(--border-soft);
+
+    border-radius: 20px;
+
+    box-shadow: var(--shadow-xs);
+}
+
+.teacher-kpi-label {
+    color: var(--text-muted);
+
+    font-size: 10px;
+
+    font-weight: 850;
+
+    letter-spacing: .09em;
+
+    text-transform: uppercase;
+}
+
+.teacher-kpi-value {
+    margin-top: 15px;
+
+    color: var(--aero-ink);
+
+    font-size: 38px;
+
+    font-weight: 780;
+
+    line-height: 1;
+
+    letter-spacing: -.05em;
+}
+
+
+.teacher-class-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.teacher-class-card {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        auto;
+
+    gap: 22px;
+
+    padding: 24px;
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(--border-soft);
+
+    border-radius: 22px;
+
+    box-shadow: var(--shadow-xs);
+}
+
+.teacher-class-card h3 {
+    margin:
+        8px 0
+        5px;
+
+    font-size: 20px;
+}
+
+.teacher-class-metrics {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 9px;
+
+    margin-top: 17px;
+}
+
+.teacher-class-metric {
+    min-width: 105px;
+
+    padding: 10px 12px;
+
+    background: #f3f8fa;
+
+    border-radius: 12px;
+}
+
+.teacher-class-metric span {
+    display: block;
+}
+
+.teacher-class-metric-label {
+    color: var(--text-muted);
+
+    font-size: 9px;
+
+    font-weight: 850;
+
+    text-transform: uppercase;
+
+    letter-spacing: .07em;
+}
+
+.teacher-class-metric-value {
+    margin-top: 3px;
+
+    color: #264b5e;
+
+    font-size: 15px;
+
+    font-weight: 760;
+}
+
+
+.teacher-attention-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(260px, 1fr)
+        );
+
+    gap: 15px;
+}
+
+.teacher-attention-card {
+    padding: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #fff9f4
+        );
+
+    border:
+        1px solid
+        rgba(186,111,54,.12);
+
+    border-radius: 18px;
+}
+
+.teacher-attention-card h3 {
+    margin:
+        8px 0
+        5px;
+}
+
+
+.teacher-data-card {
+    padding: 24px;
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(--border-soft);
+
+    border-radius: 22px;
+
+    box-shadow: var(--shadow-xs);
+}
+
+
+.teacher-toolbar {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+.teacher-toolbar-actions {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.teacher-form-shell {
+    width: min(100%, 980px);
+
+    padding:
+        clamp(22px, 4vw, 36px);
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(--border-soft);
+
+    border-radius: 26px;
+
+    box-shadow: var(--shadow-sm);
+}
+
+.teacher-form-shell form p {
+    margin-bottom: 19px;
+}
+
+
+.teacher-table-title {
+    max-width: 430px;
+
+    color: var(--aero-ink);
+
+    font-weight: 650;
+}
+
+
+.status-chip {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    background: #edf5f8;
+
+    color: #426877;
+
+    font-size: 10px;
+
+    font-weight: 800;
+}
+
+
+.resource-admin-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(290px, 1fr)
+        );
+
+    gap: 16px;
+}
+
+.resource-admin-card {
+    min-height: 230px;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 22px;
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(--border-soft);
+
+    border-radius:
+        22px 22px
+        22px 8px;
+
+    box-shadow: var(--shadow-xs);
+}
+
+.resource-admin-card h3 {
+    margin:
+        10px 0
+        7px;
+}
+
+.resource-admin-card p {
+    color: var(--text-secondary);
+
+    font-size: 12.5px;
+}
+
+.resource-admin-actions {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: auto;
+}
+
+.inline-delete-form {
+    display: inline;
+}
+
+
+.ai-feature-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(280px, 1fr)
+        );
+
+    gap: 16px;
+}
+
+.ai-feature-card {
+    min-height: 220px;
+
+    padding: 23px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #f2f9fb
+        );
+
+    border:
+        1px solid
+        rgba(55,154,196,.12);
+
+    border-radius:
+        24px 24px
+        24px 9px;
+}
+
+.ai-feature-card h3 {
+    margin:
+        11px 0
+        7px;
+}
+
+.ai-confidence {
+    font-size: 27px;
+
+    font-weight: 780;
+
+    letter-spacing: -.04em;
+}
+
+
+.weak-area-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(180px, 1fr)
+        );
+
+    gap: 12px;
+}
+
+.weak-area-card {
+    padding: 18px;
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(--border-soft);
+
+    border-radius: 17px;
+}
+
+.weak-area-card h3 {
+    margin:
+        0 0
+        12px;
+
+    font-size: 14px;
+}
+
+
+.analytics-student-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(180px, 1.4fr)
+        repeat(4, minmax(80px, .7fr))
+        auto;
+
+    gap: 12px;
+
+    align-items: center;
+
+    padding: 16px 18px;
+
+    margin-bottom: 8px;
+
+    background: #ffffff;
+
+    border:
+        1px solid
+        var(--border-soft);
+
+    border-radius: 15px;
+}
+
+.analytics-student-name {
+    font-weight: 730;
+}
+
+.analytics-cell-label {
+    display: block;
+
+    color: var(--text-muted);
+
+    font-size: 8.5px;
+
+    font-weight: 850;
+
+    letter-spacing: .07em;
+
+    text-transform: uppercase;
+}
+
+.analytics-cell-value {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #315365;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+
+@media (max-width: 900px) {
+
+    .teacher-kpi-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+    .analytics-student-row {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .analytics-student-name {
+        grid-column:
+            1 / -1;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .teacher-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-class-card {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-student-row {
+        grid-template-columns: 1fr;
+    }
+
+}

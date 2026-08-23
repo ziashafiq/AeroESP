@@ -1,199 +1,288 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Student Analytics | AeroESP
+Student Analytics · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+Student Analytics
 {% endblock %}
 
 {% block content %}
 
 
-<div class="program-header">
+<div class="breadcrumb">
 
-    <h1>
-        Student Analytics
-    </h1>
+    <a href="{% url 'learning:teacher_learning_dashboard' %}">
+        Teacher Analytics
+    </a>
 
-    <h2>
-        {{ student_object.username }}
-    </h2>
+    <span>/</span>
+
+    {{ student_object.username }}
 
 </div>
 
 
+<section class="app-hero">
+
+    <div class="page-eyebrow">
+        Individual learner
+    </div>
+
+    <h1 class="page-title">
+        {{ student_object.username }}
+    </h1>
+
+    <p class="page-lead">
+        Individual performance,
+        placement and diagnostic history.
+    </p>
+
+</section>
+
+
+
 {% if latest_placement %}
 
-<h2>
-    Placement Profile
-</h2>
+<section class="teacher-kpi-grid">
 
-<div class="cards">
+    <div class="teacher-kpi">
 
-    <div class="card">
-
-        <h3>
+        <div class="teacher-kpi-label">
             CEFR
-        </h3>
+        </div>
 
-        <div class="stat-number">
+        <div class="teacher-kpi-value">
             {{ latest_placement.cefr_level }}
         </div>
 
     </div>
 
-    <div class="card">
 
-        <h3>
-            IELTS Estimate
-        </h3>
+    <div class="teacher-kpi">
 
-        <div class="stat-number">
+        <div class="teacher-kpi-label">
+            IELTS estimate
+        </div>
+
+        <div class="teacher-kpi-value">
             {{ latest_placement.ielts_estimate }}
         </div>
 
     </div>
 
-    <div class="card">
 
-        <h3>
+    <div class="teacher-kpi">
+
+        <div class="teacher-kpi-label">
             Overall
-        </h3>
+        </div>
 
-        <div class="stat-number">
+        <div class="teacher-kpi-value">
             {{ latest_placement.overall_score }}%
         </div>
 
     </div>
 
-</div>
+</section>
 
 {% endif %}
 
 
-<h2>
-    Course Performance
-</h2>
 
-{% for row in course_rows %}
+<section class="section">
 
-<div class="module">
+    <div class="section-header">
 
-    <span class="badge">
-        {{ row.course.program.title }}
-    </span>
+        <div>
 
-    <h3>
-        {{ row.course.title }}
-    </h3>
+            <div class="page-eyebrow">
+                Learning performance
+            </div>
 
-    <p>
-        Class:
-        {% if row.enrollment.class_name %}
-            {{ row.enrollment.class_name }}
-        {% else %}
-            Unassigned
-        {% endif %}
-    </p>
+            <h2>
+                Courses
+            </h2>
 
-    <p>
-        Accuracy:
-        {{ row.summary.accuracy }}%
-    </p>
+        </div>
 
-    <p>
-        Mastery:
-        {{ row.summary.mastery }}%
-    </p>
-
-    <p>
-        Correct:
-        {{ row.summary.correct }}
-    </p>
-
-    <p>
-        Incorrect:
-        {{ row.summary.incorrect }}
-    </p>
-
-    <p>
-        Due Reviews:
-        {{ row.summary.due }}
-    </p>
-
-</div>
-
-{% endfor %}
-
-
-<h2>
-    Weak Areas
-</h2>
-
-<div class="cards">
-
-{% for area in weak_areas %}
-
-<div class="card">
-
-    <h3>
-        {{ area.category }}
-    </h3>
-
-    <div class="stat-number">
-        {{ area.total }}
     </div>
 
-</div>
 
-{% empty %}
+    <div class="teacher-class-grid">
 
-<div class="card">
-    No unresolved weak areas.
-</div>
+        {% for row in course_rows %}
 
-{% endfor %}
+        <article class="teacher-class-card">
 
-</div>
+            <div>
+
+                <span class="app-badge">
+                    {{ row.course.program.title }}
+                </span>
+
+                <h3>
+                    {{ row.course.title }}
+                </h3>
+
+                <p class="text-secondary">
+                    Class:
+                    {% if row.enrollment.class_name %}
+                        {{ row.enrollment.class_name }}
+                    {% else %}
+                        Unassigned
+                    {% endif %}
+                </p>
 
 
-<h2>
-    Recent Errors
-</h2>
+                <div class="teacher-class-metrics">
 
-{% for error in errors %}
+                    <div class="teacher-class-metric">
+                        <span class="teacher-class-metric-label">Accuracy</span>
+                        <span class="teacher-class-metric-value">{{ row.summary.accuracy }}%</span>
+                    </div>
 
-<div class="module">
+                    <div class="teacher-class-metric">
+                        <span class="teacher-class-metric-label">Mastery</span>
+                        <span class="teacher-class-metric-value">{{ row.summary.mastery }}%</span>
+                    </div>
 
-    <span class="badge">
-        {{ error.get_category_display }}
-    </span>
+                    <div class="teacher-class-metric">
+                        <span class="teacher-class-metric-label">Correct</span>
+                        <span class="teacher-class-metric-value">{{ row.summary.correct }}</span>
+                    </div>
 
-    {% if error.learning_item %}
+                    <div class="teacher-class-metric">
+                        <span class="teacher-class-metric-label">Incorrect</span>
+                        <span class="teacher-class-metric-value">{{ row.summary.incorrect }}</span>
+                    </div>
 
-    <h3>
-        {{ error.learning_item.title }}
-    </h3>
+                    <div class="teacher-class-metric">
+                        <span class="teacher-class-metric-label">Due</span>
+                        <span class="teacher-class-metric-value">{{ row.summary.due }}</span>
+                    </div>
 
-    {% endif %}
+                </div>
 
-    <p>
-        Student Answer:
-        {{ error.student_response }}
-    </p>
+            </div>
 
-    <p>
-        Expected:
-        {{ error.expected_response }}
-    </p>
+        </article>
 
-</div>
+        {% empty %}
 
-{% empty %}
+            <div class="empty-state">
+                <div>
+                    <h3>No active course data</h3>
+                </div>
+            </div>
 
-<div class="card">
-    No recorded errors.
-</div>
+        {% endfor %}
 
-{% endfor %}
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+            <div class="page-eyebrow">Diagnostics</div>
+            <h2>Weak Areas</h2>
+        </div>
+
+    </div>
+
+    <div class="weak-area-grid">
+
+        {% for area in weak_areas %}
+
+        <article class="weak-area-card">
+
+            <h3>
+                {{ area.category }}
+            </h3>
+
+            <div class="stat-number">
+                {{ area.total }}
+            </div>
+
+        </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+                <div>
+                    <h3>No unresolved weak areas</h3>
+                </div>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+            <div class="page-eyebrow">Recent history</div>
+            <h2>Recent Errors</h2>
+        </div>
+
+    </div>
+
+
+    <div class="teacher-class-grid">
+
+        {% for error in errors %}
+
+        <article class="teacher-data-card">
+
+            <span class="app-badge badge-warning">
+                {{ error.get_category_display }}
+            </span>
+
+            {% if error.learning_item %}
+
+                <h3>
+                    {{ error.learning_item.title }}
+                </h3>
+
+            {% endif %}
+
+            <p class="text-secondary">
+                <strong>Student answer:</strong>
+                {{ error.student_response }}
+            </p>
+
+            <p class="text-secondary">
+                <strong>Expected:</strong>
+                {{ error.expected_response }}
+            </p>
+
+        </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+                <div>
+                    <h3>No recorded errors</h3>
+                </div>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
 
 
 {% endblock %}

@@ -1,63 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "aeroesp/base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>My Topic Proposals</title>
-</head>
+{% block title %}
+Topic Proposals · AeroESP
+{% endblock %}
 
-<body>
+{% block workspace_name %}
+Taxonomy Proposals
+{% endblock %}
 
-    <h1>My Aerospace Topic Proposals</h1>
+{% block content %}
 
-    <p>
-        Teacher:
-        <strong>{{ request.user.username }}</strong>
+
+<section class="app-hero">
+
+    <div class="page-eyebrow">
+        Aerospace taxonomy
+    </div>
+
+    <h1 class="page-title">
+        My Topic Proposals
+    </h1>
+
+    <p class="page-lead">
+        Track proposed aerospace topics
+        and their review status.
     </p>
 
-    <hr>
 
-    <p>
-        <a href="{% url 'teacher_questions:topic_propose' %}">
-            Propose New Topic
-        </a>
-    </p>
+    <a
+        class="button"
+        href="{% url 'teacher_questions:topic_propose' %}"
+    >
+        Propose Topic
+    </a>
 
-    <hr>
+</section>
 
-    <h2>Search Proposals</h2>
 
-    <form method="get">
 
-        <input
-            type="text"
-            name="q"
-            value="{{ search_query }}"
-            placeholder="Search topic, domain or description..."
-        >
+<section class="teacher-data-card">
 
-        <button type="submit">
-            Search
-        </button>
+    <div class="teacher-toolbar">
 
-        {% if search_query %}
+        <form method="get">
 
-            <a href="{% url 'teacher_questions:topic_proposals' %}">
-                Clear Search
-            </a>
+            <input
+                type="text"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Search proposals..."
+            >
 
-        {% endif %}
+            <div
+                class="teacher-toolbar-actions"
+                style="margin-top: 8px;"
+            >
 
-    </form>
+                <button
+                    class="button"
+                    type="submit"
+                >
+                    Search
+                </button>
 
-    <hr>
+
+                {% if search_query %}
+
+                    <a
+                        class="button button-secondary"
+                        href="{% url 'teacher_questions:topic_proposals' %}"
+                    >
+                        Clear
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </form>
+
+    </div>
+
 
     {% if proposals %}
 
-        <table
-            border="1"
-            cellpadding="8"
-        >
+    <div class="table-wrap">
+
+        <table>
 
             <thead>
 
@@ -69,7 +98,7 @@
                     <th>Status</th>
                     <th>Reviewed By</th>
                     <th>Reviewed At</th>
-                    <th>Review Note</th>
+                    <th>Note</th>
                 </tr>
 
             </thead>
@@ -78,81 +107,55 @@
 
                 {% for proposal in proposals %}
 
-                    <tr>
+                <tr>
 
-                        <td>
-                            {{ proposal.id }}
-                        </td>
+                    <td>#{{ proposal.id }}</td>
 
-                        <td>
-                            {{ proposal.domain.name }}
-                        </td>
+                    <td>{{ proposal.domain.name }}</td>
 
-                        <td>
+                    <td>
+                        {% if proposal.parent %}
+                            {{ proposal.parent.name }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-                            {% if proposal.parent %}
+                    <td class="teacher-table-title">
+                        {{ proposal.name }}
+                    </td>
 
-                                {{ proposal.parent.name }}
-
-                            {% else %}
-
-                                -
-
-                            {% endif %}
-
-                        </td>
-
-                        <td>
-                            {{ proposal.name }}
-                        </td>
-
-                        <td>
+                    <td>
+                        <span class="status-chip">
                             {{ proposal.get_approval_status_display }}
-                        </td>
+                        </span>
+                    </td>
 
-                        <td>
+                    <td>
+                        {% if proposal.reviewed_by %}
+                            {{ proposal.reviewed_by.username }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-                            {% if proposal.reviewed_by %}
+                    <td>
+                        {% if proposal.reviewed_at %}
+                            {{ proposal.reviewed_at }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-                                {{ proposal.reviewed_by.username }}
+                    <td>
+                        {% if proposal.review_note %}
+                            {{ proposal.review_note }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
 
-                            {% else %}
-
-                                -
-
-                            {% endif %}
-
-                        </td>
-
-                        <td>
-
-                            {% if proposal.reviewed_at %}
-
-                                {{ proposal.reviewed_at }}
-
-                            {% else %}
-
-                                -
-
-                            {% endif %}
-
-                        </td>
-
-                        <td>
-
-                            {% if proposal.review_note %}
-
-                                {{ proposal.review_note }}
-
-                            {% else %}
-
-                                -
-
-                            {% endif %}
-
-                        </td>
-
-                    </tr>
+                </tr>
 
                 {% endfor %}
 
@@ -160,20 +163,19 @@
 
         </table>
 
+    </div>
+
     {% else %}
 
-        <p>
-            No topic proposals found.
-        </p>
+        <div class="empty-state">
+            <div>
+                <h3>No proposals found</h3>
+            </div>
+        </div>
 
     {% endif %}
 
-    <hr>
+</section>
 
-    <a href="{% url 'teacher_questions:list' %}">
-        Back to Question Bank
-    </a>
 
-</body>
-
-</html>
+{% endblock %}

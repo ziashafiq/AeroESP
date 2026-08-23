@@ -1,25 +1,37 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-AI Question Generator | AeroESP
+AI Question Generator · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+AI Question Generator
 {% endblock %}
 
 {% block content %}
 
-<div class="program-header">
 
-    <h1>
-        AI Question Generator
+<section class="app-hero">
+
+    <div class="page-eyebrow">
+        Human-reviewed generation
+    </div>
+
+    <h1 class="page-title">
+        Generate Question Draft
     </h1>
 
-    <p>
-        Generate a draft question for
-        teacher review.
+    <p class="page-lead">
+        Define the educational context.
+        AeroESP produces a draft that
+        must be reviewed before it can
+        enter the question bank.
     </p>
 
-</div>
+</section>
 
-<div class="card">
+
+<div class="teacher-form-shell">
 
     <form method="post">
 
@@ -38,9 +50,14 @@ AI Question Generator | AeroESP
 
 </div>
 
-<p>
+
+<div
+    class="app-alert"
+    style="margin-top: 16px;"
+>
     Generated questions are never
     published automatically.
-</p>
+</div>
+
 
 {% endblock %}

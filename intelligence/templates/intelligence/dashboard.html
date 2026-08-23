@@ -1,136 +1,200 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-AI Intelligence | AeroESP
+AI Intelligence · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+AI Intelligence
 {% endblock %}
 
 {% block content %}
 
-<div class="program-header">
+
+<section class="teacher-hero">
+
+    <div class="page-eyebrow">
+        Human-reviewed AI
+    </div>
 
     <h1>
-        AI Intelligence
+        Intelligence that supports
+        the teacher — not replaces them.
     </h1>
 
     <p>
-        Explainable AI assistance for
-        question analysis and learner insights.
+        Analyze questions, generate
+        reviewable drafts and inspect
+        explainable learner insights.
     </p>
 
-</div>
-
-<div class="card">
-
-    <h3>
-        AI Question Generation
-    </h3>
-
-    <p>
-        Generate teacher-reviewed
-        question drafts.
-    </p>
-
-    <a
-        class="button"
-        href="{% url 'intelligence:generate_question' %}"
-    >
-        Generate Question
-    </a>
-
-</div>
+</section>
 
 
-<h2>
-    Recent Question Suggestions
-</h2>
 
-{% for item in suggestions %}
+<section class="section">
 
-<div class="module">
+    <div class="ai-feature-grid">
 
-    <h3>
-        Question {{ item.question_id }}
-    </h3>
+        <article class="aero-feature-card">
 
-    <p>
-        Track:
-        {{ item.suggested_track }}
-    </p>
+            <span class="app-badge">
+                Generation
+            </span>
 
-    <p>
-        Skill:
-        {{ item.suggested_skill }}
-    </p>
+            <h2>
+                AI Question Generator
+            </h2>
 
-    <p>
-        Difficulty:
-        {{ item.suggested_difficulty }}
-    </p>
+            <p>
+                Generate draft questions
+                that remain under teacher
+                review before publication.
+            </p>
 
-    <p>
-        Confidence:
-        {{ item.confidence }}
-    </p>
+            <a
+                class="button button-primary"
+                href="{% url 'intelligence:generate_question' %}"
+            >
+                Generate Draft
+            </a>
 
-    <p>
-        Status:
-        {{ item.get_status_display }}
-    </p>
+        </article>
 
-    <a
-        class="button"
-        href="{% url 'intelligence:suggestion_detail' item.pk %}"
-    >
-        Review
-    </a>
+    </div>
 
-</div>
-
-{% empty %}
-
-<div class="card">
-    No AI question analyses yet.
-</div>
-
-{% endfor %}
+</section>
 
 
-<h2>
-    Recent Learner Insights
-</h2>
 
-{% for insight in insights %}
+<section class="section">
 
-<div class="module">
+    <div class="section-header">
 
-    <h3>
-        {{ insight.student.username }}
-    </h3>
+        <div>
+            <div class="page-eyebrow">Question intelligence</div>
+            <h2>Recent Suggestions</h2>
+        </div>
 
-    <p>
-        Scope:
-        {{ insight.get_scope_display }}
-    </p>
+    </div>
 
-    <p>
-        Risk:
-        {{ insight.risk_band }}
-        /
-        {{ insight.risk_score }}
-    </p>
 
-    <p>
-        {{ insight.summary }}
-    </p>
+    <div class="ai-feature-grid">
 
-</div>
+        {% for item in suggestions %}
 
-{% empty %}
+        <article class="ai-feature-card">
 
-<div class="card">
-    No learner insight snapshots yet.
-</div>
+            <span class="app-badge">
+                {{ item.get_status_display }}
+            </span>
 
-{% endfor %}
+            <h3>
+                Question #{{ item.question_id }}
+            </h3>
+
+            <p class="text-secondary">
+                {{ item.suggested_track }}
+                ·
+                {{ item.suggested_skill }}
+                ·
+                {{ item.suggested_difficulty }}
+            </p>
+
+            <div class="ai-confidence">
+                {{ item.confidence }}
+            </div>
+
+            <div class="text-muted">
+                confidence
+            </div>
+
+
+            <div style="margin-top: 18px;">
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'intelligence:suggestion_detail' item.pk %}"
+                >
+                    Review Suggestion
+                </a>
+
+            </div>
+
+        </article>
+
+
+        {% empty %}
+
+            <div class="empty-state">
+                <div>
+                    <h3>No AI analyses yet</h3>
+                </div>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+            <div class="page-eyebrow">Learner intelligence</div>
+            <h2>Recent Insights</h2>
+        </div>
+
+    </div>
+
+
+    <div class="teacher-class-grid">
+
+        {% for insight in insights %}
+
+        <article class="teacher-data-card">
+
+            <span class="app-badge">
+                {{ insight.get_scope_display }}
+            </span>
+
+            <h3>
+                {{ insight.student.username }}
+            </h3>
+
+            <p class="text-secondary">
+                Risk:
+                <strong>
+                    {{ insight.risk_band }}
+                </strong>
+                ·
+                {{ insight.risk_score }}
+            </p>
+
+            <p>
+                {{ insight.summary }}
+            </p>
+
+        </article>
+
+
+        {% empty %}
+
+            <div class="empty-state">
+                <div>
+                    <h3>No learner insights yet</h3>
+                </div>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
 
 {% endblock %}

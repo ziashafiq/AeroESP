@@ -1,196 +1,433 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Teacher Analytics | AeroESP
+Teacher Analytics · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+Teacher Analytics
 {% endblock %}
 
 {% block content %}
 
-<div class="program-header">
+
+<section class="teacher-hero">
+
+    <div class="page-eyebrow">
+        Learning intelligence
+    </div>
 
     <h1>
-        Teacher Learning Dashboard
+        Understand the class,
+        not just the score.
     </h1>
 
     <p>
-        Monitor classes, learners,
-        performance, and weak areas.
+        Monitor learner performance,
+        mastery, review demand and
+        recurring weak areas across
+        your AeroESP courses.
     </p>
 
-</div>
+</section>
 
 
-<div class="cards">
+<section class="teacher-kpi-grid">
 
-    <div class="card">
-        <h3>Courses</h3>
-        <div class="stat-number">
+    <div class="teacher-kpi">
+
+        <div class="teacher-kpi-label">
+            Active courses
+        </div>
+
+        <div class="teacher-kpi-value">
             {{ course_count }}
         </div>
+
     </div>
 
-    <div class="card">
-        <h3>Classes</h3>
-        <div class="stat-number">
+
+    <div class="teacher-kpi">
+
+        <div class="teacher-kpi-label">
+            Classes
+        </div>
+
+        <div class="teacher-kpi-value">
             {{ class_count }}
         </div>
+
     </div>
 
-    <div class="card">
-        <h3>Students</h3>
-        <div class="stat-number">
+
+    <div class="teacher-kpi">
+
+        <div class="teacher-kpi-label">
+            Students
+        </div>
+
+        <div class="teacher-kpi-value">
             {{ student_count }}
         </div>
+
     </div>
 
-</div>
+</section>
 
 
-<h2>
-    My Classes
-</h2>
 
-{% for group in classes %}
+<section class="section">
 
-<div class="module">
+    <div class="section-header">
 
-    <span class="badge">
-        {{ group.course.program.title }}
-    </span>
+        <div>
 
-    <h3>
-        {{ group.course.title }}
-        /
-        {{ group.class_name }}
-    </h3>
+            <div class="page-eyebrow">
+                Teaching groups
+            </div>
 
-    <p>
-        Students:
-        {{ group.student_count }}
-    </p>
+            <h2>
+                My Classes
+            </h2>
 
-    <p>
-        Accuracy:
-        {{ group.accuracy }}%
-    </p>
+            <div class="section-description">
+                Aggregated class performance
+                across active enrollments.
+            </div>
 
-    <p>
-        Mastery:
-        {{ group.mastery }}%
-    </p>
+        </div>
 
-    <p>
-        Due Reviews:
-        {{ group.due }}
-    </p>
-
-    <p>
-        Unresolved Errors:
-        {{ group.errors }}
-    </p>
-
-    <p>
-        Students Needing Attention:
-        {{ group.attention_count }}
-    </p>
-
-    <a
-        class="button"
-        href="{% url 'learning:teacher_class_detail' group.course.pk %}?name={{ group.class_query|urlencode }}"
-    >
-        Open Class Analytics
-    </a>
-
-</div>
-
-{% empty %}
-
-<div class="card">
-    No active classes yet.
-</div>
-
-{% endfor %}
-
-
-<h2>
-    Students Needing Attention
-</h2>
-
-{% for row in attention_students %}
-
-<div class="module">
-
-    <h3>
-        {{ row.student.username }}
-    </h3>
-
-    <p>
-        {{ row.course.title }}
-        /
-        {{ row.class_name }}
-    </p>
-
-    <p>
-        Accuracy:
-        {{ row.summary.accuracy }}%
-    </p>
-
-    <p>
-        Errors:
-        {{ row.summary.errors }}
-    </p>
-
-    <p>
-        Due:
-        {{ row.summary.due }}
-    </p>
-
-    <a
-        class="button"
-        href="{% url 'learning:teacher_student_detail' row.student.pk %}"
-    >
-        View Student
-    </a>
-
-</div>
-
-{% empty %}
-
-<div class="card">
-    No learners currently require attention.
-</div>
-
-{% endfor %}
-
-
-<h2>
-    Class Weak Areas
-</h2>
-
-<div class="cards">
-
-{% for area in weak_categories %}
-
-<div class="card">
-
-    <h3>
-        {{ area.category }}
-    </h3>
-
-    <div class="stat-number">
-        {{ area.total }}
     </div>
 
-</div>
 
-{% empty %}
+    <div class="teacher-class-grid">
 
-<div class="card">
-    No unresolved class errors yet.
-</div>
+        {% for group in classes %}
 
-{% endfor %}
+        <article class="teacher-class-card">
 
-</div>
+            <div>
+
+                <span class="app-badge">
+                    {{ group.course.program.title }}
+                </span>
+
+                <h3>
+                    {{ group.course.title }}
+                    ·
+                    {{ group.class_name }}
+                </h3>
+
+
+                <div class="teacher-class-metrics">
+
+                    <div class="teacher-class-metric">
+
+                        <span class="teacher-class-metric-label">
+                            Students
+                        </span>
+
+                        <span class="teacher-class-metric-value">
+                            {{ group.student_count }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="teacher-class-metric">
+
+                        <span class="teacher-class-metric-label">
+                            Accuracy
+                        </span>
+
+                        <span class="teacher-class-metric-value">
+                            {{ group.accuracy }}%
+                        </span>
+
+                    </div>
+
+
+                    <div class="teacher-class-metric">
+
+                        <span class="teacher-class-metric-label">
+                            Mastery
+                        </span>
+
+                        <span class="teacher-class-metric-value">
+                            {{ group.mastery }}%
+                        </span>
+
+                    </div>
+
+
+                    <div class="teacher-class-metric">
+
+                        <span class="teacher-class-metric-label">
+                            Due
+                        </span>
+
+                        <span class="teacher-class-metric-value">
+                            {{ group.due }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="teacher-class-metric">
+
+                        <span class="teacher-class-metric-label">
+                            Errors
+                        </span>
+
+                        <span class="teacher-class-metric-value">
+                            {{ group.errors }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="teacher-class-metric">
+
+                        <span class="teacher-class-metric-label">
+                            Attention
+                        </span>
+
+                        <span class="teacher-class-metric-value">
+                            {{ group.attention_count }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <a
+                    class="button"
+                    href="{% url 'learning:teacher_class_detail' group.course.pk %}?name={{ group.class_query|urlencode }}"
+                >
+                    Class Analytics
+                </a>
+
+            </div>
+
+        </article>
+
+
+        {% empty %}
+
+            <div class="empty-state">
+
+                <div>
+
+                    <h3>
+                        No active classes yet
+                    </h3>
+
+                    <p>
+                        Active class groups will
+                        appear here when students
+                        are enrolled.
+                    </p>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="page-eyebrow">
+                Intervention
+            </div>
+
+            <h2>
+                Students Needing Attention
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="teacher-attention-grid">
+
+        {% for row in attention_students %}
+
+        <article class="teacher-attention-card">
+
+            <span class="app-badge badge-warning">
+                Needs attention
+            </span>
+
+            <h3>
+                {{ row.student.username }}
+            </h3>
+
+            <p class="text-secondary">
+                {{ row.course.title }}
+                ·
+                {{ row.class_name }}
+            </p>
+
+
+            <div class="teacher-class-metrics">
+
+                <div class="teacher-class-metric">
+
+                    <span class="teacher-class-metric-label">
+                        Accuracy
+                    </span>
+
+                    <span class="teacher-class-metric-value">
+                        {{ row.summary.accuracy }}%
+                    </span>
+
+                </div>
+
+
+                <div class="teacher-class-metric">
+
+                    <span class="teacher-class-metric-label">
+                        Errors
+                    </span>
+
+                    <span class="teacher-class-metric-value">
+                        {{ row.summary.errors }}
+                    </span>
+
+                </div>
+
+
+                <div class="teacher-class-metric">
+
+                    <span class="teacher-class-metric-label">
+                        Due
+                    </span>
+
+                    <span class="teacher-class-metric-value">
+                        {{ row.summary.due }}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 16px;">
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'learning:teacher_student_detail' row.student.pk %}"
+                >
+                    Student Analytics
+                </a>
+
+            </div>
+
+        </article>
+
+
+        {% empty %}
+
+            <div class="empty-state">
+
+                <div>
+
+                    <h3>
+                        No learners require attention
+                    </h3>
+
+                    <p>
+                        AeroESP will surface learners
+                        when performance or review
+                        indicators cross attention
+                        thresholds.
+                    </p>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+
+        <div>
+
+            <div class="page-eyebrow">
+                Diagnostic signals
+            </div>
+
+            <h2>
+                Class Weak Areas
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="weak-area-grid">
+
+        {% for area in weak_categories %}
+
+        <article class="weak-area-card">
+
+            <h3>
+                {{ area.category }}
+            </h3>
+
+            <div class="stat-number">
+                {{ area.total }}
+            </div>
+
+            <div class="text-muted">
+                unresolved signals
+            </div>
+
+        </article>
+
+
+        {% empty %}
+
+            <div class="empty-state">
+
+                <div>
+                    <h3>
+                        No unresolved class errors
+                    </h3>
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
 
 {% endblock %}

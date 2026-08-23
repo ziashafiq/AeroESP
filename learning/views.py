@@ -3768,11 +3768,88 @@ def teacher_learning_dashboard(request):
                 row["summary"]["accuracy"],
             )
         )
-        class_list.append({
-            "course": group["course"],
-            "class_name": class_name,
-            "students": student_rows,
-        })
+
+        student_count = len(
+            student_rows
+        )
+
+        total_correct = sum(
+            row["summary"]["correct"]
+            for row in student_rows
+        )
+
+        total_incorrect = sum(
+            row["summary"]["incorrect"]
+            for row in student_rows
+        )
+
+        total_attempts = (
+            total_correct
+            + total_incorrect
+        )
+
+        total_tracked = sum(
+            row["summary"]["tracked"]
+            for row in student_rows
+        )
+
+        total_mastered = sum(
+            row["summary"]["mastered"]
+            for row in student_rows
+        )
+
+        accuracy = (
+            round(
+                total_correct
+                / total_attempts
+                * 100,
+                1,
+            )
+            if total_attempts
+            else 0
+        )
+
+        mastery = (
+            round(
+                total_mastered
+                / total_tracked
+                * 100,
+                1,
+            )
+            if total_tracked
+            else 0
+        )
+
+        due = sum(
+            row["summary"]["due"]
+            for row in student_rows
+        )
+
+        errors = sum(
+            row["summary"]["errors"]
+            for row in student_rows
+        )
+
+        attention_count = sum(
+            1
+            for row in student_rows
+            if row["summary"]["needs_attention"]
+        )
+
+        class_list.append(
+            {
+                "course": group["course"],
+                "class_name": class_name,
+                "class_query": class_name,
+                "students": student_rows,
+                "student_count": student_count,
+                "accuracy": accuracy,
+                "mastery": mastery,
+                "due": due,
+                "errors": errors,
+                "attention_count": attention_count,
+            }
+        )
 
     # Top weak categories across all classes
     weak_categories = (
@@ -3822,11 +3899,27 @@ def teacher_learning_dashboard(request):
 
 
 @login_required
-def teacher_class_detail(request, course_id, class_name):
-    """
-    Detailed view for a specific class within a course.
-    """
+def teacher_class_detail(
+    request,
+    course_id,
+):
+
     _require_learning_teacher(request.user)
+
+    requested_class_name = (
+        request.GET.get(
+            "name",
+            "Unassigned",
+        )
+        .strip()
+        or "Unassigned"
+    )
+
+    database_class_name = (
+        ""
+        if requested_class_name == "Unassigned"
+        else requested_class_name
+    )
 
     course = get_object_or_404(
         LearningCourse.objects.select_related('program'),
@@ -3836,10 +3929,9 @@ def teacher_class_detail(request, course_id, class_name):
     )
 
     # Get enrollments for this course and class
-    class_name = class_name if class_name != "Unassigned" else ""
     enrollments = Enrollment.objects.filter(
         course=course,
-        class_name=class_name,
+        class_name=database_class_name,
         status=Enrollment.Status.ACTIVE,
     ).select_related('student')
 
@@ -3850,7 +3942,7 @@ def teacher_class_detail(request, course_id, class_name):
             "learning/teacher_class_detail.html",
             {
                 "course": course,
-                "class_name": class_name or "Unassigned",
+                "class_name": requested_class_name,
                 "students": [],
                 "student_count": 0,
                 "class_accuracy": 0,
@@ -3931,7 +4023,7 @@ def teacher_class_detail(request, course_id, class_name):
         "learning/teacher_class_detail.html",
         {
             "course": course,
-            "class_name": class_name or "Unassigned",
+            "class_name": requested_class_name,
             "students": students,
             "student_count": len(students),
             "class_accuracy": class_accuracy,
@@ -4125,6 +4217,10 @@ def resource_list(request):
 
 @login_required
 def teacher_resource_list(request):
+    _require_learning_teacher(
+        request.user
+    )
+
     resources = Resource.objects.filter(
         uploaded_by=request.user
     ).order_by(

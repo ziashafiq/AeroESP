@@ -1,13 +1,92 @@
-<h2>Add Learning Resource</h2>
+{% extends "learning/base.html" %}
 
-<form method="post" enctype="multipart/form-data">
+{% block title %}
+Resource Editor · AeroESP
+{% endblock %}
 
-{% csrf_token %}
+{% block workspace_name %}
+Resource Management
+{% endblock %}
 
-{{ form.as_p }}
+{% block content %}
 
-<button type="submit">
-Upload
-</button>
 
-</form>
+<div class="breadcrumb">
+
+    <a href="{% url 'learning:teacher_resource_list' %}">
+        Resources
+    </a>
+
+    <span>/</span>
+
+    {% if resource %}
+        Edit
+    {% else %}
+        Add
+    {% endif %}
+
+</div>
+
+
+<section class="app-hero">
+
+    <div class="page-eyebrow">
+        Content management
+    </div>
+
+    <h1 class="page-title">
+
+        {% if resource %}
+            Edit Resource
+        {% else %}
+            Add Learning Resource
+        {% endif %}
+
+    </h1>
+
+    <p class="page-lead">
+        Attach learning material to
+        the appropriate course or module
+        and control its visibility.
+    </p>
+
+</section>
+
+
+<div class="teacher-form-shell">
+
+    <form
+        method="post"
+        enctype="multipart/form-data"
+    >
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+
+        <div class="teacher-toolbar-actions">
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Save Resource
+            </button>
+
+
+            <a
+                class="button button-secondary"
+                href="{% url 'learning:teacher_resource_list' %}"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+{% endblock %}
