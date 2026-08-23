@@ -327,7 +327,7 @@ svg {
 
     border-radius: 50%;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     box-shadow:
         0 0 0 4px
@@ -650,7 +650,7 @@ svg {
 
     color: var(--text-primary);
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     box-shadow: var(--shadow-xs);
 
@@ -768,7 +768,7 @@ svg {
 }
 
 .topbar-user:hover {
-    background: #ffffff;
+    background: var(--theme-surface);
 
     transform: translateY(-1px);
 }
@@ -1333,7 +1333,7 @@ textarea {
 
     color: var(--text-primary);
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -1390,7 +1390,7 @@ input[type="checkbox"] {
 .table-wrap {
     overflow-x: auto;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -1766,7 +1766,7 @@ tbody tr:hover {
 
     padding: 22px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -1794,7 +1794,7 @@ tbody tr:hover {
 
     border-radius: 12px;
 
-    background: #fbfdfe;
+    background: var(--theme-surface-soft);
 
     transition:
         border-color var(--transition),
@@ -1872,7 +1872,7 @@ tbody tr:hover {
 
     color: #476879;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -2606,7 +2606,7 @@ tbody tr:hover {
 
     padding: 20px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -2753,7 +2753,7 @@ tbody tr:hover {
 
     padding: 22px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -2807,7 +2807,7 @@ tbody tr:hover {
     padding:
         clamp(22px, 4vw, 40px);
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -2895,7 +2895,7 @@ tbody tr:hover {
 
     padding: 24px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3010,7 +3010,7 @@ tbody tr:hover {
 
     padding: 23px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3146,7 +3146,7 @@ tbody tr:hover {
     padding:
         clamp(23px, 4vw, 38px);
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3395,7 +3395,7 @@ tbody tr:hover {
 
     min-height: 140px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3449,7 +3449,7 @@ tbody tr:hover {
 
     padding: 24px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3553,7 +3553,7 @@ tbody tr:hover {
 .teacher-data-card {
     padding: 24px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3593,7 +3593,7 @@ tbody tr:hover {
     padding:
         clamp(22px, 4vw, 36px);
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3657,7 +3657,7 @@ tbody tr:hover {
 
     padding: 22px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3760,7 +3760,7 @@ tbody tr:hover {
 .weak-area-card {
     padding: 18px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -3794,7 +3794,7 @@ tbody tr:hover {
 
     margin-bottom: 8px;
 
-    background: #ffffff;
+    background: var(--theme-surface);
 
     border:
         1px solid
@@ -4360,3 +4360,635 @@ html[data-theme="dark"] {
     }
 
 }
+
+
+/* ==========================================================
+   UI-04 Theme Selector Fix
+   ========================================================== */
+
+.theme-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+
+    padding: 3px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 12px;
+
+    background: var(--theme-surface);
+}
+
+.theme-choice {
+    display: grid;
+    place-items: center;
+
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+
+    color: var(--theme-text-soft);
+    background: transparent;
+
+    font: inherit;
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition:
+        color 150ms ease,
+        background 150ms ease,
+        transform 150ms ease;
+}
+
+.theme-choice:hover {
+    color: var(--theme-text);
+    background: var(--theme-surface-soft);
+}
+
+.theme-choice.is-active {
+    color: var(--theme-accent-strong);
+    background: var(--theme-accent-soft);
+}
+
+.theme-choice:active {
+    transform: scale(0.94);
+}
+
+.theme-menu,
+.theme-toggle {
+    display: none !important;
+}
+
+
+
+/* ==========================================================
+   UI-04 Theme Runtime Fix
+   ========================================================== */
+
+html,
+body,
+.app-frame,
+.app-main,
+.app-content,
+.app-topbar {
+    transition:
+        background-color 180ms ease,
+        color 180ms ease,
+        border-color 180ms ease;
+}
+
+
+/* Theme selector */
+
+.theme-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+
+    padding: 4px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 14px;
+
+    background: var(--theme-surface);
+    box-shadow: var(--theme-shadow-sm);
+}
+
+.theme-choice {
+    display: grid;
+    place-items: center;
+
+    width: 34px;
+    height: 34px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 10px;
+
+    color: var(--theme-text-soft);
+    background: transparent;
+
+    cursor: pointer;
+
+    transition:
+        background 150ms ease,
+        color 150ms ease,
+        transform 150ms ease;
+}
+
+.theme-choice svg {
+    width: 17px;
+    height: 17px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.theme-choice:hover {
+    color: var(--theme-text);
+    background: var(--theme-surface-soft);
+}
+
+.theme-choice.is-active {
+    color: #087dac;
+    background: var(--theme-accent-soft);
+}
+
+html[data-theme="dark"] .theme-choice.is-active {
+    color: #7bd8f5;
+}
+
+
+/* DARK */
+
+html[data-theme="dark"] {
+
+    --aero-ink: #eef6fc;
+    --aero-text: #eef6fc;
+    --aero-muted: #a9bac9;
+    --aero-ice: #10253b;
+
+    background: #06111f;
+}
+
+html[data-theme="dark"] body {
+    color: #eef6fc !important;
+
+    background:
+        radial-gradient(
+            circle at 78% 3%,
+            rgba(72, 185, 232, 0.10),
+            transparent 34rem
+        ),
+        #06111f !important;
+}
+
+html[data-theme="dark"] .app-frame,
+html[data-theme="dark"] .app-main,
+html[data-theme="dark"] .app-content {
+    background: transparent !important;
+}
+
+html[data-theme="dark"] .app-topbar {
+    color: #eef6fc !important;
+    border-color: rgba(255,255,255,.08) !important;
+
+    background:
+        rgba(7, 20, 33, .88) !important;
+}
+
+html[data-theme="dark"] .topbar-context,
+html[data-theme="dark"] .topbar-user-name {
+    color: #eef6fc !important;
+}
+
+html[data-theme="dark"] .topbar-status,
+html[data-theme="dark"] .topbar-user,
+html[data-theme="dark"] .theme-control {
+    color: #a9bac9 !important;
+    border-color: rgba(255,255,255,.10) !important;
+    background: #0b1b2d !important;
+}
+
+
+/* Common content surfaces */
+
+html[data-theme="dark"] .app-content > *,
+html[data-theme="dark"] .app-content section {
+    border-color: rgba(255,255,255,.09);
+}
+
+html[data-theme="dark"] .app-content :where(
+    .card,
+    .panel,
+    .surface,
+    .dashboard-card,
+    .metric-card,
+    .teacher-card,
+    .learning-card,
+    .resource-card,
+    .question-card,
+    .course-card,
+    .program-card
+) {
+    color: #eef6fc !important;
+    border-color: rgba(255,255,255,.09) !important;
+    background: #0b1b2d !important;
+}
+
+
+/* Headings and regular text */
+
+html[data-theme="dark"] .app-content :where(
+    h1,h2,h3,h4,h5,h6,
+    p,strong,label,
+    th,td
+) {
+    color: inherit;
+}
+
+
+/* Links */
+
+html[data-theme="dark"] .app-content a:not(.btn):not(.button) {
+    color: #7bd8f5;
+}
+
+
+/* Inputs */
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+    color: #eef6fc !important;
+    border-color: rgba(255,255,255,.12) !important;
+    background: #10253b !important;
+}
+
+
+/* Tables */
+
+html[data-theme="dark"] table,
+html[data-theme="dark"] thead,
+html[data-theme="dark"] tbody,
+html[data-theme="dark"] tr,
+html[data-theme="dark"] td,
+html[data-theme="dark"] th {
+    border-color: rgba(255,255,255,.08) !important;
+}
+
+html[data-theme="dark"] tbody tr:hover {
+    background: rgba(85,199,239,.06) !important;
+}
+
+
+/* Light mode */
+
+html[data-theme="light"] body {
+    color: #10243a;
+
+    background:
+        radial-gradient(
+            circle at 82% 5%,
+            rgba(72,185,232,.10),
+            transparent 28rem
+        ),
+        #f5f8fb !important;
+}
+
+
+/* Keyboard focus */
+
+.theme-choice:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+
+
+/* ==========================================================
+   UI-04 Dark Contrast Final Fix
+   ========================================================== */
+
+html[data-theme="dark"] {
+    --aero-ink: #07182d;
+    --aero-text: #eef6fc;
+    --aero-muted: #9fb2c3;
+    --aero-ice: #10253b;
+}
+
+
+/* ----------------------------------------------------------
+   Main typography
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .app-content h1,
+html[data-theme="dark"] .app-content h2,
+html[data-theme="dark"] .app-content h3,
+html[data-theme="dark"] .app-content h4,
+html[data-theme="dark"] .app-content h5,
+html[data-theme="dark"] .app-content h6 {
+    color: #f4f9fd !important;
+}
+
+html[data-theme="dark"] .app-content p,
+html[data-theme="dark"] .app-content li,
+html[data-theme="dark"] .app-content td,
+html[data-theme="dark"] .app-content label {
+    color: #b7c7d5;
+}
+
+
+/* ----------------------------------------------------------
+   Hero / banner / intro areas
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .app-content :where(
+    [class*="hero"],
+    [class*="banner"],
+    [class*="intro"],
+    [class*="welcome"]
+) {
+    color: #eef6fc !important;
+
+    border-color: rgba(255,255,255,.08) !important;
+
+    background:
+        radial-gradient(
+            circle at 88% 20%,
+            rgba(72,185,232,.15),
+            transparent 22rem
+        ),
+        linear-gradient(
+            135deg,
+            #0d2235 0%,
+            #10293d 100%
+        ) !important;
+
+    box-shadow:
+        0 18px 50px rgba(0,0,0,.18);
+}
+
+html[data-theme="dark"] .app-content :where(
+    [class*="hero"],
+    [class*="banner"],
+    [class*="intro"],
+    [class*="welcome"]
+) h1,
+html[data-theme="dark"] .app-content :where(
+    [class*="hero"],
+    [class*="banner"],
+    [class*="intro"],
+    [class*="welcome"]
+) h2,
+html[data-theme="dark"] .app-content :where(
+    [class*="hero"],
+    [class*="banner"],
+    [class*="intro"],
+    [class*="welcome"]
+) h3 {
+    color: #f5fbff !important;
+}
+
+html[data-theme="dark"] .app-content :where(
+    [class*="hero"],
+    [class*="banner"],
+    [class*="intro"],
+    [class*="welcome"]
+) p {
+    color: #b7cad9 !important;
+}
+
+
+/* ----------------------------------------------------------
+   Cards / programs / statistics
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .app-content :where(
+    [class*="card"],
+    [class*="panel"],
+    [class*="program"],
+    [class*="metric"],
+    [class*="stat"]
+) {
+    color: #eef6fc !important;
+
+    border-color: rgba(255,255,255,.09) !important;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0c2033 0%,
+            #0b1b2d 100%
+        ) !important;
+}
+
+html[data-theme="dark"] .app-content :where(
+    [class*="card"],
+    [class*="panel"],
+    [class*="program"],
+    [class*="metric"],
+    [class*="stat"]
+) h1,
+html[data-theme="dark"] .app-content :where(
+    [class*="card"],
+    [class*="panel"],
+    [class*="program"],
+    [class*="metric"],
+    [class*="stat"]
+) h2,
+html[data-theme="dark"] .app-content :where(
+    [class*="card"],
+    [class*="panel"],
+    [class*="program"],
+    [class*="metric"],
+    [class*="stat"]
+) h3,
+html[data-theme="dark"] .app-content :where(
+    [class*="card"],
+    [class*="panel"],
+    [class*="program"],
+    [class*="metric"],
+    [class*="stat"]
+) strong {
+    color: #f5fbff !important;
+}
+
+html[data-theme="dark"] .app-content :where(
+    [class*="card"],
+    [class*="panel"],
+    [class*="program"],
+    [class*="metric"],
+    [class*="stat"]
+) p {
+    color: #afc1d0 !important;
+}
+
+
+/* ----------------------------------------------------------
+   Buttons
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .app-content :where(
+    .btn,
+    .button,
+    button,
+    [class*="btn-"],
+    [class*="button-"]
+) {
+    border-color: rgba(255,255,255,.10);
+}
+
+html[data-theme="dark"] .app-content :where(
+    .btn-primary,
+    .button-primary,
+    [class*="primary"]
+) {
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #087eae,
+            #149dce
+        ) !important;
+}
+
+html[data-theme="dark"] .app-content :where(
+    .btn-primary,
+    .button-primary,
+    [class*="primary"]
+):hover {
+    background:
+        linear-gradient(
+            135deg,
+            #0a8fbe,
+            #23addb
+        ) !important;
+}
+
+
+/* Existing dark buttons that use aero-ink */
+
+html[data-theme="dark"] .app-content a[class*="btn"]:not([class*="secondary"]),
+html[data-theme="dark"] .app-content button[class*="btn"]:not([class*="secondary"]) {
+    color: #ffffff;
+}
+
+
+/* ----------------------------------------------------------
+   Secondary / quiet buttons
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .app-content :where(
+    .btn-secondary,
+    .button-secondary
+) {
+    color: #d9e8f2 !important;
+
+    border-color: rgba(255,255,255,.11) !important;
+
+    background: #132b40 !important;
+}
+
+
+/* ----------------------------------------------------------
+   Badges
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .app-content :where(
+    [class*="badge"],
+    [class*="pill"],
+    [class*="tag"]
+) {
+    color: #70d5f5 !important;
+
+    border-color: rgba(72,185,232,.18) !important;
+
+    background: rgba(72,185,232,.10) !important;
+}
+
+
+/* ----------------------------------------------------------
+   Dividers
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .app-content hr {
+    border-color: rgba(255,255,255,.12);
+}
+
+
+/* ----------------------------------------------------------
+   Theme selector refinement
+   ---------------------------------------------------------- */
+
+.theme-control {
+    gap: 1px !important;
+
+    padding: 3px !important;
+
+    border-color: var(--theme-border) !important;
+
+    border-radius: 13px !important;
+
+    box-shadow: none !important;
+}
+
+.theme-choice {
+    width: 32px !important;
+    height: 32px !important;
+
+    border-radius: 9px !important;
+}
+
+.theme-choice svg {
+    width: 16px !important;
+    height: 16px !important;
+
+    stroke-width: 1.7 !important;
+}
+
+html[data-theme="light"] .theme-choice {
+    color: #667b8c;
+}
+
+html[data-theme="light"] .theme-choice.is-active {
+    color: #087eae !important;
+    background: #dff4fc !important;
+}
+
+html[data-theme="dark"] .theme-choice {
+    color: #839bad !important;
+}
+
+html[data-theme="dark"] .theme-choice:hover {
+    color: #dcebf5 !important;
+    background: #132c42 !important;
+}
+
+html[data-theme="dark"] .theme-choice.is-active {
+    color: #75d7f5 !important;
+    background: #14354b !important;
+}
+
+
+/* ----------------------------------------------------------
+   Topbar account
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] .topbar-user-avatar {
+    color: #07182d !important;
+    background: #dff5fc !important;
+}
+
+html[data-theme="dark"] .topbar-user-name {
+    color: #eaf4fa !important;
+}
+
+
+/* ----------------------------------------------------------
+   Scrollbar
+   ---------------------------------------------------------- */
+
+html[data-theme="dark"] ::-webkit-scrollbar {
+    width: 10px;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: #071522;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    border: 2px solid #071522;
+    border-radius: 10px;
+    background: #29465c;
+}
+

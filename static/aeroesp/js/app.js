@@ -245,227 +245,88 @@
    ========================================================== */
 
 (() => {
-
     "use strict";
 
+    const KEY = "aeroesp-theme";
     const root = document.documentElement;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
 
-    const toggle =
-        document.querySelector(
-            "[data-theme-toggle]"
-        );
+    const buttons = Array.from(
+        document.querySelectorAll("[data-theme-option]")
+    );
 
-    const menu =
-        document.querySelector(
-            "[data-theme-menu]"
-        );
+    function getPreference() {
+        const value = localStorage.getItem(KEY);
 
-    const label =
-        document.querySelector(
-            "[data-theme-label]"
-        );
-
-    const icon =
-        document.querySelector(
-            "[data-theme-icon]"
-        );
-
-    const options =
-        document.querySelectorAll(
-            "[data-theme-option]"
-        );
-
-    const media =
-        window.matchMedia(
-            "(prefers-color-scheme: dark)"
-        );
-
-
-    function preference() {
-
-        return (
-            localStorage.getItem(
-                "aeroesp-theme"
-            )
-            ||
-            "system"
-        );
-    }
-
-
-    function resolveTheme(value) {
-
-        if (value === "system") {
-
-            return media.matches
-                ? "dark"
-                : "light";
+        if (
+            value === "light" ||
+            value === "dark" ||
+            value === "system"
+        ) {
+            return value;
         }
 
-        return value;
+        return "system";
     }
 
+    function resolvedTheme(preference) {
+        if (preference === "system") {
+            return media.matches ? "dark" : "light";
+        }
 
-    function updateMeta(theme) {
+        return preference;
+    }
+
+    function apply(preference) {
+        const resolved = resolvedTheme(preference);
+
+        root.setAttribute("data-theme", resolved);
+        root.setAttribute("data-theme-preference", preference);
+
+        buttons.forEach((button) => {
+            const active =
+                button.dataset.themeOption === preference;
+
+            button.classList.toggle("is-active", active);
+            button.setAttribute(
+                "aria-pressed",
+                active ? "true" : "false"
+            );
+        });
 
         const meta =
-            document.querySelector(
-                "#theme-color-meta"
+            document.getElementById("theme-color-meta");
+
+        if (meta) {
+            meta.content =
+                resolved === "dark"
+                    ? "#06111f"
+                    : "#f5f8fb";
+        }
+    }
+
+    function setPreference(preference) {
+        localStorage.setItem(KEY, preference);
+        apply(preference);
+    }
+
+    buttons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            setPreference(
+                button.dataset.themeOption
             );
+        });
+    });
 
-        if (!meta) {
-            return;
+    media.addEventListener("change", () => {
+        if (getPreference() === "system") {
+            apply("system");
         }
+    });
 
-        meta.setAttribute(
-            "content",
-            theme === "dark"
-                ? "#06111f"
-                : "#f5f8fb"
-        );
-    }
-
-
-    function updateControl(value) {
-
-        if (label) {
-
-            label.textContent =
-                value === "dark"
-                    ? "Dark"
-                    : value === "light"
-                    ? "Light"
-                    : "System";
-        }
-
-        if (icon) {
-
-            icon.textContent =
-                value === "dark"
-                    ? "☾"
-                    : value === "light"
-                    ? "☀"
-                    : "◐";
-        }
-
-        options.forEach(
-            (option) => {
-
-                option.classList.toggle(
-                    "is-active",
-                    option.dataset.themeOption
-                    === value
-                );
-            }
-        );
-    }
-
-
-    function applyTheme(value) {
-
-        const resolved =
-            resolveTheme(value);
-
-        root.dataset.theme =
-            resolved;
-
-        root.dataset.themePreference =
-            value;
-
-        updateMeta(resolved);
-
-        updateControl(value);
-    }
-
-
-    function setTheme(value) {
-
-        localStorage.setItem(
-            "aeroesp-theme",
-            value
-        );
-
-        applyTheme(value);
-    }
-
-
-    applyTheme(
-        preference()
-    );
-
-
-    if (toggle && menu) {
-
-        toggle.addEventListener(
-            "click",
-            (event) => {
-
-                event.stopPropagation();
-
-                menu.hidden =
-                    !menu.hidden;
-            }
-        );
-    }
-
-
-    options.forEach(
-        (option) => {
-
-            option.addEventListener(
-                "click",
-                () => {
-
-                    setTheme(
-                        option.dataset.themeOption
-                    );
-
-                    if (menu) {
-                        menu.hidden = true;
-                    }
-                }
-            );
-        }
-    );
-
-
-    document.addEventListener(
-        "click",
-        () => {
-
-            if (menu) {
-                menu.hidden = true;
-            }
-        }
-    );
-
-
-    if (menu) {
-
-        menu.addEventListener(
-            "click",
-            (event) => {
-
-                event.stopPropagation();
-            }
-        );
-    }
-
-
-    media.addEventListener(
-        "change",
-        () => {
-
-            if (
-                preference()
-                === "system"
-            ) {
-
-                applyTheme(
-                    "system"
-                );
-            }
-        }
-    );
+    apply(getPreference());
 
 })();
