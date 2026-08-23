@@ -46,7 +46,7 @@
 
     <link
         rel="stylesheet"
-        href="{% static 'aeroesp/css/app.css' %}?v=ui04c"
+        href="{% static 'aeroesp/css/app.css' %}?v=ui04-logo"
     >
 
     {% block extra_css %}
@@ -76,25 +76,23 @@
         data-sidebar
     >
 
-        <a
-            href="{% url 'home' %}"
-            class="app-brand"
-        >
+        <a href="/" class="app-brand">
+            <span class="app-brand-mark">
+                <img
+                    src="{% static 'aeroesp/brand/aeroesp-symbol.svg' %}"
+                    class="app-brand-symbol"
+                    alt="AeroESP"
+                >
+            </span>
 
-            <span class="app-brand-mark"></span>
-
-            <span class="app-brand-copy">
-
+            <span class="app-brand-text">
                 <span class="app-brand-name">
                     Aero<span>ESP</span>
                 </span>
-
                 <span class="app-brand-tagline">
-                    Aerospace English
+                    Aerospace English Platform
                 </span>
-
             </span>
-
         </a>
 
 
@@ -695,7 +693,7 @@
 
 
 <script
-    src="{% static 'aeroesp/js/app.js' %}?v=ui04c"
+    src="{% static 'aeroesp/js/app.js' %}?v=ui04-logo"
 ></script>
 
 

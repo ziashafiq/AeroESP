@@ -255,115 +255,88 @@ svg {
 .app-brand {
     display: flex;
     align-items: center;
-
-    gap: 12px;
-
-    padding:
-        4px 10px
-        25px;
-
+    gap: 10px;
     text-decoration: none;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    padding: 4px 0 22px;
 }
 
 .app-brand-mark {
-    position: relative;
-
-    width: 43px;
-    height: 43px;
-
-    flex: 0 0 43px;
-
-    border-radius:
-        15px 15px 15px 7px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #8ae0fb,
-            #43b9ef 58%,
-            #2387ee
-        );
-
-    box-shadow:
-        0 13px 34px
-        rgba(55, 179, 236, .26);
-
-    transform: rotate(-3deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    flex: 0 0 44px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
-.app-brand-mark::before {
-    content: "";
-
-    position: absolute;
-
-    width: 18px;
-    height: 6px;
-
-    left: 12px;
-    top: 17px;
-
-    border:
-        2px solid
-        rgba(4, 44, 68, .8);
-
-    border-left: 0;
-    border-right: 0;
-
-    transform:
-        skewX(-28deg)
-        rotate(-7deg);
-}
-
+.app-brand-mark::before,
 .app-brand-mark::after {
-    content: "";
-
-    position: absolute;
-
-    width: 6px;
-    height: 6px;
-
-    right: 8px;
-    top: 8px;
-
-    border-radius: 50%;
-
-    background: var(--theme-surface);
-
-    box-shadow:
-        0 0 0 4px
-        rgba(255,255,255,.15);
+    display: none !important;
 }
 
-.app-brand-copy {
+.app-brand-symbol {
+    width: 42px;
+    height: 42px;
+    display: block;
+    object-fit: contain;
+}
+
+.app-brand-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    line-height: 1.05;
     min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
 }
 
 .app-brand-name {
-    font-size: 19px;
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #f7fbfe;
     line-height: 1;
-
-    font-weight: 790;
-
-    letter-spacing: -.035em;
+    white-space: nowrap;
 }
 
 .app-brand-name span {
-    color: var(--aero-sky);
+    color: #37b7f3;
 }
 
 .app-brand-tagline {
-    margin-top: 6px;
-
-    color:
-        rgba(255,255,255,.46);
-
-    font-size: 10px;
-
-    font-weight: 700;
-
-    letter-spacing: .09em;
-
+    display: block;
+    margin-top: 4px;
+    font-size: 0.50rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
+    color: #c5d4df;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 150px;
+}
+
+.sidebar-brand,
+.app-sidebar-brand,
+.sidebar-header {
+    overflow: hidden;
+}
+
+.sidebar-brand {
+    width: 100%;
+    overflow: hidden;
 }
 
 
@@ -5025,4 +4998,308 @@ html[data-theme="dark"] .app-content table tbody td {
 
 html[data-theme="dark"] .app-content table tbody td strong {
     color: #f2f8fc !important;
+}
+
+/* ==========================================================
+   UI-04 Brand Refinement
+   ========================================================== */
+
+.app-brand-mark {
+    display: grid !important;
+    place-items: center !important;
+
+    width: 46px !important;
+    height: 46px !important;
+
+    min-width: 46px !important;
+
+    overflow: visible !important;
+
+    border: 0 !important;
+    border-radius: 14px !important;
+
+    background: transparent !important;
+
+    box-shadow:
+        0 8px 22px rgba(31, 169, 222, .20) !important;
+}
+
+.app-brand-mark::before,
+.app-brand-mark::after {
+    display: none !important;
+}
+
+.app-brand-symbol {
+    display: block;
+
+    width: 46px;
+    height: 46px;
+
+    object-fit: contain;
+}
+
+.app-brand-name {
+    letter-spacing: -.03em;
+}
+
+.app-brand-name span {
+    color: #55c8ef;
+}
+
+.app-brand-tagline {
+    letter-spacing: .09em;
+}
+
+
+/* ----------------------------------------------------------
+   Workspace atmospheric system
+   ---------------------------------------------------------- */
+
+.app-main {
+    position: relative;
+    isolation: isolate;
+}
+
+.app-main::before {
+    content: "";
+
+    position: fixed;
+    z-index: -1;
+
+    top: var(--topbar-height);
+    right: 0;
+    bottom: 0;
+    left: var(--sidebar-width);
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle at 87% 8%,
+            rgba(72, 185, 232, .09),
+            transparent 28rem
+        ),
+        radial-gradient(
+            circle at 38% 62%,
+            rgba(232, 182, 106, .035),
+            transparent 34rem
+        );
+}
+
+html[data-theme="dark"] .app-main::before {
+    background:
+        radial-gradient(
+            circle at 88% 8%,
+            rgba(72, 185, 232, .08),
+            transparent 30rem
+        ),
+        radial-gradient(
+            circle at 38% 62%,
+            rgba(85, 199, 239, .025),
+            transparent 36rem
+        );
+}
+
+
+/* ----------------------------------------------------------
+   Shared surface refinement
+   ---------------------------------------------------------- */
+
+.app-content :where(
+    [class*="hero"],
+    [class*="banner"]
+) {
+    position: relative;
+    overflow: hidden;
+}
+
+.app-content :where(
+    [class*="hero"],
+    [class*="banner"]
+)::after {
+    content: "";
+
+    position: absolute;
+
+    width: 260px;
+    height: 260px;
+
+    right: -90px;
+    bottom: -160px;
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(72, 185, 232, .15),
+            transparent 68%
+        );
+}
+
+html[data-theme="dark"] .app-content :where(
+    [class*="hero"],
+    [class*="banner"]
+)::after {
+    background:
+        radial-gradient(
+            circle,
+            rgba(85, 199, 239, .15),
+            transparent 68%
+        );
+}
+
+
+/* ----------------------------------------------------------
+   Topbar polish
+   ---------------------------------------------------------- */
+
+.app-topbar {
+    box-shadow:
+        0 1px 0 var(--theme-border);
+}
+
+.topbar-status {
+    min-height: 36px;
+}
+
+.topbar-user {
+    min-height: 42px;
+    border-radius: 14px;
+}
+
+
+/* ----------------------------------------------------------
+   Sidebar refinement
+   ---------------------------------------------------------- */
+
+.app-sidebar {
+    background:
+        radial-gradient(
+            circle at 20% 0%,
+            rgba(69, 190, 235, .08),
+            transparent 19rem
+        ),
+        linear-gradient(
+            180deg,
+            #071f31 0%,
+            #061a29 100%
+        ) !important;
+}
+
+.app-nav-link {
+    border-radius: 12px;
+}
+
+.app-nav-link.is-active {
+    box-shadow:
+        inset 0 0 0 1px
+        rgba(109, 216, 247, .12);
+}
+
+
+/* ----------------------------------------------------------
+   Responsive background
+   ---------------------------------------------------------- */
+
+@media (max-width: 860px) {
+
+    .app-main::before {
+        left: 0;
+    }
+
+}
+
+/* ==========================================================
+   UI-04 Final AeroESP Logo
+   ========================================================== */
+
+/* Override the earlier brand styles with the final ones */
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    padding: 4px 0 22px;
+}
+
+.app-brand-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    flex: 0 0 44px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.app-brand-mark::before,
+.app-brand-mark::after {
+    display: none !important;
+}
+
+.app-brand-symbol {
+    width: 42px;
+    height: 42px;
+    display: block;
+    object-fit: contain;
+}
+
+.app-brand-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    line-height: 1.05;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.app-brand-name {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #f7fbfe;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.app-brand-name span {
+    color: #37b7f3;
+}
+
+.app-brand-tagline {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.50rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c5d4df;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 150px;
+}
+
+.sidebar-brand,
+.app-sidebar-brand,
+.sidebar-header {
+    overflow: hidden;
+}
+
+.sidebar-brand {
+    width: 100%;
+    overflow: hidden;
 }

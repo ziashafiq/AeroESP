@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<defs>
+  <linearGradient id="blue" x1="15" y1="90" x2="85" y2="10" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#249FD7"/>
+    <stop offset="1" stop-color="#78DDF7"/>
+  </linearGradient>
+</defs>
+
+<path
+ d="M18 82 L45 18 L55 18 L82 82 L68 82 L61 65 L38 65 L31 82 Z
+    M43 53 L56 53 L50 37 Z"
+ fill="#F6FBFF"/>
+
+<path
+ d="M18 82 L30 82 L39 61 L31 61 Z"
+ fill="url(#blue)"/>
+
+<path
+ d="M62 63 L70 82 L83 82 L68 48 Z"
+ fill="url(#blue)"/>
+
+<path
+ d="M13 69
+ C30 68 48 59 66 43
+ C72 38 77 33 84 26"
+ fill="none"
+ stroke="#F6FBFF"
+ stroke-width="7"
+ stroke-linecap="round"/>
+
+<path
+ d="M19 76
+ C38 73 57 62 72 48
+ C77 43 82 37 87 31"
+ fill="none"
+ stroke="url(#blue)"
+ stroke-width="4"
+ stroke-linecap="round"/>
+
+<path
+ d="M83 24 L94 19 L90 31 Z"
+ fill="#47BFEA"/>
+</svg>

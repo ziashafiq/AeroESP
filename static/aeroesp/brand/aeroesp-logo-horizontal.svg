@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="120" viewBox="0 0 500 120">
+<defs>
+  <linearGradient id="blue" x1="15" y1="100" x2="100" y2="10">
+    <stop stop-color="#249FD7"/>
+    <stop offset="1" stop-color="#78DDF7"/>
+  </linearGradient>
+</defs>
+
+<g transform="translate(4 6) scale(1.05)">
+<path d="M18 82 L45 18 L55 18 L82 82 L68 82 L61 65 L38 65 L31 82 Z M43 53 L56 53 L50 37 Z"
+ fill="#07182D"/>
+<path d="M18 82 L30 82 L39 61 L31 61 Z" fill="url(#blue)"/>
+<path d="M62 63 L70 82 L83 82 L68 48 Z" fill="url(#blue)"/>
+<path d="M13 69 C30 68 48 59 66 43 C72 38 77 33 84 26"
+ fill="none" stroke="#07182D" stroke-width="7" stroke-linecap="round"/>
+<path d="M19 76 C38 73 57 62 72 48 C77 43 82 37 87 31"
+ fill="none" stroke="url(#blue)" stroke-width="4" stroke-linecap="round"/>
+<path d="M83 24 L94 19 L90 31 Z" fill="#47BFEA"/>
+</g>
+
+<text x="125" y="64"
+ font-family="Arial, Helvetica, sans-serif"
+ font-size="48"
+ font-weight="700"
+ letter-spacing="-2"
+ fill="#07182D">Aero</text>
+
+<text x="232" y="64"
+ font-family="Arial, Helvetica, sans-serif"
+ font-size="48"
+ font-weight="700"
+ letter-spacing="-2"
+ fill="#279FD8">ESP</text>
+
+<text x="128" y="88"
+ font-family="Arial, Helvetica, sans-serif"
+ font-size="15"
+ letter-spacing="2"
+ fill="#52687A">AEROSPACE ENGLISH PLATFORM</text>
+</svg>
