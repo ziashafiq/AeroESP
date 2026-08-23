@@ -239,3 +239,233 @@
         );
 
 })();
+
+/* ==========================================================
+   AeroESP Theme Engine
+   ========================================================== */
+
+(() => {
+
+    "use strict";
+
+    const root = document.documentElement;
+
+    const toggle =
+        document.querySelector(
+            "[data-theme-toggle]"
+        );
+
+    const menu =
+        document.querySelector(
+            "[data-theme-menu]"
+        );
+
+    const label =
+        document.querySelector(
+            "[data-theme-label]"
+        );
+
+    const icon =
+        document.querySelector(
+            "[data-theme-icon]"
+        );
+
+    const options =
+        document.querySelectorAll(
+            "[data-theme-option]"
+        );
+
+    const media =
+        window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        );
+
+
+    function preference() {
+
+        return (
+            localStorage.getItem(
+                "aeroesp-theme"
+            )
+            ||
+            "system"
+        );
+    }
+
+
+    function resolveTheme(value) {
+
+        if (value === "system") {
+
+            return media.matches
+                ? "dark"
+                : "light";
+        }
+
+        return value;
+    }
+
+
+    function updateMeta(theme) {
+
+        const meta =
+            document.querySelector(
+                "#theme-color-meta"
+            );
+
+        if (!meta) {
+            return;
+        }
+
+        meta.setAttribute(
+            "content",
+            theme === "dark"
+                ? "#06111f"
+                : "#f5f8fb"
+        );
+    }
+
+
+    function updateControl(value) {
+
+        if (label) {
+
+            label.textContent =
+                value === "dark"
+                    ? "Dark"
+                    : value === "light"
+                    ? "Light"
+                    : "System";
+        }
+
+        if (icon) {
+
+            icon.textContent =
+                value === "dark"
+                    ? "☾"
+                    : value === "light"
+                    ? "☀"
+                    : "◐";
+        }
+
+        options.forEach(
+            (option) => {
+
+                option.classList.toggle(
+                    "is-active",
+                    option.dataset.themeOption
+                    === value
+                );
+            }
+        );
+    }
+
+
+    function applyTheme(value) {
+
+        const resolved =
+            resolveTheme(value);
+
+        root.dataset.theme =
+            resolved;
+
+        root.dataset.themePreference =
+            value;
+
+        updateMeta(resolved);
+
+        updateControl(value);
+    }
+
+
+    function setTheme(value) {
+
+        localStorage.setItem(
+            "aeroesp-theme",
+            value
+        );
+
+        applyTheme(value);
+    }
+
+
+    applyTheme(
+        preference()
+    );
+
+
+    if (toggle && menu) {
+
+        toggle.addEventListener(
+            "click",
+            (event) => {
+
+                event.stopPropagation();
+
+                menu.hidden =
+                    !menu.hidden;
+            }
+        );
+    }
+
+
+    options.forEach(
+        (option) => {
+
+            option.addEventListener(
+                "click",
+                () => {
+
+                    setTheme(
+                        option.dataset.themeOption
+                    );
+
+                    if (menu) {
+                        menu.hidden = true;
+                    }
+                }
+            );
+        }
+    );
+
+
+    document.addEventListener(
+        "click",
+        () => {
+
+            if (menu) {
+                menu.hidden = true;
+            }
+        }
+    );
+
+
+    if (menu) {
+
+        menu.addEventListener(
+            "click",
+            (event) => {
+
+                event.stopPropagation();
+            }
+        );
+    }
+
+
+    media.addEventListener(
+        "change",
+        () => {
+
+            if (
+                preference()
+                === "system"
+            ) {
+
+                applyTheme(
+                    "system"
+                );
+            }
+        }
+    );
+
+})();

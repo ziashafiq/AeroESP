@@ -2,7 +2,7 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
 
@@ -16,7 +16,27 @@
     <meta
         name="theme-color"
         content="#071926"
+        id="theme-color-meta"
     >
+
+    <link
+        rel="icon"
+        type="image/svg+xml"
+        href="{% static 'aeroesp/brand/favicon.svg' %}"
+    >
+
+    <script>
+        (() => {
+            const saved = localStorage.getItem("aeroesp-theme") || "system";
+            const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const resolved = saved === "system"
+                ? (dark ? "dark" : "light")
+                : saved;
+
+            document.documentElement.dataset.theme = resolved;
+            document.documentElement.dataset.themePreference = saved;
+        })();
+    </script>
 
     <title>
         {% block title %}
@@ -567,6 +587,52 @@
 
                 <div class="topbar-status">
                     Platform online
+                </div>
+
+                <div class="theme-control" data-theme-control>
+
+                    <button
+                        type="button"
+                        class="theme-toggle"
+                        data-theme-toggle
+                        aria-label="Change appearance"
+                        title="Appearance"
+                    >
+                        <span class="theme-toggle-icon" data-theme-icon>◐</span>
+                        <span class="theme-toggle-label" data-theme-label>System</span>
+                    </button>
+
+                    <div class="theme-menu" data-theme-menu hidden>
+
+                        <button
+                            type="button"
+                            class="theme-option"
+                            data-theme-option="light"
+                        >
+                            <span>☀</span>
+                            Light
+                        </button>
+
+                        <button
+                            type="button"
+                            class="theme-option"
+                            data-theme-option="system"
+                        >
+                            <span>◐</span>
+                            System
+                        </button>
+
+                        <button
+                            type="button"
+                            class="theme-option"
+                            data-theme-option="dark"
+                        >
+                            <span>☾</span>
+                            Dark
+                        </button>
+
+                    </div>
+
                 </div>
 
 
