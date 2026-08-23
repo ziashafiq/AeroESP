@@ -1,95 +1,67 @@
 {% extends "exams/teacher/base.html" %}
 
-{% block title %}
-{{ page_title }} - AeroESP
-{% endblock %}
-
 {% block content %}
 
-<h1>{{ page_title }}</h1>
+<section class="exam-form-page">
 
-<form method="post">
+    <div class="exam-form-header">
 
-    {% csrf_token %}
+        <div>
 
-    {{ form.non_field_errors }}
+            <span class="exam-kicker">
+                Exam configuration
+            </span>
 
-    <p>
-        {{ form.title.label_tag }}
-        <br>
-        {{ form.title }}
-        {{ form.title.errors }}
-    </p>
+            <h1>
+                {% if exam %}
+                    Edit Exam
+                {% else %}
+                    Create Exam
+                {% endif %}
+            </h1>
 
-    <p>
-        {{ form.description.label_tag }}
-        <br>
-        {{ form.description }}
-        {{ form.description.errors }}
-    </p>
+            <p>
+                Configure assessment access, timing,
+                attempts and result behavior.
+            </p>
 
-    <p>
-        {{ form.instructions.label_tag }}
-        <br>
-        {{ form.instructions }}
-        {{ form.instructions.errors }}
-    </p>
+        </div>
 
-    <p>
-        {{ form.mode.label_tag }}
-        <br>
-        {{ form.mode }}
-        {{ form.mode.errors }}
-    </p>
+    </div>
 
-    <p>
-        {{ form.duration_minutes.label_tag }}
-        <br>
-        {{ form.duration_minutes }}
-        {{ form.duration_minutes.errors }}
-    </p>
 
-    <p>
-        {{ form.starts_at.label_tag }}
-        <br>
-        {{ form.starts_at }}
-        {{ form.starts_at.errors }}
-    </p>
+    <form
+        method="post"
+        class="exam-builder-form"
+    >
 
-    <p>
-        {{ form.ends_at.label_tag }}
-        <br>
-        {{ form.ends_at }}
-        {{ form.ends_at.errors }}
-    </p>
+        {% csrf_token %}
 
-    <p>
-        {{ form.max_attempts.label_tag }}
-        <br>
-        {{ form.max_attempts }}
-        {{ form.max_attempts.errors }}
-    </p>
+        <div class="exam-builder-fields">
+            {{ form.as_p }}
+        </div>
 
-    <p>
-        {{ form.shuffle_questions }}
-        {{ form.shuffle_questions.label_tag }}
-    </p>
 
-    <p>
-        {{ form.shuffle_options }}
-        {{ form.shuffle_options.label_tag }}
-    </p>
+        <div class="exam-builder-actions">
 
-    <p>
-        {{ form.result_policy.label_tag }}
-        <br>
-        {{ form.result_policy }}
-    </p>
+            <button
+                type="submit"
+                class="exam-open-button"
+            >
+                Save Exam
+            </button>
 
-    <button type="submit">
-        Save
-    </button>
+            <a
+                href="{% url 'exams:teacher_exam_list' %}"
+                class="exam-secondary-button"
+            >
+                Cancel
+            </a>
 
-</form>
+        </div>
+
+    </form>
+
+</section>
 
 {% endblock %}

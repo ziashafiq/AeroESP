@@ -2,60 +2,99 @@
 
 {% block content %}
 
-<h1>Exam Submitted</h1>
+<section class="exam-result-shell">
 
-<p>
-    <strong>Exam:</strong>
-    {{ exam.title }}
-</p>
+    <div class="exam-result-status">
+        ✓
+    </div>
 
-<p>
-    <strong>Attempt:</strong>
-    {{ attempt.attempt_number }}
-</p>
+    <span class="exam-kicker">
+        Submission recorded
+    </span>
 
-<p>
-    <strong>Status:</strong>
-    {{ attempt.get_status_display }}
-</p>
+    <h1>
+        Exam Submitted
+    </h1>
 
-<p>
-    <strong>Submitted:</strong>
-    {{ attempt.submitted_at }}
-</p>
+    <p class="exam-result-lead">
+        Your exam attempt has been successfully recorded.
+    </p>
 
 
-{% if show_result %}
+    <div class="exam-result-meta">
 
-<hr>
+        <div>
+            <span>Exam</span>
+            <strong>{{ exam.title }}</strong>
+        </div>
 
-<h2>Result</h2>
+        <div>
+            <span>Attempt</span>
+            <strong>#{{ attempt.attempt_number }}</strong>
+        </div>
 
-<p>
-    Score:
-    {{ attempt.score }}
-    /
-    {{ attempt.max_score }}
-</p>
+        <div>
+            <span>Status</span>
+            <strong>{{ attempt.get_status_display }}</strong>
+        </div>
 
-<p>
-    Percentage:
-    {{ attempt.percentage }}%
-</p>
+        <div>
+            <span>Submitted</span>
+            <strong>
+                {{ attempt.submitted_at|date:"M d, Y · H:i" }}
+            </strong>
+        </div>
 
-{% else %}
-
-<p>
-    Your submission was recorded.
-    The score is not currently available
-    under this exam's result policy.
-</p>
-
-{% endif %}
+    </div>
 
 
-<a href="{% url 'exams_student:home' %}">
-    Back to Student Exams
-</a>
+    {% if show_result %}
+
+        <div class="exam-score-card">
+
+            <div>
+                <span>
+                    Score
+                </span>
+
+                <strong>
+                    {{ attempt.score }}
+                    <small>/ {{ attempt.max_score }}</small>
+                </strong>
+            </div>
+
+            <div>
+                <span>
+                    Percentage
+                </span>
+
+                <strong>
+                    {{ attempt.percentage }}%
+                </strong>
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="exam-result-policy">
+
+            Your submission was recorded successfully.
+            Results are currently hidden under this exam's
+            result policy.
+
+        </div>
+
+    {% endif %}
+
+
+    <a
+        href="{% url 'exams_student:home' %}"
+        class="exam-open-button"
+    >
+        Back to My Exams
+    </a>
+
+</section>
 
 {% endblock %}

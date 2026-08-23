@@ -2,90 +2,233 @@
 
 {% block content %}
 
-<h1>Student Exams</h1>
+<section class="exam-hero">
 
-<h2>Enter Exam Code</h2>
+    <div>
+        <div class="exam-eyebrow">
+            Assessment Center
+        </div>
 
-<form method="post">
+        <h1>
+            Student Exams
+        </h1>
 
-    {% csrf_token %}
+        <p>
+            Enter an exam access code, continue an active attempt,
+            or review your completed assessments.
+        </p>
+    </div>
 
-    {{ form.as_p }}
-
-    <button type="submit">
-        Open Exam
-    </button>
-
-</form>
+</section>
 
 
-<h2>My Attempts</h2>
+<div class="exam-home-grid">
 
-{% if attempts %}
+    <section class="exam-access-card">
 
-<table>
+        <div class="exam-section-icon">
+            EX
+        </div>
 
-<thead>
-<tr>
-    <th>Exam</th>
-    <th>Attempt</th>
-    <th>Status</th>
-    <th>Started</th>
-    <th>Open</th>
-</tr>
-</thead>
+        <div class="exam-section-copy">
 
-<tbody>
+            <span class="exam-kicker">
+                Join an assessment
+            </span>
 
-{% for attempt in attempts %}
+            <h2>
+                Enter Exam Code
+            </h2>
 
-<tr>
+            <p>
+                Use the access code provided by your teacher.
+            </p>
 
-    <td>
-        {{ attempt.exam.title }}
-    </td>
+        </div>
 
-    <td>
-        {{ attempt.attempt_number }}
-    </td>
 
-    <td>
-        {{ attempt.get_status_display }}
-    </td>
+        <form method="post" class="exam-access-form">
 
-    <td>
-        {{ attempt.started_at }}
-    </td>
+            {% csrf_token %}
 
-    <td>
+            {{ form.as_p }}
 
-        {% if attempt.status == "IN_PROGRESS" %}
+            <button
+                type="submit"
+                class="exam-open-button"
+            >
+                <span>
+                    Open Exam
+                </span>
 
-        <a href="{% url 'exams_student:take' attempt.pk %}">
-            Continue
-        </a>
+                <span aria-hidden="true">
+                    →
+                </span>
+            </button>
 
-        {% else %}
+        </form>
 
-        <a href="{% url 'exams_student:result' attempt.pk %}">
-            Result
-        </a>
+    </section>
 
+
+    <aside class="exam-info-card">
+
+        <span class="exam-kicker">
+            Before you begin
+        </span>
+
+        <h3>
+            Exam readiness
+        </h3>
+
+        <div class="exam-readiness-list">
+
+            <div>
+                <span>01</span>
+                Use a stable internet connection.
+            </div>
+
+            <div>
+                <span>02</span>
+                Check the exam duration before starting.
+            </div>
+
+            <div>
+                <span>03</span>
+                Submit only after reviewing unanswered items.
+            </div>
+
+        </div>
+
+    </aside>
+
+</div>
+
+
+<section class="exam-attempts">
+
+    <div class="exam-section-heading">
+
+        <div>
+            <span class="exam-kicker">
+                Assessment history
+            </span>
+
+            <h2>
+                My Attempts
+            </h2>
+        </div>
+
+        {% if attempts %}
+            <span class="exam-count">
+                {{ attempts|length }} attempt{{ attempts|length|pluralize }}
+            </span>
         {% endif %}
 
-    </td>
+    </div>
 
-</tr>
 
-{% endfor %}
+    {% if attempts %}
 
-</tbody>
-</table>
+    <div class="exam-table-shell">
 
-{% else %}
+        <table class="exam-table">
 
-<p>No attempts yet.</p>
+            <thead>
+                <tr>
+                    <th>Exam</th>
+                    <th>Attempt</th>
+                    <th>Status</th>
+                    <th>Started</th>
+                    <th></th>
+                </tr>
+            </thead>
 
-{% endif %}
+            <tbody>
+
+            {% for attempt in attempts %}
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            {{ attempt.exam.title }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        #{{ attempt.attempt_number }}
+                    </td>
+
+                    <td>
+                        <span class="
+                            exam-status
+                            exam-status-{{ attempt.status|lower }}
+                        ">
+                            {{ attempt.get_status_display }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ attempt.started_at|date:"M d, Y · H:i" }}
+                    </td>
+
+                    <td class="exam-table-action">
+
+                        {% if attempt.status == "IN_PROGRESS" %}
+
+                            <a
+                                href="{% url 'exams_student:take' attempt.pk %}"
+                                class="exam-action-link exam-action-primary"
+                            >
+                                Continue →
+                            </a>
+
+                        {% else %}
+
+                            <a
+                                href="{% url 'exams_student:result' attempt.pk %}"
+                                class="exam-action-link"
+                            >
+                                Result →
+                            </a>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+        <div class="exam-empty-state">
+
+            <div class="exam-empty-icon">
+                0
+            </div>
+
+            <div>
+                <h3>
+                    No exam attempts yet
+                </h3>
+
+                <p>
+                    Your current and completed exam attempts will appear here.
+                </p>
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</section>
 
 {% endblock %}

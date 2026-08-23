@@ -1,91 +1,160 @@
 {% extends "exams/teacher/base.html" %}
 
-{% block title %}
-My Exams - AeroESP
-{% endblock %}
-
 {% block content %}
 
-<h1>My Exams</h1>
+<section class="exam-hero exam-hero-teacher">
 
-<div class="actions">
-    <a href="{% url 'exams:teacher_exam_create' %}">
-        Create New Exam
+    <div>
+
+        <div class="exam-eyebrow">
+            Assessment Management
+        </div>
+
+        <h1>
+            Exam Builder
+        </h1>
+
+        <p>
+            Build, configure, publish and manage secure assessments.
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'exams:teacher_exam_create' %}"
+        class="exam-open-button"
+    >
+        + Create Exam
     </a>
-</div>
 
-{% if exams %}
+</section>
 
-<table>
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Mode</th>
-            <th>Status</th>
-            <th>Questions</th>
-            <th>Duration</th>
-            <th>Schedule</th>
-            <th>Access Code</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
 
-    <tbody>
+<section class="teacher-exam-section">
 
-    {% for exam in exams %}
+    <div class="exam-section-heading">
 
-        <tr>
-            <td>{{ exam.title }}</td>
+        <div>
+            <span class="exam-kicker">
+                Your assessments
+            </span>
 
-            <td>
-                {{ exam.get_mode_display }}
-            </td>
+            <h2>
+                My Exams
+            </h2>
+        </div>
 
-            <td>
-                {{ exam.get_status_display }}
-            </td>
+        {% if exams %}
+            <span class="exam-count">
+                {{ exams|length }} exam{{ exams|length|pluralize }}
+            </span>
+        {% endif %}
 
-            <td>
-                {{ exam.question_count }}
-            </td>
+    </div>
 
-            <td>
-                {{ exam.duration_minutes }} min
-            </td>
 
-            <td>
-                {{ exam.starts_at|default:"-" }}
-                <br>
-                {{ exam.ends_at|default:"-" }}
-            </td>
+    {% if exams %}
 
-            <td>
-                {{ exam.access_code|default:"-" }}
-            </td>
+        <div class="teacher-exam-grid">
 
-            <td>
-                <a href="{% url 'exams:teacher_exam_detail' exam.pk %}">
-                    Open
-                </a>
+        {% for exam in exams %}
 
-                {% if exam.status == "DRAFT" %}
-                    |
-                    <a href="{% url 'exams:teacher_exam_edit' exam.pk %}">
+            <article class="teacher-exam-card">
+
+                <div class="teacher-exam-card-top">
+
+                    <span class="exam-status">
+                        {{ exam.get_status_display|default:"Draft" }}
+                    </span>
+
+                    <span class="teacher-exam-question-count">
+                        {{ exam.question_count }} questions
+                    </span>
+
+                </div>
+
+
+                <h3>
+                    {{ exam.title }}
+                </h3>
+
+
+                <div class="teacher-exam-meta">
+
+                    <span>
+                        Created
+                    </span>
+
+                    <strong>
+                        {{ exam.created_at|date:"M d, Y" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="teacher-exam-actions">
+
+                    <a
+                        href="{% url 'exams:teacher_exam_detail' exam.pk %}"
+                        class="exam-action-link exam-action-primary"
+                    >
+                        Open
+                    </a>
+
+                    <a
+                        href="{% url 'exams:teacher_exam_edit' exam.pk %}"
+                        class="exam-action-link"
+                    >
                         Edit
                     </a>
-                {% endif %}
-            </td>
-        </tr>
 
-    {% endfor %}
+                    <a
+                        href="{% url 'exams:teacher_exam_structure' exam.pk %}"
+                        class="exam-action-link"
+                    >
+                        Structure
+                    </a>
 
-    </tbody>
-</table>
+                </div>
 
-{% else %}
+            </article>
 
-<p>No exams have been created yet.</p>
+        {% endfor %}
 
-{% endif %}
+        </div>
+
+    {% else %}
+
+        <div class="exam-empty-state exam-empty-large">
+
+            <div class="exam-empty-icon">
+                +
+            </div>
+
+            <div>
+
+                <h3>
+                    Create your first exam
+                </h3>
+
+                <p>
+                    Start by defining the exam settings,
+                    then add questions and publish it when ready.
+                </p>
+
+                <a
+                    href="{% url 'exams:teacher_exam_create' %}"
+                    class="exam-open-button"
+                >
+                    Create Exam
+                </a>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</section>
 
 {% endblock %}
