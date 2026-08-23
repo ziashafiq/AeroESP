@@ -1,137 +1,246 @@
 {% extends "exams/teacher/base.html" %}
 
 {% block title %}
-Add Questions - AeroESP
+Add Questions · AeroESP
 {% endblock %}
 
 {% block content %}
 
-<h1>Add Questions</h1>
+<section class="exam-bank-page">
 
-<p>
-    Exam:
-    <strong>{{ exam.title }}</strong>
-</p>
+    <div class="exam-builder-page-header">
 
-<form method="get">
+        <div>
 
-    <input
-        type="text"
-        name="q"
-        value="{{ query }}"
-        placeholder="Search question text..."
+            <span class="exam-kicker">
+                Exam Question Bank
+            </span>
+
+            <h1>
+                Add Questions
+            </h1>
+
+            <p>
+                {{ exam.title }}
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'exams:teacher_exam_detail' exam.pk %}"
+            class="exam-secondary-button"
+        >
+            Back to Exam
+        </a>
+
+    </div>
+
+
+    <form
+        method="get"
+        class="exam-bank-search"
     >
 
-    <button type="submit">
-        Search
-    </button>
+        <input
+            type="search"
+            name="q"
+            value="{{ query }}"
+            placeholder="Search question text or explanation..."
+        >
 
-</form>
+        <button
+            type="submit"
+            class="exam-secondary-button"
+        >
+            Search
+        </button>
 
-<form method="post">
+    </form>
 
-{% csrf_token %}
 
-<table>
+    <form method="post">
 
-<thead>
-<tr>
-    <th>Select</th>
-    <th>Question</th>
-    <th>Domain</th>
-    <th>Topic</th>
-    <th>Difficulty</th>
-    <th>Source</th>
-</tr>
-</thead>
+        {% csrf_token %}
 
-<tbody>
 
-{% for question in page_obj %}
+        <div class="exam-bank-toolbar">
 
-<tr>
+            <button
+                type="button"
+                class="exam-secondary-button"
+                id="select-all-questions"
+            >
+                Select visible
+            </button>
 
-    <td>
+            <button
+                type="submit"
+                class="exam-open-button"
+            >
+                Add Selected Questions
+            </button>
 
-        {% if question.pk in already_linked_ids %}
+        </div>
 
-            Added
+
+        <div class="exam-table-shell">
+
+            <table class="exam-table exam-bank-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Select</th>
+                        <th>Question</th>
+                        <th>Domain</th>
+                        <th>Topic</th>
+                        <th>Difficulty</th>
+                        <th>Source</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for question in page_obj %}
+
+                <tr>
+
+                    <td>
+
+                        {% if question.pk in already_linked_ids %}
+
+                            <span class="exam-added-badge">
+                                Added
+                            </span>
+
+                        {% else %}
+
+                            <input
+                                type="checkbox"
+                                name="question_ids"
+                                value="{{ question.pk }}"
+                                class="exam-question-checkbox"
+                            >
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <strong>
+                            {{ question.question_text }}
+                        </strong>
+
+                    </td>
+
+                    <td>
+                        {{ question.domain_ref|default:"—" }}
+                    </td>
+
+                    <td>
+                        {{ question.topic_ref|default:"—" }}
+                    </td>
+
+                    <td>
+                        {{ question.difficulty|default:"—" }}
+                    </td>
+
+                    <td>
+                        {{ question.source_type|default:"—" }}
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="6">
+                        <div class="exam-table-empty">
+                            No questions found.
+                        </div>
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </form>
+
+
+    <div class="exam-pagination">
+
+        {% if page_obj.has_previous %}
+
+            <a
+                href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}"
+            >
+                ← Previous
+            </a>
 
         {% else %}
 
-            <input
-                type="checkbox"
-                name="question_ids"
-                value="{{ question.pk }}"
-            >
+            <span></span>
 
         {% endif %}
 
-    </td>
 
-    <td>
-        {{ question.question_text }}
-    </td>
-
-    <td>
-        {{ question.domain_ref|default:"-" }}
-    </td>
-
-    <td>
-        {{ question.topic_ref|default:"-" }}
-    </td>
-
-    <td>
-        {{ question.difficulty|default:"-" }}
-    </td>
-
-    <td>
-        {{ question.source_type|default:"-" }}
-    </td>
-
-</tr>
-
-{% empty %}
-
-<tr>
-    <td colspan="6">
-        No questions found.
-    </td>
-</tr>
-
-{% endfor %}
-
-</tbody>
-</table>
-
-<br>
-
-<button type="submit">
-    Add Selected Questions
-</button>
-
-</form>
+        <strong>
+            Page {{ page_obj.number }}
+            of {{ page_obj.paginator.num_pages }}
+        </strong>
 
 
-{% if page_obj.has_previous %}
+        {% if page_obj.has_next %}
 
-<a href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}">
-    Previous
-</a>
+            <a
+                href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}"
+            >
+                Next →
+            </a>
 
-{% endif %}
+        {% else %}
 
-Page
-{{ page_obj.number }}
-of
-{{ page_obj.paginator.num_pages }}
+            <span></span>
 
-{% if page_obj.has_next %}
+        {% endif %}
 
-<a href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}">
-    Next
-</a>
+    </div>
 
-{% endif %}
+
+</section>
+
+
+<script>
+
+const selectAllButton =
+    document.getElementById(
+        "select-all-questions"
+    );
+
+if (selectAllButton) {
+
+    selectAllButton.addEventListener(
+        "click",
+        function() {
+
+            document.querySelectorAll(
+                ".exam-question-checkbox"
+            ).forEach(
+                function(input) {
+                    input.checked = true;
+                }
+            );
+        }
+    );
+}
+
+</script>
 
 {% endblock %}

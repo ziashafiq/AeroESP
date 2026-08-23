@@ -1,146 +1,311 @@
 {% extends "exams/teacher/base.html" %}
 
 {% block title %}
-{{ exam.title }} - AeroESP
+{{ exam.title }} · AeroESP
 {% endblock %}
 
 {% block content %}
 
-<h1>{{ exam.title }}</h1>
+<section class="teacher-exam-detail-hero">
 
-<p>
-    <strong>Status:</strong>
-    {{ exam.get_status_display }}
-</p>
+    <div>
 
-<p>
-    <strong>Mode:</strong>
-    {{ exam.get_mode_display }}
-</p>
+        <span class="exam-kicker">
+            Exam Workspace
+        </span>
 
-<p>
-    <strong>Duration:</strong>
-    {{ exam.duration_minutes }} minutes
-</p>
+        <h1>
+            {{ exam.title }}
+        </h1>
 
-<p>
-    <strong>Maximum Attempts:</strong>
-    {{ exam.max_attempts }}
-</p>
+        <div class="teacher-exam-detail-tags">
 
-<p>
-    <strong>Questions:</strong>
-    {{ question_count }}
-</p>
+            <span class="exam-status exam-status-{{ exam.status|lower }}">
+                {{ exam.get_status_display }}
+            </span>
 
-<p>
-    <strong>Total Points:</strong>
-    {{ total_points }}
-</p>
+            <span>
+                {{ exam.get_mode_display }}
+            </span>
 
-<p>
-    <strong>Access Code:</strong>
-    {{ exam.access_code|default:"Not generated yet" }}
-</p>
+        </div>
 
-<p>
-    <strong>Starts:</strong>
-    {{ exam.starts_at|default:"Not specified" }}
-</p>
-
-<p>
-    <strong>Ends:</strong>
-    {{ exam.ends_at|default:"Not specified" }}
-</p>
-
-{% if exam.description %}
-
-<h3>Description</h3>
-<p>{{ exam.description|linebreaks }}</p>
-
-{% endif %}
-
-{% if exam.instructions %}
-
-<h3>Instructions</h3>
-<p>{{ exam.instructions|linebreaks }}</p>
-
-{% endif %}
+    </div>
 
 
-{% if exam.status == "DRAFT" %}
+    {% if exam.status == "DRAFT" %}
 
-<div class="actions">
+    <div class="teacher-exam-detail-actions">
 
-    <a href="{% url 'exams:teacher_exam_edit' exam.pk %}">
-        Edit Settings
-    </a>
+        <a
+            href="{% url 'exams:teacher_exam_edit' exam.pk %}"
+            class="exam-secondary-button"
+        >
+            Edit Settings
+        </a>
 
-    <a href="{% url 'exams:teacher_exam_question_bank' exam.pk %}">
-        Add Questions
-    </a>
+        <a
+            href="{% url 'exams:teacher_exam_question_bank' exam.pk %}"
+            class="exam-secondary-button"
+        >
+            Add Questions
+        </a>
 
-    <a href="{% url 'exams:teacher_exam_structure' exam.pk %}">
-        Question Structure
-    </a>
+        <a
+            href="{% url 'exams:teacher_exam_publish' exam.pk %}"
+            class="exam-open-button"
+        >
+            Publish Exam
+        </a>
 
-    <a href="{% url 'exams:teacher_exam_publish' exam.pk %}">
-        Publish Exam
-    </a>
+    </div>
+
+    {% endif %}
+
+</section>
+
+
+<div class="teacher-exam-metrics">
+
+    <div>
+        <span>Questions</span>
+        <strong>{{ question_count }}</strong>
+    </div>
+
+    <div>
+        <span>Total Points</span>
+        <strong>{{ total_points }}</strong>
+    </div>
+
+    <div>
+        <span>Duration</span>
+        <strong>{{ exam.duration_minutes }} min</strong>
+    </div>
+
+    <div>
+        <span>Max Attempts</span>
+        <strong>{{ exam.max_attempts }}</strong>
+    </div>
 
 </div>
 
-{% endif %}
+
+<div class="teacher-exam-detail-grid">
+
+    <section class="teacher-exam-settings-card">
+
+        <span class="exam-kicker">
+            Configuration
+        </span>
+
+        <h2>
+            Exam Settings
+        </h2>
+
+        <div class="teacher-exam-setting-list">
+
+            <div>
+                <span>Access Code</span>
+                <strong>
+                    {{ exam.access_code|default:"Generated on publish" }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Starts</span>
+                <strong>
+                    {{ exam.starts_at|date:"M d, Y · H:i"|default:"Not specified" }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Ends</span>
+                <strong>
+                    {{ exam.ends_at|date:"M d, Y · H:i"|default:"Not specified" }}
+                </strong>
+            </div>
+
+            <div>
+                <span>Result Policy</span>
+                <strong>
+                    {{ exam.get_result_policy_display }}
+                </strong>
+            </div>
+
+        </div>
 
 
-<h2>Questions</h2>
+        {% if exam.description %}
 
-{% if exam_questions %}
+        <div class="teacher-exam-text-block">
 
-<table>
-    <thead>
-        <tr>
-            <th>Order</th>
-            <th>Question</th>
-            <th>Points</th>
-            <th>Required</th>
-            <th>Frozen Version</th>
-        </tr>
-    </thead>
+            <h3>Description</h3>
 
-    <tbody>
+            {{ exam.description|linebreaks }}
 
-    {% for item in exam_questions %}
+        </div>
 
-        <tr>
-            <td>{{ item.order }}</td>
+        {% endif %}
 
-            <td>
-                {{ item.question.question_text }}
-            </td>
 
-            <td>
-                {{ item.points }}
-            </td>
+        {% if exam.instructions %}
 
-            <td>
-                {{ item.required|yesno:"Yes,No" }}
-            </td>
+        <div class="teacher-exam-text-block">
 
-            <td>
-                {{ item.question_version }}
-            </td>
-        </tr>
+            <h3>Instructions</h3>
 
-    {% endfor %}
+            {{ exam.instructions|linebreaks }}
 
-    </tbody>
-</table>
+        </div>
 
-{% else %}
+        {% endif %}
 
-<p>No questions have been added.</p>
+    </section>
 
-{% endif %}
+
+    <aside class="teacher-exam-flow-card">
+
+        <span class="exam-kicker">
+            Builder
+        </span>
+
+        <h2>
+            Exam Workflow
+        </h2>
+
+        <a href="{% url 'exams:teacher_exam_edit' exam.pk %}">
+            <span>01</span>
+            Settings
+        </a>
+
+        <a href="{% url 'exams:teacher_exam_question_bank' exam.pk %}">
+            <span>02</span>
+            Question Bank
+        </a>
+
+        <a href="{% url 'exams:teacher_exam_structure' exam.pk %}">
+            <span>03</span>
+            Structure & Points
+        </a>
+
+        <a href="{% url 'exams:teacher_exam_publish' exam.pk %}">
+            <span>04</span>
+            Publish
+        </a>
+
+    </aside>
+
+</div>
+
+
+<section class="teacher-exam-question-section">
+
+    <div class="exam-section-heading">
+
+        <div>
+
+            <span class="exam-kicker">
+                Assessment Structure
+            </span>
+
+            <h2>
+                Questions
+            </h2>
+
+        </div>
+
+        {% if exam.status == "DRAFT" %}
+
+        <a
+            href="{% url 'exams:teacher_exam_structure' exam.pk %}"
+            class="exam-secondary-button"
+        >
+            Edit Structure
+        </a>
+
+        {% endif %}
+
+    </div>
+
+
+    {% if exam_questions %}
+
+    <div class="exam-table-shell">
+
+        <table class="exam-table">
+
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Question</th>
+                    <th>Points</th>
+                    <th>Required</th>
+                    <th>Version</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for item in exam_questions %}
+
+            <tr>
+
+                <td>
+                    #{{ item.order }}
+                </td>
+
+                <td>
+                    <strong>
+                        {{ item.question.question_text }}
+                    </strong>
+                </td>
+
+                <td>
+                    {{ item.points }}
+                </td>
+
+                <td>
+                    {{ item.required|yesno:"Yes,No" }}
+                </td>
+
+                <td>
+                    v{{ item.question_version }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="exam-empty-state">
+
+        <div class="exam-empty-icon">
+            +
+        </div>
+
+        <div>
+
+            <h3>
+                No questions yet
+            </h3>
+
+            <p>
+                Add questions from your approved question bank.
+            </p>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</section>
 
 {% endblock %}

@@ -2,83 +2,180 @@
 
 {% block content %}
 
-<h1>{{ exam.title }}</h1>
+<section class="exam-preview-hero">
 
-<p>
-    <strong>Mode:</strong>
-    {{ exam.get_mode_display }}
-</p>
+    <span class="exam-kicker">
+        Exam Preview
+    </span>
 
-<p>
-    <strong>Duration:</strong>
-    {{ exam.duration_minutes }} minutes
-</p>
+    <h1>
+        {{ exam.title }}
+    </h1>
 
-<p>
-    <strong>Maximum attempts:</strong>
-    {{ exam.max_attempts }}
-</p>
+    <p>
+        Review the assessment settings before starting.
+    </p>
 
-<p>
-    <strong>Attempts used:</strong>
-    {{ attempt_count }}
-</p>
-
-<p>
-    <strong>Starts:</strong>
-    {{ exam.starts_at|default:"Immediately" }}
-</p>
-
-<p>
-    <strong>Ends:</strong>
-    {{ exam.ends_at|default:"No fixed closing time" }}
-</p>
-
-{% if exam.instructions %}
-
-<h3>Instructions</h3>
-
-{{ exam.instructions|linebreaks }}
-
-{% endif %}
+</section>
 
 
-{% if active_attempt %}
+<div class="exam-preview-grid">
 
-<form
-    method="post"
-    action="{% url 'exams_student:start' exam.pk %}"
->
+    <section class="exam-preview-main">
 
-    {% csrf_token %}
+        <div class="exam-preview-stats">
 
-    <button type="submit">
-        Continue Existing Attempt
-    </button>
+            <div>
+                <span>Mode</span>
+                <strong>{{ exam.get_mode_display }}</strong>
+            </div>
 
-</form>
+            <div>
+                <span>Duration</span>
+                <strong>{{ exam.duration_minutes }} min</strong>
+            </div>
 
-{% elif can_start %}
+            <div>
+                <span>Attempts</span>
+                <strong>
+                    {{ attempt_count }} / {{ exam.max_attempts }}
+                </strong>
+            </div>
 
-<form
-    method="post"
-    action="{% url 'exams_student:start' exam.pk %}"
->
+            <div>
+                <span>Status</span>
+                <strong>Ready</strong>
+            </div>
 
-    {% csrf_token %}
+        </div>
 
-    <button type="submit">
-        Start Exam
-    </button>
 
-</form>
+        <div class="exam-preview-schedule">
 
-{% else %}
+            <div>
+                <span>Available from</span>
+                <strong>
+                    {{ exam.starts_at|date:"M d, Y · H:i"|default:"Immediately" }}
+                </strong>
+            </div>
 
-<p>
-    This exam cannot currently be started.
-</p>
+            <div>
+                <span>Closes</span>
+                <strong>
+                    {{ exam.ends_at|date:"M d, Y · H:i"|default:"No fixed closing time" }}
+                </strong>
+            </div>
 
-{% endif %}
+        </div>
+
+
+        {% if exam.instructions %}
+
+        <div class="exam-instructions">
+
+            <span class="exam-kicker">
+                Instructions
+            </span>
+
+            <div>
+                {{ exam.instructions|linebreaks }}
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <div class="exam-preview-actions">
+
+            {% if active_attempt %}
+
+                <form
+                    method="post"
+                    action="{% url 'exams_student:start' exam.pk %}"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="exam-open-button"
+                    >
+                        Continue Existing Attempt →
+                    </button>
+                </form>
+
+            {% elif can_start %}
+
+                <form
+                    method="post"
+                    action="{% url 'exams_student:start' exam.pk %}"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="exam-open-button"
+                    >
+                        Start Exam →
+                    </button>
+                </form>
+
+            {% else %}
+
+                <div class="exam-unavailable">
+                    This exam cannot currently be started.
+                </div>
+
+            {% endif %}
+
+            <a
+                href="{% url 'exams_student:home' %}"
+                class="exam-secondary-button"
+            >
+                Back
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <aside class="exam-preview-side">
+
+        <span class="exam-kicker">
+            Checklist
+        </span>
+
+        <h3>
+            Before starting
+        </h3>
+
+        <div class="exam-preview-checklist">
+
+            <div>
+                <span>✓</span>
+                Stable internet connection
+            </div>
+
+            <div>
+                <span>✓</span>
+                Enough uninterrupted time
+            </div>
+
+            <div>
+                <span>✓</span>
+                Review the instructions
+            </div>
+
+            <div>
+                <span>✓</span>
+                Submit before the timer expires
+            </div>
+
+        </div>
+
+    </aside>
+
+</div>
 
 {% endblock %}

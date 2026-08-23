@@ -1,92 +1,146 @@
 {% extends "exams/teacher/base.html" %}
 
 {% block title %}
-Exam Structure - AeroESP
+Exam Structure · AeroESP
 {% endblock %}
 
 {% block content %}
 
-<h1>Exam Structure</h1>
+<section class="exam-builder-page">
 
-<p>
-    <strong>{{ exam.title }}</strong>
-</p>
+    <div class="exam-builder-page-header">
 
-<form method="post">
+        <div>
 
-{% csrf_token %}
+            <span class="exam-kicker">
+                Structure & Scoring
+            </span>
 
-{{ formset.management_form }}
+            <h1>
+                Exam Structure
+            </h1>
 
-{{ formset.non_form_errors }}
+            <p>
+                {{ exam.title }}
+            </p>
 
-<table>
+        </div>
 
-<thead>
-<tr>
-    <th>Question</th>
-    <th>Order</th>
-    <th>Points</th>
-    <th>Required</th>
-    <th>Remove</th>
-</tr>
-</thead>
+        <a
+            href="{% url 'exams:teacher_exam_question_bank' exam.pk %}"
+            class="exam-secondary-button"
+        >
+            + Add Questions
+        </a>
 
-<tbody>
+    </div>
 
-{% for form in formset %}
 
-<tr>
+    <form method="post">
 
-    <td>
-        {{ form.id }}
+        {% csrf_token %}
 
-        {{ form.instance.question.question_text }}
+        {{ formset.management_form }}
 
-        {{ form.non_field_errors }}
-    </td>
+        {{ formset.non_form_errors }}
 
-    <td>
-        {{ form.order }}
-        {{ form.order.errors }}
-    </td>
 
-    <td>
-        {{ form.points }}
-        {{ form.points.errors }}
-    </td>
+        <div class="exam-table-shell">
 
-    <td>
-        {{ form.required }}
-        {{ form.required.errors }}
-    </td>
+            <table class="exam-table exam-structure-table">
 
-    <td>
-        {{ form.DELETE }}
-    </td>
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Order</th>
+                        <th>Points</th>
+                        <th>Required</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
 
-</tr>
+                <tbody>
 
-{% empty %}
+                {% for form in formset %}
 
-<tr>
-    <td colspan="5">
-        No questions are currently in this exam.
-    </td>
-</tr>
+                    <tr>
 
-{% endfor %}
+                        <td class="exam-structure-question">
 
-</tbody>
+                            {{ form.id }}
 
-</table>
+                            <strong>
+                                {{ form.instance.question.question_text }}
+                            </strong>
 
-<br>
+                            {{ form.non_field_errors }}
 
-<button type="submit">
-    Save Structure
-</button>
+                        </td>
 
-</form>
+                        <td>
+                            {{ form.order }}
+                            {{ form.order.errors }}
+                        </td>
+
+                        <td>
+                            {{ form.points }}
+                            {{ form.points.errors }}
+                        </td>
+
+                        <td>
+                            {{ form.required }}
+                            {{ form.required.errors }}
+                        </td>
+
+                        <td>
+                            {{ form.DELETE }}
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="5">
+
+                            <div class="exam-table-empty">
+                                No questions are currently in this exam.
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <div class="exam-builder-actions">
+
+            <a
+                href="{% url 'exams:teacher_exam_detail' exam.pk %}"
+                class="exam-secondary-button"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="exam-open-button"
+            >
+                Save Structure
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
 
 {% endblock %}

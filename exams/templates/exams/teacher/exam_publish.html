@@ -1,73 +1,98 @@
 {% extends "exams/teacher/base.html" %}
 
 {% block title %}
-Publish Exam - AeroESP
+Publish {{ exam.title }} · AeroESP
 {% endblock %}
 
 {% block content %}
 
-<h1>Publish Exam</h1>
+<section class="exam-publish-page">
 
-<p>
-    <strong>{{ exam.title }}</strong>
-</p>
+    <span class="exam-kicker">
+        Final Review
+    </span>
 
-<p>
-    Questions:
-    {{ question_count }}
-</p>
+    <h1>
+        Publish Exam
+    </h1>
 
-<p>
-    Total Points:
-    {{ total_points }}
-</p>
+    <p class="exam-publish-lead">
+        Review the configuration before making this assessment available.
+    </p>
 
-<p>
-    Duration:
-    {{ exam.duration_minutes }} minutes
-</p>
 
-<p>
-    Maximum Attempts:
-    {{ exam.max_attempts }}
-</p>
+    <div class="exam-publish-summary">
 
-<p>
-    Start:
-    {{ exam.starts_at|default:"Not specified" }}
-</p>
+        <div>
+            <span>Exam</span>
+            <strong>{{ exam.title }}</strong>
+        </div>
 
-<p>
-    End:
-    {{ exam.ends_at|default:"Not specified" }}
-</p>
+        <div>
+            <span>Questions</span>
+            <strong>{{ question_count }}</strong>
+        </div>
 
-<hr>
+        <div>
+            <span>Total Points</span>
+            <strong>{{ total_points }}</strong>
+        </div>
 
-<p>
-    Publishing will freeze a snapshot of every question used
-    in this exam.
-</p>
+        <div>
+            <span>Duration</span>
+            <strong>{{ exam.duration_minutes }} min</strong>
+        </div>
 
-<p>
-    After publication, normal Teacher Exam Builder editing
-    will be disabled.
-</p>
+        <div>
+            <span>Attempts</span>
+            <strong>{{ exam.max_attempts }}</strong>
+        </div>
 
-<form method="post">
+        <div>
+            <span>Mode</span>
+            <strong>{{ exam.get_mode_display }}</strong>
+        </div>
 
-    {% csrf_token %}
+    </div>
 
-    <button type="submit">
-        Confirm Publish
-    </button>
 
-</form>
+    <div class="exam-publish-warning">
 
-<br>
+        <strong>
+            Publishing freezes the question versions.
+        </strong>
 
-<a href="{% url 'exams:teacher_exam_detail' exam.pk %}">
-    Cancel
-</a>
+        <p>
+            Normal Exam Builder editing will be disabled after publication.
+        </p>
+
+    </div>
+
+
+    <div class="exam-publish-actions">
+
+        <a
+            href="{% url 'exams:teacher_exam_detail' exam.pk %}"
+            class="exam-secondary-button"
+        >
+            Cancel
+        </a>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="exam-publish-button"
+            >
+                Confirm & Publish
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
 
 {% endblock %}
