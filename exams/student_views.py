@@ -1786,3 +1786,185 @@ def student_save_flag(
         }
     )
 
+
+@student_required
+@require_POST
+def student_security_event(
+    request,
+    attempt_id,
+):
+    """
+    Record browser-side integrity signals for SECURE exams.
+
+    These events are evidence only.
+    They do not automatically invalidate an attempt.
+    """
+
+    from .models import ExamEvent
+
+    attempt = get_object_or_404(
+        ExamAttempt.objects
+        .select_related(
+            "exam",
+        ),
+        pk=attempt_id,
+        student=request.user,
+    )
+
+    if (
+        attempt.status
+        != ExamAttempt.Status.IN_PROGRESS
+    ):
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "Attempt is no longer active."
+                ),
+            },
+            status=409,
+        )
+
+    if (
+        attempt.exam.mode
+        != Exam.Mode.SECURE
+    ):
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "Security telemetry is only "
+                    "enabled for secure exams."
+                ),
+            },
+            status=400,
+        )
+
+    if _deadline_passed(
+        attempt
+    ):
+        _finalize_attempt(
+            attempt,
+            auto_submit=True,
+        )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "expired": True,
+            },
+            status=409,
+        )
+
+    kind = (
+        request.POST
+        .get(
+            "kind",
+            "",
+        )
+        .strip()
+        .upper()
+    )
+
+    allowed_kinds = {
+        "SECURE_MODE_STARTED",
+        "TAB_HIDDEN",
+        "WINDOW_BLUR",
+        "FULLSCREEN_EXIT",
+        "FULLSCREEN_REQUEST_FAILED",
+        "COPY_BLOCKED",
+        "CUT_BLOCKED",
+        "PASTE_BLOCKED",
+        "CONTEXT_MENU_BLOCKED",
+        "DRAG_BLOCKED",
+        "DROP_BLOCKED",
+        "SHORTCUT_BLOCKED",
+        "PRINT_ATTEMPT",
+        "SCREENSHOT_KEY",
+        "TRANSLATION_DETECTED",
+    }
+
+    if kind not in allowed_kinds:
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": (
+                    "Unsupported security event."
+                ),
+            },
+            status=400,
+        )
+
+    detail = (
+        request.POST
+        .get(
+            "detail",
+            "",
+        )
+        .strip()
+    )[:250]
+
+    client_time = (
+        request.POST
+        .get(
+            "client_time",
+            "",
+        )
+        .strip()
+    )[:100]
+
+    visibility = (
+        request.POST
+        .get(
+            "visibility",
+            "",
+        )
+        .strip()
+    )[:30]
+
+    fullscreen = (
+        request.POST
+        .get(
+            "fullscreen",
+            "",
+        )
+        .strip()
+    )[:20]
+
+    if kind == "SECURE_MODE_STARTED":
+
+        event_type = (
+            ExamEvent
+            .EventType
+            .SECURE_MODE_STARTED
+        )
+
+    else:
+
+        event_type = (
+            ExamEvent
+            .EventType
+            .SECURITY_VIOLATION
+        )
+
+    ExamEvent.objects.create(
+        attempt=attempt,
+        event_type=event_type,
+        payload={
+            "kind": kind,
+            "detail": detail,
+            "client_time": client_time,
+            "visibility": visibility,
+            "fullscreen": fullscreen,
+        },
+    )
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "kind": kind,
+        }
+    )
+
+

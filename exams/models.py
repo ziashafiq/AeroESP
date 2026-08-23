@@ -650,6 +650,16 @@ class ExamEvent(models.Model):
             "Reconnected",
         )
 
+        SECURE_MODE_STARTED = (
+            "SECURE_MODE_STARTED",
+            "Secure Mode Started",
+        )
+
+        SECURITY_VIOLATION = (
+            "SECURITY_VIOLATION",
+            "Security Violation",
+        )
+
     attempt = models.ForeignKey(
         ExamAttempt,
         on_delete=models.CASCADE,

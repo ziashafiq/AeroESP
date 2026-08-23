@@ -54,6 +54,112 @@ aeroesp-app exam-focus-mode
 </section>
 
 
+{% if exam.mode == "SECURE" %}
+
+<div class="exam-secure-banner">
+
+    <div>
+
+        <span class="exam-secure-indicator"></span>
+
+        <strong>
+            Secure Exam Mode
+        </strong>
+
+        <span>
+            Translation and clipboard assistance restricted
+        </span>
+
+    </div>
+
+    <div class="exam-secure-event-counter">
+
+        Integrity events
+
+        <strong id="security-event-count">
+            0
+        </strong>
+
+    </div>
+
+</div>
+
+
+<div
+    class="secure-mode-overlay"
+    id="secure-mode-overlay"
+>
+
+    <div class="secure-mode-dialog">
+
+        <div class="secure-mode-shield">
+            S
+        </div>
+
+        <span class="exam-kicker">
+            Secure Assessment
+        </span>
+
+        <h2>
+            Enter Secure Exam Mode
+        </h2>
+
+        <p>
+            During this assessment, translation,
+            copy/paste, printing, context menus and
+            common browser shortcuts are restricted.
+            Tab switching, focus loss and fullscreen
+            exits may be recorded for the instructor.
+        </p>
+
+        <div class="secure-mode-rules">
+
+            <span>
+                No translation tools
+            </span>
+
+            <span>
+                No clipboard use
+            </span>
+
+            <span>
+                Fullscreen recommended
+            </span>
+
+            <span>
+                Focus changes recorded
+            </span>
+
+        </div>
+
+        <button
+            type="button"
+            class="exam-open-button"
+            id="secure-mode-button"
+        >
+            Enter Secure Mode
+        </button>
+
+        <small>
+            Your exam timer is already running.
+        </small>
+
+    </div>
+
+</div>
+
+
+<div
+    class="exam-security-toast"
+    id="exam-security-toast"
+    hidden
+>
+    Action blocked and recorded.
+</div>
+
+{% endif %}
+
+
 <div class="exam-progress-strip">
 
     <div>
@@ -79,7 +185,12 @@ aeroesp-app exam-focus-mode
 </div>
 
 
-<div class="exam-runner-layout">
+<div
+    class="exam-runner-layout{% if exam.mode == 'SECURE' %} notranslate secure-exam-content{% endif %}"
+    {% if exam.mode == "SECURE" %}
+        translate="no"
+    {% endif %}
+>
 
 
     <main class="exam-question-column">
@@ -366,6 +477,13 @@ const deadline =
 
 const eventUrl =
     "{% url 'exams_student:event_log' attempt.pk %}";
+
+const secureExam =
+    "{{ exam.mode|escapejs }}"
+    === "SECURE";
+
+const securityEventUrl =
+    "{% url 'exams_student:security_event' attempt.pk %}";
 
 let timerFinished = false;
 
@@ -1197,6 +1315,687 @@ submitModal.addEventListener(
         }
     }
 );
+
+
+
+
+/* =====================================================
+   SEC-01A Secure Exam Controls
+   ===================================================== */
+
+let secureSessionStarted = false;
+
+let securityEventCount = 0;
+
+const securityEventLastSent = {};
+
+
+function showSecurityWarning(
+    message
+) {
+
+    const toast =
+        document.getElementById(
+            "exam-security-toast"
+        );
+
+    if (!toast) {
+        return;
+    }
+
+    toast.textContent =
+        message
+        || "Action blocked and recorded.";
+
+    toast.hidden =
+        false;
+
+    window.clearTimeout(
+        toast._hideTimer
+    );
+
+    toast._hideTimer =
+        window.setTimeout(
+            function() {
+                toast.hidden = true;
+            },
+            2200
+        );
+}
+
+
+async function recordSecurityEvent(
+    kind,
+    detail = ""
+) {
+
+    if (!secureExam) {
+        return;
+    }
+
+    const now =
+        Date.now();
+
+    const previous =
+        securityEventLastSent[
+            kind
+        ] || 0;
+
+    /*
+    Debounce repeated browser events so
+    the database cannot be flooded by a
+    single continuous action.
+    */
+    if (
+        kind !== "SECURE_MODE_STARTED"
+        && now - previous < 1200
+    ) {
+        return;
+    }
+
+    securityEventLastSent[
+        kind
+    ] = now;
+
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "csrfmiddlewaretoken",
+        csrfToken
+    );
+
+    formData.append(
+        "kind",
+        kind
+    );
+
+    formData.append(
+        "detail",
+        String(
+            detail || ""
+        ).slice(
+            0,
+            250
+        )
+    );
+
+    formData.append(
+        "client_time",
+        new Date()
+        .toISOString()
+    );
+
+    formData.append(
+        "visibility",
+        document.visibilityState
+    );
+
+    formData.append(
+        "fullscreen",
+        document.fullscreenElement
+            ? "yes"
+            : "no"
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                securityEventUrl,
+                {
+                    method: "POST",
+                    body: formData,
+                    keepalive: true,
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            response.ok
+            && data.ok
+            && kind !== "SECURE_MODE_STARTED"
+        ) {
+
+            securityEventCount += 1;
+
+            const counter =
+                document.getElementById(
+                    "security-event-count"
+                );
+
+            if (counter) {
+
+                counter.textContent =
+                    String(
+                        securityEventCount
+                    );
+            }
+        }
+
+    } catch (error) {
+
+        /*
+        Integrity telemetry failure must
+        never block answer autosave.
+        */
+    }
+}
+
+
+function blockSecureAction(
+    event,
+    kind,
+    detail = ""
+) {
+
+    if (
+        !secureExam
+        || !secureSessionStarted
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    event.stopPropagation();
+
+    recordSecurityEvent(
+        kind,
+        detail
+    );
+
+    showSecurityWarning(
+        "This action is disabled in Secure Exam Mode."
+    );
+}
+
+
+/* -----------------------------------------------------
+   Translation suppression
+   ----------------------------------------------------- */
+
+if (secureExam) {
+
+    document.documentElement
+        .setAttribute(
+            "translate",
+            "no"
+        );
+
+    document.body
+        .setAttribute(
+            "translate",
+            "no"
+        );
+
+    document.documentElement
+        .classList.add(
+            "notranslate"
+        );
+
+    document.body
+        .classList.add(
+            "notranslate"
+        );
+
+    const translateMeta =
+        document.createElement(
+            "meta"
+        );
+
+    translateMeta.name =
+        "google";
+
+    translateMeta.content =
+        "notranslate";
+
+    document.head.appendChild(
+        translateMeta
+    );
+}
+
+
+/*
+Best-effort detection for Google Translate style
+DOM modifications. This cannot detect every browser
+extension or external device.
+*/
+function detectTranslationState() {
+
+    if (
+        !secureExam
+        || !secureSessionStarted
+    ) {
+        return;
+    }
+
+    const htmlClass =
+        String(
+            document.documentElement
+            .className
+            || ""
+        );
+
+    const translatedClass =
+        htmlClass.includes(
+            "translated-ltr"
+        )
+        || htmlClass.includes(
+            "translated-rtl"
+        );
+
+    const translateFrame =
+        document.querySelector(
+            ".goog-te-banner-frame,"
+            + "iframe.goog-te-banner-frame"
+        );
+
+    if (
+        translatedClass
+        || translateFrame
+    ) {
+
+        recordSecurityEvent(
+            "TRANSLATION_DETECTED",
+            "Translation-related DOM state detected."
+        );
+
+        showSecurityWarning(
+            "Translation tools are not allowed in this secure exam."
+        );
+    }
+}
+
+
+/* -----------------------------------------------------
+   Secure mode entry
+   ----------------------------------------------------- */
+
+if (secureExam) {
+
+    const secureButton =
+        document.getElementById(
+            "secure-mode-button"
+        );
+
+    const secureOverlay =
+        document.getElementById(
+            "secure-mode-overlay"
+        );
+
+
+    if (secureButton) {
+
+        secureButton
+        .addEventListener(
+            "click",
+            async function() {
+
+                secureSessionStarted =
+                    true;
+
+                document.body
+                    .classList.add(
+                        "secure-exam-active"
+                    );
+
+                try {
+
+                    if (
+                        !document.fullscreenElement
+                        && document.documentElement
+                        .requestFullscreen
+                    ) {
+
+                        await (
+                            document.documentElement
+                            .requestFullscreen()
+                        );
+                    }
+
+                } catch (error) {
+
+                    recordSecurityEvent(
+                        "FULLSCREEN_REQUEST_FAILED",
+                        String(
+                            error.name
+                            || "Fullscreen unavailable"
+                        )
+                    );
+                }
+
+
+                if (secureOverlay) {
+
+                    secureOverlay.hidden =
+                        true;
+                }
+
+
+                await recordSecurityEvent(
+                    "SECURE_MODE_STARTED",
+                    "Student entered secure exam mode."
+                );
+            }
+        );
+    }
+}
+
+
+/* -----------------------------------------------------
+   Clipboard
+   ----------------------------------------------------- */
+
+document.addEventListener(
+    "copy",
+    function(event) {
+
+        blockSecureAction(
+            event,
+            "COPY_BLOCKED"
+        );
+    },
+    true
+);
+
+
+document.addEventListener(
+    "cut",
+    function(event) {
+
+        blockSecureAction(
+            event,
+            "CUT_BLOCKED"
+        );
+    },
+    true
+);
+
+
+document.addEventListener(
+    "paste",
+    function(event) {
+
+        blockSecureAction(
+            event,
+            "PASTE_BLOCKED"
+        );
+    },
+    true
+);
+
+
+/* -----------------------------------------------------
+   Context menu
+   ----------------------------------------------------- */
+
+document.addEventListener(
+    "contextmenu",
+    function(event) {
+
+        blockSecureAction(
+            event,
+            "CONTEXT_MENU_BLOCKED"
+        );
+    },
+    true
+);
+
+
+/* -----------------------------------------------------
+   Drag / drop
+   ----------------------------------------------------- */
+
+document.addEventListener(
+    "dragstart",
+    function(event) {
+
+        blockSecureAction(
+            event,
+            "DRAG_BLOCKED"
+        );
+    },
+    true
+);
+
+
+document.addEventListener(
+    "drop",
+    function(event) {
+
+        blockSecureAction(
+            event,
+            "DROP_BLOCKED"
+        );
+    },
+    true
+);
+
+
+/* -----------------------------------------------------
+   Browser shortcuts
+   ----------------------------------------------------- */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            !secureExam
+            || !secureSessionStarted
+        ) {
+            return;
+        }
+
+        const key =
+            String(
+                event.key
+                || ""
+            ).toLowerCase();
+
+
+        if (
+            key === "printscreen"
+        ) {
+
+            recordSecurityEvent(
+                "SCREENSHOT_KEY",
+                "PrintScreen key detected."
+            );
+
+            showSecurityWarning(
+                "Screenshot activity may be recorded."
+            );
+
+            return;
+        }
+
+
+        const ctrlOrMeta =
+            event.ctrlKey
+            || event.metaKey;
+
+
+        const blockedCtrlKeys =
+            new Set(
+                [
+                    "c",
+                    "v",
+                    "x",
+                    "p",
+                    "s",
+                    "u",
+                    "f",
+                    "r",
+                ]
+            );
+
+
+        const developerShortcut =
+            (
+                ctrlOrMeta
+                && event.shiftKey
+                && [
+                    "i",
+                    "j",
+                    "c",
+                ].includes(
+                    key
+                )
+            );
+
+
+        const blocked =
+            (
+                ctrlOrMeta
+                && blockedCtrlKeys
+                    .has(
+                        key
+                    )
+            )
+            || developerShortcut
+            || key === "f12"
+            || key === "f5";
+
+
+        if (blocked) {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+            recordSecurityEvent(
+                "SHORTCUT_BLOCKED",
+                (
+                    "key="
+                    + key
+                    + "; ctrl="
+                    + String(
+                        ctrlOrMeta
+                    )
+                    + "; shift="
+                    + String(
+                        event.shiftKey
+                    )
+                )
+            );
+
+            showSecurityWarning(
+                "This browser shortcut is disabled during the secure exam."
+            );
+        }
+    },
+    true
+);
+
+
+/* -----------------------------------------------------
+   Tab / focus monitoring
+   ----------------------------------------------------- */
+
+document.addEventListener(
+    "visibilitychange",
+    function() {
+
+        if (
+            secureExam
+            && secureSessionStarted
+            && document.visibilityState
+                === "hidden"
+        ) {
+
+            recordSecurityEvent(
+                "TAB_HIDDEN",
+                "Exam tab became hidden."
+            );
+        }
+    }
+);
+
+
+window.addEventListener(
+    "blur",
+    function() {
+
+        if (
+            secureExam
+            && secureSessionStarted
+        ) {
+
+            recordSecurityEvent(
+                "WINDOW_BLUR",
+                "Exam window lost focus."
+            );
+        }
+    }
+);
+
+
+/* -----------------------------------------------------
+   Fullscreen monitoring
+   ----------------------------------------------------- */
+
+document.addEventListener(
+    "fullscreenchange",
+    function() {
+
+        if (
+            secureExam
+            && secureSessionStarted
+            && !document.fullscreenElement
+        ) {
+
+            recordSecurityEvent(
+                "FULLSCREEN_EXIT",
+                "Fullscreen mode exited."
+            );
+
+            showSecurityWarning(
+                "Fullscreen exit recorded."
+            );
+        }
+    }
+);
+
+
+/* -----------------------------------------------------
+   Printing
+   ----------------------------------------------------- */
+
+window.addEventListener(
+    "beforeprint",
+    function() {
+
+        if (
+            secureExam
+            && secureSessionStarted
+        ) {
+
+            recordSecurityEvent(
+                "PRINT_ATTEMPT",
+                "Browser print event detected."
+            );
+        }
+    }
+);
+
+
+/* -----------------------------------------------------
+   Translation check
+   ----------------------------------------------------- */
+
+if (secureExam) {
+
+    window.setInterval(
+        detectTranslationState,
+        2000
+    );
+}
 
 
 refreshExamState();

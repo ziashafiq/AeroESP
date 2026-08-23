@@ -55,6 +55,17 @@ urlpatterns = [
         name="save_flag",
     ),
 
+
+    path(
+        (
+            "attempt/"
+            "<int:attempt_id>/"
+            "security-event/"
+        ),
+        student_views.student_security_event,
+        name="security_event",
+    ),
+
     path(
         (
             "attempt/"
