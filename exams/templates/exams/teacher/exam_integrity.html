@@ -1,0 +1,191 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+{{ exam.title }} Integrity · AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+
+    <a href="{% url 'exams:teacher_exam_detail' exam.pk %}">
+        {{ exam.title }}
+    </a>
+
+    <span>/</span>
+
+    Integrity
+
+</div>
+
+
+<section class="integrity-hero">
+
+    <div>
+
+        <span class="exam-kicker">
+            Secure Exam
+        </span>
+
+        <h1>
+            {{ exam.title }}
+        </h1>
+
+        <p>
+            Evidence-based integrity review for all attempts.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{% url 'exams:teacher_exam_integrity_export' exam.pk %}"
+        class="exam-secondary-button"
+    >
+        Export CSV
+    </a>
+
+</section>
+
+
+<div class="integrity-kpi-grid four">
+
+    <article>
+        <span>Attempts</span>
+        <strong>{{ attempt_count }}</strong>
+    </article>
+
+    <article>
+        <span>Low Risk</span>
+        <strong>{{ low_count }}</strong>
+    </article>
+
+    <article>
+        <span>Medium Risk</span>
+        <strong>{{ medium_count }}</strong>
+    </article>
+
+    <article>
+        <span>High Risk</span>
+        <strong>{{ high_count }}</strong>
+    </article>
+
+</div>
+
+
+<section class="integrity-section">
+
+    <div class="integrity-table-shell">
+
+        <table class="integrity-table">
+
+            <thead>
+
+                <tr>
+                    <th>Student</th>
+                    <th>Attempt</th>
+                    <th>Status</th>
+                    <th>Exam Score</th>
+                    <th>Integrity Events</th>
+                    <th>Risk</th>
+                    <th>Teacher Decision</th>
+                    <th></th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for row in rows %}
+
+            <tr>
+
+                <td>
+                    <strong>
+                        {{ row.attempt.student.username }}
+                    </strong>
+                </td>
+
+                <td>
+                    #{{ row.attempt.attempt_number }}
+                </td>
+
+                <td>
+                    {{ row.attempt.get_status_display }}
+                </td>
+
+                <td>
+                    {% if row.attempt.percentage != None %}
+                        {{ row.attempt.percentage }}%
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+
+                <td>
+                    {{ row.summary.event_count }}
+                </td>
+
+                <td>
+
+                    <span class="integrity-risk integrity-risk-{{ row.summary.risk_level|lower }}">
+                        {{ row.summary.risk_level }}
+                        ·
+                        {{ row.summary.score }}
+                    </span>
+
+                </td>
+
+                <td>
+                    {{ row.attempt.get_integrity_decision_display }}
+                </td>
+
+                <td>
+
+                    <a
+                        href="{% url 'exams:teacher_attempt_integrity' exam.pk row.attempt.pk %}"
+                        class="exam-secondary-button"
+                    >
+                        Evidence
+                    </a>
+
+                </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+                <td colspan="8">
+                    No exam attempts yet.
+                </td>
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<div class="integrity-method-note">
+
+    <strong>
+        Interpretation
+    </strong>
+
+    <p>
+        The integrity score is a rule-based prioritization
+        signal derived from recorded browser events.
+        It is not proof of misconduct.
+        The instructor makes the final decision after
+        reviewing the evidence.
+    </p>
+
+</div>
+
+{% endblock %}

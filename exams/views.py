@@ -1,3 +1,4 @@
+import csv
 import secrets
 import string
 
@@ -18,6 +19,8 @@ from django.db.models import (
     Q,
     Sum,
 )
+from django.http import HttpResponse
+
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -41,6 +44,8 @@ from .forms import (
 
 from .models import (
     Exam,
+    ExamAttempt,
+    ExamEvent,
     ExamQuestion,
 )
 
@@ -984,3 +989,750 @@ def teacher_exam_publish(
             ),
         },
     )
+
+
+# =========================================================
+# UI-07 Exam Integrity Analytics
+# =========================================================
+
+INTEGRITY_EVENT_WEIGHTS = {
+    "TAB_HIDDEN": 8,
+    "WINDOW_BLUR": 4,
+    "FULLSCREEN_EXIT": 10,
+    "FULLSCREEN_REQUEST_FAILED": 0,
+    "COPY_BLOCKED": 6,
+    "CUT_BLOCKED": 6,
+    "PASTE_BLOCKED": 8,
+    "CONTEXT_MENU_BLOCKED": 2,
+    "DRAG_BLOCKED": 2,
+    "DROP_BLOCKED": 2,
+    "SHORTCUT_BLOCKED": 5,
+    "PRINT_ATTEMPT": 12,
+    "SCREENSHOT_KEY": 12,
+    "TRANSLATION_DETECTED": 18,
+}
+
+
+INTEGRITY_EVENT_LABELS = {
+    "TAB_HIDDEN": "Tab switch / hidden tab",
+    "WINDOW_BLUR": "Window focus lost",
+    "FULLSCREEN_EXIT": "Fullscreen exit",
+    "FULLSCREEN_REQUEST_FAILED": (
+        "Fullscreen unavailable"
+    ),
+    "COPY_BLOCKED": "Copy attempt",
+    "CUT_BLOCKED": "Cut attempt",
+    "PASTE_BLOCKED": "Paste attempt",
+    "CONTEXT_MENU_BLOCKED": (
+        "Context menu attempt"
+    ),
+    "DRAG_BLOCKED": "Drag attempt",
+    "DROP_BLOCKED": "Drop attempt",
+    "SHORTCUT_BLOCKED": (
+        "Restricted browser shortcut"
+    ),
+    "PRINT_ATTEMPT": "Print attempt",
+    "SCREENSHOT_KEY": "Screenshot key",
+    "TRANSLATION_DETECTED": (
+        "Translation signal detected"
+    ),
+}
+
+
+def _build_integrity_summary(
+    attempt,
+):
+    """
+    Build evidence-based browser integrity metrics.
+
+    The score is a rule-based prioritization signal.
+    It is not an automatic cheating verdict.
+    """
+
+    events = list(
+        attempt.events
+        .all()
+        .order_by(
+            "occurred_at",
+            "id",
+        )
+    )
+
+    security_events = []
+    kind_counts = {}
+
+    secure_mode_started = False
+
+    for event in events:
+
+        if (
+            event.event_type
+            == ExamEvent.EventType.SECURE_MODE_STARTED
+        ):
+            secure_mode_started = True
+            continue
+
+        if (
+            event.event_type
+            != ExamEvent.EventType.SECURITY_VIOLATION
+        ):
+            continue
+
+        payload = (
+            event.payload
+            if isinstance(
+                event.payload,
+                dict,
+            )
+            else {}
+        )
+
+        kind = str(
+            payload.get(
+                "kind",
+                "UNKNOWN",
+            )
+        ).strip().upper()
+
+        kind_counts[kind] = (
+            kind_counts.get(
+                kind,
+                0,
+            )
+            + 1
+        )
+
+        weight = (
+            INTEGRITY_EVENT_WEIGHTS
+            .get(
+                kind,
+                1,
+            )
+        )
+
+        security_events.append(
+            {
+                "event": event,
+                "kind": kind,
+                "label": (
+                    INTEGRITY_EVENT_LABELS
+                    .get(
+                        kind,
+                        kind.replace(
+                            "_",
+                            " ",
+                        ).title(),
+                    )
+                ),
+                "weight": weight,
+                "payload": payload,
+            }
+        )
+
+    raw_score = 0
+
+    contributions = []
+
+    for kind, count in (
+        kind_counts.items()
+    ):
+
+        weight = (
+            INTEGRITY_EVENT_WEIGHTS
+            .get(
+                kind,
+                1,
+            )
+        )
+
+        contribution = (
+            weight * count
+        )
+
+        raw_score += contribution
+
+        if contribution > 0:
+
+            contributions.append(
+                {
+                    "kind": kind,
+                    "label": (
+                        INTEGRITY_EVENT_LABELS
+                        .get(
+                            kind,
+                            kind.replace(
+                                "_",
+                                " ",
+                            ).title(),
+                        )
+                    ),
+                    "count": count,
+                    "weight": weight,
+                    "contribution": (
+                        contribution
+                    ),
+                }
+            )
+
+    score = min(
+        int(raw_score),
+        100,
+    )
+
+    if score >= 30:
+
+        risk_level = "HIGH"
+
+    elif score >= 10:
+
+        risk_level = "MEDIUM"
+
+    else:
+
+        risk_level = "LOW"
+
+    contributions.sort(
+        key=lambda item: (
+            item[
+                "contribution"
+            ],
+            item["count"],
+        ),
+        reverse=True,
+    )
+
+    return {
+        "score": score,
+        "raw_score": raw_score,
+        "risk_level": risk_level,
+        "event_count": len(
+            security_events
+        ),
+        "secure_mode_started": (
+            secure_mode_started
+        ),
+        "kind_counts": kind_counts,
+        "events": security_events,
+        "reasons": contributions[:5],
+    }
+
+
+@approved_teacher_required
+def teacher_integrity_dashboard(
+    request,
+):
+
+    secure_exams = (
+        Exam.objects
+        .filter(
+            owner=request.user,
+            mode=Exam.Mode.SECURE,
+        )
+        .prefetch_related(
+            "attempts",
+            "attempts__student",
+            "attempts__events",
+        )
+        .order_by(
+            "-created_at",
+        )
+    )
+
+    exam_rows = []
+
+    total_attempts = 0
+    high_risk_count = 0
+    medium_risk_count = 0
+    pending_review_count = 0
+
+    recent_attempts = []
+
+    for exam in secure_exams:
+
+        attempt_rows = []
+
+        for attempt in (
+            exam.attempts
+            .all()
+            .order_by(
+                "-started_at",
+            )
+        ):
+
+            summary = (
+                _build_integrity_summary(
+                    attempt
+                )
+            )
+
+            attempt_rows.append(
+                {
+                    "attempt": attempt,
+                    "summary": summary,
+                }
+            )
+
+            recent_attempts.append(
+                {
+                    "exam": exam,
+                    "attempt": attempt,
+                    "summary": summary,
+                }
+            )
+
+            total_attempts += 1
+
+            if (
+                summary[
+                    "risk_level"
+                ]
+                == "HIGH"
+            ):
+                high_risk_count += 1
+
+            elif (
+                summary[
+                    "risk_level"
+                ]
+                == "MEDIUM"
+            ):
+                medium_risk_count += 1
+
+            if (
+                attempt.integrity_decision
+                == ExamAttempt
+                .IntegrityDecision
+                .PENDING
+            ):
+                pending_review_count += 1
+
+        exam_rows.append(
+            {
+                "exam": exam,
+                "attempt_count": len(
+                    attempt_rows
+                ),
+                "high_count": sum(
+                    1
+                    for row
+                    in attempt_rows
+                    if (
+                        row[
+                            "summary"
+                        ][
+                            "risk_level"
+                        ]
+                        == "HIGH"
+                    )
+                ),
+                "medium_count": sum(
+                    1
+                    for row
+                    in attempt_rows
+                    if (
+                        row[
+                            "summary"
+                        ][
+                            "risk_level"
+                        ]
+                        == "MEDIUM"
+                    )
+                ),
+            }
+        )
+
+    recent_attempts.sort(
+        key=lambda row: (
+            row[
+                "attempt"
+            ].started_at
+        ),
+        reverse=True,
+    )
+
+    return render(
+        request,
+        "exams/teacher/integrity_dashboard.html",
+        {
+            "exam_rows": exam_rows,
+            "secure_exam_count": (
+                len(
+                    exam_rows
+                )
+            ),
+            "total_attempts": (
+                total_attempts
+            ),
+            "high_risk_count": (
+                high_risk_count
+            ),
+            "medium_risk_count": (
+                medium_risk_count
+            ),
+            "pending_review_count": (
+                pending_review_count
+            ),
+            "recent_attempts": (
+                recent_attempts[:20]
+            ),
+        },
+    )
+
+
+@approved_teacher_required
+def teacher_exam_integrity(
+    request,
+    pk,
+):
+
+    exam = _get_teacher_exam(
+        request,
+        pk,
+    )
+
+    attempts = (
+        exam.attempts
+        .select_related(
+            "student",
+            "integrity_reviewed_by",
+        )
+        .prefetch_related(
+            "events",
+        )
+        .order_by(
+            "-started_at",
+        )
+    )
+
+    rows = []
+
+    for attempt in attempts:
+
+        rows.append(
+            {
+                "attempt": attempt,
+                "summary": (
+                    _build_integrity_summary(
+                        attempt
+                    )
+                ),
+            }
+        )
+
+    return render(
+        request,
+        "exams/teacher/exam_integrity.html",
+        {
+            "exam": exam,
+            "rows": rows,
+            "attempt_count": len(
+                rows
+            ),
+            "high_count": sum(
+                1
+                for row in rows
+                if (
+                    row["summary"]
+                    ["risk_level"]
+                    == "HIGH"
+                )
+            ),
+            "medium_count": sum(
+                1
+                for row in rows
+                if (
+                    row["summary"]
+                    ["risk_level"]
+                    == "MEDIUM"
+                )
+            ),
+            "low_count": sum(
+                1
+                for row in rows
+                if (
+                    row["summary"]
+                    ["risk_level"]
+                    == "LOW"
+                )
+            ),
+        },
+    )
+
+
+@approved_teacher_required
+@require_http_methods(
+    [
+        "GET",
+        "POST",
+    ]
+)
+def teacher_attempt_integrity(
+    request,
+    pk,
+    attempt_id,
+):
+
+    exam = _get_teacher_exam(
+        request,
+        pk,
+    )
+
+    attempt = get_object_or_404(
+        ExamAttempt.objects
+        .select_related(
+            "student",
+            "integrity_reviewed_by",
+        )
+        .prefetch_related(
+            "events",
+        ),
+        pk=attempt_id,
+        exam=exam,
+    )
+
+    if request.method == "POST":
+
+        decision = (
+            request.POST
+            .get(
+                "integrity_decision",
+                "",
+            )
+            .strip()
+        )
+
+        valid_decisions = {
+            value
+            for value, _
+            in (
+                ExamAttempt
+                .IntegrityDecision
+                .choices
+            )
+        }
+
+        if decision not in (
+            valid_decisions
+        ):
+
+            messages.error(
+                request,
+                "Invalid integrity decision.",
+            )
+
+            return redirect(
+                "exams:teacher_attempt_integrity",
+                pk=exam.pk,
+                attempt_id=attempt.pk,
+            )
+
+        note = (
+            request.POST
+            .get(
+                "integrity_review_note",
+                "",
+            )
+            .strip()
+        )[:3000]
+
+        attempt.integrity_decision = (
+            decision
+        )
+
+        attempt.integrity_review_note = (
+            note
+        )
+
+        attempt.integrity_reviewed_by = (
+            request.user
+        )
+
+        attempt.integrity_reviewed_at = (
+            timezone.now()
+        )
+
+        attempt.save(
+            update_fields=[
+                "integrity_decision",
+                "integrity_review_note",
+                "integrity_reviewed_by",
+                "integrity_reviewed_at",
+                "last_activity_at",
+            ]
+        )
+
+        messages.success(
+            request,
+            "Integrity review saved.",
+        )
+
+        return redirect(
+            "exams:teacher_attempt_integrity",
+            pk=exam.pk,
+            attempt_id=attempt.pk,
+        )
+
+    summary = (
+        _build_integrity_summary(
+            attempt
+        )
+    )
+
+    return render(
+        request,
+        "exams/teacher/attempt_integrity.html",
+        {
+            "exam": exam,
+            "attempt": attempt,
+            "summary": summary,
+            "decision_choices": (
+                ExamAttempt
+                .IntegrityDecision
+                .choices
+            ),
+        },
+    )
+
+
+@approved_teacher_required
+def teacher_exam_integrity_export(
+    request,
+    pk,
+):
+
+    exam = _get_teacher_exam(
+        request,
+        pk,
+    )
+
+    attempts = (
+        exam.attempts
+        .select_related(
+            "student",
+            "integrity_reviewed_by",
+        )
+        .prefetch_related(
+            "events",
+        )
+        .order_by(
+            "started_at",
+        )
+    )
+
+    response = HttpResponse(
+        content_type=(
+            "text/csv; charset=utf-8"
+        )
+    )
+
+    response[
+        "Content-Disposition"
+    ] = (
+        'attachment; filename="'
+        f'exam_{exam.pk}_integrity.csv"'
+    )
+
+    response.write(
+        "\ufeff"
+    )
+
+    writer = csv.writer(
+        response
+    )
+
+    writer.writerow(
+        [
+            "exam_id",
+            "exam_title",
+            "attempt_id",
+            "student",
+            "attempt_number",
+            "attempt_status",
+            "percentage",
+            "risk_score",
+            "risk_level",
+            "security_event_count",
+            "secure_mode_started",
+            "integrity_decision",
+            "reviewed_by",
+            "reviewed_at",
+            "review_note",
+            "event_counts",
+        ]
+    )
+
+    for attempt in attempts:
+
+        summary = (
+            _build_integrity_summary(
+                attempt
+            )
+        )
+
+        counts_text = "; ".join(
+            (
+                f"{kind}={count}"
+            )
+            for kind, count
+            in sorted(
+                summary[
+                    "kind_counts"
+                ].items()
+            )
+        )
+
+        writer.writerow(
+            [
+                exam.pk,
+                exam.title,
+                attempt.pk,
+                attempt.student.username,
+                attempt.attempt_number,
+                attempt.status,
+                (
+                    attempt.percentage
+                    if (
+                        attempt.percentage
+                        is not None
+                    )
+                    else ""
+                ),
+                summary["score"],
+                summary[
+                    "risk_level"
+                ],
+                summary[
+                    "event_count"
+                ],
+                summary[
+                    "secure_mode_started"
+                ],
+                attempt.integrity_decision,
+                (
+                    attempt
+                    .integrity_reviewed_by
+                    .username
+                    if (
+                        attempt
+                        .integrity_reviewed_by
+                    )
+                    else ""
+                ),
+                (
+                    attempt
+                    .integrity_reviewed_at
+                    .isoformat()
+                    if (
+                        attempt
+                        .integrity_reviewed_at
+                    )
+                    else ""
+                ),
+                attempt.integrity_review_note,
+                counts_text,
+            ]
+        )
+
+    return response
+
+

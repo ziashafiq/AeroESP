@@ -1,0 +1,242 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+Exam Integrity · AeroESP
+{% endblock %}
+
+{% block content %}
+
+<section class="integrity-hero">
+
+    <div>
+
+        <span class="exam-kicker">
+            Secure Assessment Intelligence
+        </span>
+
+        <h1>
+            Exam Integrity
+        </h1>
+
+        <p>
+            Browser telemetry is used as evidence for
+            instructor review. Risk scores prioritize
+            attention and never make the final decision.
+        </p>
+
+    </div>
+
+</section>
+
+
+<div class="integrity-kpi-grid">
+
+    <article>
+        <span>Secure Exams</span>
+        <strong>{{ secure_exam_count }}</strong>
+    </article>
+
+    <article>
+        <span>Attempts</span>
+        <strong>{{ total_attempts }}</strong>
+    </article>
+
+    <article>
+        <span>High Risk</span>
+        <strong>{{ high_risk_count }}</strong>
+    </article>
+
+    <article>
+        <span>Medium Risk</span>
+        <strong>{{ medium_risk_count }}</strong>
+    </article>
+
+    <article>
+        <span>Pending Review</span>
+        <strong>{{ pending_review_count }}</strong>
+    </article>
+
+</div>
+
+
+<section class="integrity-section">
+
+    <div class="integrity-section-heading">
+
+        <div>
+
+            <span class="exam-kicker">
+                Secure Exams
+            </span>
+
+            <h2>
+                Integrity Workspaces
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="integrity-exam-grid">
+
+        {% for row in exam_rows %}
+
+        <article class="integrity-exam-card">
+
+            <span class="exam-status exam-status-{{ row.exam.status|lower }}">
+                {{ row.exam.get_status_display }}
+            </span>
+
+            <h3>
+                {{ row.exam.title }}
+            </h3>
+
+            <div class="integrity-mini-metrics">
+
+                <div>
+                    <span>Attempts</span>
+                    <strong>{{ row.attempt_count }}</strong>
+                </div>
+
+                <div>
+                    <span>High</span>
+                    <strong>{{ row.high_count }}</strong>
+                </div>
+
+                <div>
+                    <span>Medium</span>
+                    <strong>{{ row.medium_count }}</strong>
+                </div>
+
+            </div>
+
+            <a
+                href="{% url 'exams:teacher_exam_integrity' row.exam.pk %}"
+                class="exam-secondary-button"
+            >
+                View Report
+            </a>
+
+        </article>
+
+        {% empty %}
+
+        <div class="exam-empty-state">
+            No secure exams yet.
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<section class="integrity-section">
+
+    <div class="integrity-section-heading">
+
+        <div>
+
+            <span class="exam-kicker">
+                Review Queue
+            </span>
+
+            <h2>
+                Recent Attempts
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="integrity-table-shell">
+
+        <table class="integrity-table">
+
+            <thead>
+
+                <tr>
+                    <th>Student</th>
+                    <th>Exam</th>
+                    <th>Score</th>
+                    <th>Events</th>
+                    <th>Risk</th>
+                    <th>Decision</th>
+                    <th></th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for row in recent_attempts %}
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            {{ row.attempt.student.username }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        {{ row.exam.title }}
+                    </td>
+
+                    <td>
+                        {% if row.attempt.percentage != None %}
+                            {{ row.attempt.percentage }}%
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ row.summary.event_count }}
+                    </td>
+
+                    <td>
+                        <span class="integrity-risk integrity-risk-{{ row.summary.risk_level|lower }}">
+                            {{ row.summary.risk_level }}
+                            ·
+                            {{ row.summary.score }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ row.attempt.get_integrity_decision_display }}
+                    </td>
+
+                    <td>
+                        <a
+                            href="{% url 'exams:teacher_attempt_integrity' row.exam.pk row.attempt.pk %}"
+                            class="exam-secondary-button"
+                        >
+                            Review
+                        </a>
+                    </td>
+
+                </tr>
+
+            {% empty %}
+
+                <tr>
+                    <td colspan="7">
+                        No secure attempts yet.
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

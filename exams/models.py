@@ -304,6 +304,24 @@ class ExamAttempt(models.Model):
         EXPIRED = "EXPIRED", "Expired"
         CANCELLED = "CANCELLED", "Cancelled"
 
+    class IntegrityDecision(models.TextChoices):
+        PENDING = (
+            "PENDING",
+            "Pending Review",
+        )
+        CLEAR = (
+            "CLEAR",
+            "No Action Required",
+        )
+        REVIEW = (
+            "REVIEW",
+            "Further Review Required",
+        )
+        CONFIRMED = (
+            "CONFIRMED",
+            "Integrity Violation Confirmed",
+        )
+
     exam = models.ForeignKey(
         Exam,
         on_delete=models.PROTECT,
@@ -378,6 +396,29 @@ class ExamAttempt(models.Model):
                 Decimal("100.00"),
             ),
         ],
+    )
+
+    integrity_decision = models.CharField(
+        max_length=20,
+        choices=IntegrityDecision.choices,
+        default=IntegrityDecision.PENDING,
+    )
+
+    integrity_review_note = models.TextField(
+        blank=True,
+    )
+
+    integrity_reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_exam_integrity_attempts",
+    )
+
+    integrity_reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
     )
 
     last_activity_at = models.DateTimeField(

@@ -65,6 +65,39 @@
 </section>
 
 
+{% if exam.mode == "SECURE" %}
+
+<section class="integrity-entry-banner">
+
+    <div>
+
+        <span class="exam-kicker">
+            Assessment Integrity
+        </span>
+
+        <h3>
+            Secure Exam Integrity Report
+        </h3>
+
+        <p>
+            Review browser integrity signals,
+            attempt risk levels and teacher decisions.
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'exams:teacher_exam_integrity' exam.pk %}"
+        class="exam-open-button"
+    >
+        Open Integrity Report
+    </a>
+
+</section>
+
+{% endif %}
+
+
 <div class="teacher-exam-metrics">
 
     <div>

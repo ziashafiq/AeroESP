@@ -1,0 +1,329 @@
+{% extends "exams/teacher/base.html" %}
+
+{% block title %}
+Attempt Integrity · AeroESP
+{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+
+    <a href="{% url 'exams:teacher_exam_integrity' exam.pk %}">
+        {{ exam.title }}
+    </a>
+
+    <span>/</span>
+
+    {{ attempt.student.username }}
+
+</div>
+
+
+<section class="integrity-attempt-hero">
+
+    <div>
+
+        <span class="exam-kicker">
+            Attempt Evidence
+        </span>
+
+        <h1>
+            {{ attempt.student.username }}
+        </h1>
+
+        <p>
+            Attempt #{{ attempt.attempt_number }}
+            ·
+            {{ attempt.get_status_display }}
+        </p>
+
+    </div>
+
+
+    <div class="integrity-score-card integrity-score-{{ summary.risk_level|lower }}">
+
+        <span>
+            Rule-based Risk
+        </span>
+
+        <strong>
+            {{ summary.score }}
+        </strong>
+
+        <small>
+            {{ summary.risk_level }}
+        </small>
+
+    </div>
+
+</section>
+
+
+<div class="integrity-kpi-grid four">
+
+    <article>
+        <span>Security Events</span>
+        <strong>{{ summary.event_count }}</strong>
+    </article>
+
+    <article>
+        <span>Secure Mode</span>
+        <strong>
+            {% if summary.secure_mode_started %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        </strong>
+    </article>
+
+    <article>
+        <span>Exam Score</span>
+        <strong>
+            {% if attempt.percentage != None %}
+                {{ attempt.percentage }}%
+            {% else %}
+                —
+            {% endif %}
+        </strong>
+    </article>
+
+    <article>
+        <span>Decision</span>
+        <strong>
+            {{ attempt.get_integrity_decision_display }}
+        </strong>
+    </article>
+
+</div>
+
+
+{% if summary.reasons %}
+
+<section class="integrity-section">
+
+    <div class="integrity-section-heading">
+
+        <div>
+            <span class="exam-kicker">
+                Risk Explanation
+            </span>
+
+            <h2>
+                Primary Signals
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div class="integrity-reason-grid">
+
+        {% for reason in summary.reasons %}
+
+        <article>
+
+            <span>
+                {{ reason.label }}
+            </span>
+
+            <strong>
+                {{ reason.count }}
+            </strong>
+
+            <small>
+                +{{ reason.contribution }} score
+            </small>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+<section class="integrity-section">
+
+    <div class="integrity-section-heading">
+
+        <div>
+
+            <span class="exam-kicker">
+                Evidence
+            </span>
+
+            <h2>
+                Integrity Event Timeline
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="integrity-timeline">
+
+        {% for item in summary.events %}
+
+        <article>
+
+            <div class="integrity-timeline-dot"></div>
+
+            <div>
+
+                <header>
+
+                    <strong>
+                        {{ item.label }}
+                    </strong>
+
+                    <time>
+                        {{ item.event.occurred_at|date:"M d, Y · H:i:s" }}
+                    </time>
+
+                </header>
+
+                {% if item.payload.detail %}
+
+                <p>
+                    {{ item.payload.detail }}
+                </p>
+
+                {% endif %}
+
+                <div class="integrity-event-meta">
+
+                    <span>
+                        Visibility:
+                        {{ item.payload.visibility|default:"—" }}
+                    </span>
+
+                    <span>
+                        Fullscreen:
+                        {{ item.payload.fullscreen|default:"—" }}
+                    </span>
+
+                    <span>
+                        Weight:
+                        {{ item.weight }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <div class="exam-empty-state">
+
+            No recorded integrity violations
+            for this attempt.
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<section class="integrity-review-panel">
+
+    <div>
+
+        <span class="exam-kicker">
+            Instructor Review
+        </span>
+
+        <h2>
+            Final Integrity Decision
+        </h2>
+
+        <p>
+            Review the evidence and record your decision.
+            The risk score does not make this decision automatically.
+        </p>
+
+    </div>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <label>
+            Decision
+
+            <select
+                name="integrity_decision"
+                required
+            >
+
+                {% for value, label in decision_choices %}
+
+                <option
+                    value="{{ value }}"
+                    {% if attempt.integrity_decision == value %}
+                        selected
+                    {% endif %}
+                >
+                    {{ label }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </label>
+
+
+        <label>
+
+            Review Note
+
+            <textarea
+                name="integrity_review_note"
+                rows="5"
+                maxlength="3000"
+                placeholder="Record the evidence considered and rationale for the final decision."
+            >{{ attempt.integrity_review_note }}</textarea>
+
+        </label>
+
+
+        <button
+            type="submit"
+            class="exam-open-button"
+        >
+            Save Integrity Review
+        </button>
+
+    </form>
+
+
+    {% if attempt.integrity_reviewed_at %}
+
+    <div class="integrity-review-history">
+
+        Last reviewed
+        {{ attempt.integrity_reviewed_at|date:"M d, Y · H:i" }}
+
+        {% if attempt.integrity_reviewed_by %}
+            by
+            {{ attempt.integrity_reviewed_by.username }}
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

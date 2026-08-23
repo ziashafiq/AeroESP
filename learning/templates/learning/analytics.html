@@ -1,385 +1,498 @@
 {% extends "learning/base.html" %}
 
 {% block title %}
-Learning Analytics | AeroESP
+Learning Analytics · AeroESP
 {% endblock %}
 
 {% block content %}
 
+<section class="analytics07-hero">
 
-<div class="program-header">
+    <div>
 
-    <h1>
-        Learning Analytics
-    </h1>
+        <span class="adaptive-kicker">
+            Learning Intelligence
+        </span>
 
-    <p>
-        Analyze your performance,
-        mastery, errors, and weak areas.
-    </p>
+        <h1>
+            My Analytics
+        </h1>
 
-</div>
+        <p>
+            See accuracy, mastery, weak areas,
+            review demand and aerospace performance
+            in one place.
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'learning:learning_recommendations' %}"
+        class="adaptive-primary-action"
+    >
+        Recommended Next Activity
+    </a>
+
+</section>
 
 
-<div class="cards">
+<div class="analytics07-kpis">
 
-    <div class="card">
+    <article>
 
-        <h3>
+        <span>
             Overall Accuracy
-        </h3>
+        </span>
 
-        <div class="stat-number">
+        <strong>
             {{ overall_accuracy }}%
-        </div>
+        </strong>
 
-        <p>
-            {{ total_attempts }}
-            recorded attempts
-        </p>
+        <small>
+            {{ total_attempts }} attempts
+        </small>
 
-    </div>
+    </article>
 
 
-    <div class="card">
+    <article>
 
-        <h3>
+        <span>
             Mastery
-        </h3>
+        </span>
 
-        <div class="stat-number">
+        <strong>
             {{ mastery_percent }}%
-        </div>
+        </strong>
 
-        <p>
+        <small>
             {{ mastered_count }}
-            of
-            {{ tracked_count }}
-            items mastered
-        </p>
+            / {{ tracked_count }}
+            mastered
+        </small>
 
-    </div>
+    </article>
 
 
-    <div class="card">
+    <article>
 
-        <h3>
+        <span>
             Due Reviews
-        </h3>
+        </span>
 
-        <div class="stat-number">
+        <strong>
             {{ due_count }}
-        </div>
+        </strong>
 
-    </div>
+        <small>
+            scheduled for review
+        </small>
 
-</div>
-
-
-<h2>
-    Program Performance
-</h2>
-
-
-<div class="cards">
-
-    <div class="card">
-
-        <span class="badge">
-            General English
-        </span>
-
-        <h3>
-            Accuracy
-        </h3>
-
-        <div class="stat-number">
-            {{ general_stats.accuracy }}%
-        </div>
-
-        <p>
-            Tracked:
-            {{ general_stats.tracked }}
-        </p>
-
-        <p>
-            Mastered:
-            {{ general_stats.mastered }}
-        </p>
-
-        <p>
-            Mastery:
-            {{ general_stats.mastery }}%
-        </p>
-
-    </div>
-
-
-    <div class="card">
-
-        <span class="badge">
-            Aerospace English
-        </span>
-
-        <h3>
-            Accuracy
-        </h3>
-
-        <div class="stat-number">
-            {{ aerospace_stats.accuracy }}%
-        </div>
-
-        <p>
-            Tracked:
-            {{ aerospace_stats.tracked }}
-        </p>
-
-        <p>
-            Mastered:
-            {{ aerospace_stats.mastered }}
-        </p>
-
-        <p>
-            Mastery:
-            {{ aerospace_stats.mastery }}%
-        </p>
-
-    </div>
+    </article>
 
 </div>
+
+
+<section class="analytics07-section">
+
+    <div class="analytics07-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
+                Program Comparison
+            </span>
+
+            <h2>
+                Performance by Track
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="analytics07-program-grid">
+
+        <article>
+
+            <span class="adaptive-pill">
+                General / IELTS
+            </span>
+
+            <div class="analytics07-score">
+                {{ general_stats.accuracy }}%
+            </div>
+
+            <span>
+                Accuracy
+            </span>
+
+            <div class="analytics07-bar">
+
+                <span
+                    style="width: {{ general_stats.accuracy }}%;"
+                ></span>
+
+            </div>
+
+            <div class="analytics07-mini-grid">
+
+                <div>
+                    <span>Mastery</span>
+                    <strong>{{ general_stats.mastery }}%</strong>
+                </div>
+
+                <div>
+                    <span>Tracked</span>
+                    <strong>{{ general_stats.tracked }}</strong>
+                </div>
+
+                <div>
+                    <span>Mastered</span>
+                    <strong>{{ general_stats.mastered }}</strong>
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <article>
+
+            <span class="adaptive-pill">
+                Aerospace English
+            </span>
+
+            <div class="analytics07-score">
+                {{ aerospace_stats.accuracy }}%
+            </div>
+
+            <span>
+                Accuracy
+            </span>
+
+            <div class="analytics07-bar">
+
+                <span
+                    style="width: {{ aerospace_stats.accuracy }}%;"
+                ></span>
+
+            </div>
+
+            <div class="analytics07-mini-grid">
+
+                <div>
+                    <span>Mastery</span>
+                    <strong>{{ aerospace_stats.mastery }}%</strong>
+                </div>
+
+                <div>
+                    <span>Tracked</span>
+                    <strong>{{ aerospace_stats.tracked }}</strong>
+                </div>
+
+                <div>
+                    <span>Mastered</span>
+                    <strong>{{ aerospace_stats.mastered }}</strong>
+                </div>
+
+            </div>
+
+        </article>
+
+    </div>
+
+</section>
 
 
 {% if latest_placement %}
 
-<h2>
-    Placement Profile
-</h2>
+<section class="analytics07-section">
 
-<div class="cards">
+    <div class="analytics07-heading">
 
-    <div class="card">
+        <div>
+            <span class="adaptive-kicker">
+                Diagnostic Profile
+            </span>
 
-        <h3>
-            CEFR
-        </h3>
-
-        <div class="stat-number">
-            {{ latest_placement.cefr_level }}
+            <h2>
+                Placement
+            </h2>
         </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="analytics07-placement">
 
-        <h3>
-            IELTS Estimate
-        </h3>
+        <article>
+            <span>CEFR</span>
+            <strong>{{ latest_placement.cefr_level }}</strong>
+        </article>
 
-        <div class="stat-number">
-            {{ latest_placement.ielts_estimate }}
-        </div>
+        <article>
+            <span>IELTS Estimate</span>
+            <strong>{{ latest_placement.ielts_estimate }}</strong>
+        </article>
 
-    </div>
+        <article>
+            <span>Vocabulary</span>
+            <strong>{{ latest_placement.vocabulary_score }}%</strong>
+        </article>
 
+        <article>
+            <span>Grammar</span>
+            <strong>{{ latest_placement.grammar_score }}%</strong>
+        </article>
 
-    <div class="card">
+        <article>
+            <span>Reading</span>
+            <strong>{{ latest_placement.reading_score }}%</strong>
+        </article>
 
-        <h3>
-            Vocabulary
-        </h3>
-
-        <div class="stat-number">
-            {{ latest_placement.vocabulary_score }}%
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3>
-            Grammar
-        </h3>
-
-        <div class="stat-number">
-            {{ latest_placement.grammar_score }}%
-        </div>
+        <article>
+            <span>Listening</span>
+            <strong>{{ latest_placement.listening_score }}%</strong>
+        </article>
 
     </div>
 
-
-    <div class="card">
-
-        <h3>
-            Reading
-        </h3>
-
-        <div class="stat-number">
-            {{ latest_placement.reading_score }}%
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3>
-            Listening
-        </h3>
-
-        <div class="stat-number">
-            {{ latest_placement.listening_score }}%
-        </div>
-
-    </div>
-
-</div>
+</section>
 
 {% endif %}
 
 
-<h2>
-    Weak Areas
-</h2>
+<div class="analytics07-columns">
 
+<section class="analytics07-section">
 
-<div class="cards">
+    <div class="analytics07-heading">
 
-{% for error in unresolved_distribution %}
+        <div>
+            <span class="adaptive-kicker">
+                Diagnostics
+            </span>
 
-<div class="card">
+            <h2>
+                Weak Areas
+            </h2>
+        </div>
 
-    <h3>
-        {{ error.category }}
-    </h3>
+        <a
+            href="{% url 'learning:weak_topics' %}"
+            class="adaptive-secondary-action"
+        >
+            Open Weak Areas
+        </a>
 
-    <div class="stat-number">
-        {{ error.total }}
     </div>
 
-</div>
 
-{% empty %}
+    <div class="analytics07-error-list">
 
-<div class="card">
-    No unresolved weak areas.
-</div>
+        {% for error in unresolved_distribution %}
 
-{% endfor %}
+        <article>
 
-</div>
+            <span>
+                {{ error.category|title }}
+            </span>
 
+            <strong>
+                {{ error.total }}
+            </strong>
 
-<h2>
-    Aerospace Domain Performance
-</h2>
+        </article>
 
+        {% empty %}
 
-{% for domain in domain_stats %}
+        <div class="adaptive-empty compact">
+            No unresolved weak areas.
+        </div>
 
-<div class="module">
+        {% endfor %}
 
-    <h3>
-        {{ domain.name }}
-    </h3>
-
-    <p>
-        Accuracy:
-        <strong>
-            {{ domain.accuracy }}%
-        </strong>
-    </p>
-
-    <p>
-        Mastery:
-        <strong>
-            {{ domain.mastery }}%
-        </strong>
-    </p>
-
-    <p>
-        Tracked Items:
-        {{ domain.tracked }}
-    </p>
-
-</div>
-
-{% empty %}
-
-<div class="card">
-    No Aerospace domain data yet.
-</div>
-
-{% endfor %}
-
-
-<h2>
-    Aerospace Topic Performance
-</h2>
-
-
-{% for topic in topic_stats %}
-
-<div class="module">
-
-    <h3>
-        {{ topic.name }}
-    </h3>
-
-    <p>
-        Accuracy:
-        <strong>
-            {{ topic.accuracy }}%
-        </strong>
-    </p>
-
-    <p>
-        Tracked Items:
-        {{ topic.tracked }}
-    </p>
-
-</div>
-
-{% empty %}
-
-<div class="card">
-    No Aerospace topic data yet.
-</div>
-
-{% endfor %}
-
-
-<h2>
-    Error Distribution
-</h2>
-
-
-<div class="cards">
-
-{% for error in error_distribution %}
-
-<div class="card">
-
-    <h3>
-        {{ error.category }}
-    </h3>
-
-    <div class="stat-number">
-        {{ error.total }}
     </div>
 
+</section>
+
+
+<section class="analytics07-section">
+
+    <div class="analytics07-heading">
+
+        <div>
+            <span class="adaptive-kicker">
+                Error Profile
+            </span>
+
+            <h2>
+                Error Distribution
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div class="analytics07-error-list">
+
+        {% for error in error_distribution %}
+
+        <article>
+
+            <span>
+                {{ error.category|title }}
+            </span>
+
+            <strong>
+                {{ error.total }}
+            </strong>
+
+        </article>
+
+        {% empty %}
+
+        <div class="adaptive-empty compact">
+            No error data yet.
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
 </div>
 
-{% empty %}
 
-<div class="card">
-    No error data yet.
-</div>
+<section class="analytics07-section">
 
-{% endfor %}
+    <div class="analytics07-heading">
 
-</div>
+        <div>
 
+            <span class="adaptive-kicker">
+                Aerospace Intelligence
+            </span>
+
+            <h2>
+                Domain Performance
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="analytics07-domain-grid">
+
+        {% for domain in domain_stats %}
+
+        <article>
+
+            <header>
+
+                <h3>
+                    {{ domain.name }}
+                </h3>
+
+                <strong>
+                    {{ domain.accuracy }}%
+                </strong>
+
+            </header>
+
+            <div class="analytics07-bar">
+
+                <span
+                    style="width: {{ domain.accuracy }}%;"
+                ></span>
+
+            </div>
+
+            <div class="analytics07-domain-meta">
+
+                <span>
+                    Mastery {{ domain.mastery }}%
+                </span>
+
+                <span>
+                    {{ domain.tracked }} tracked
+                </span>
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <div class="adaptive-empty">
+            No Aerospace domain data yet.
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<section class="analytics07-section">
+
+    <div class="analytics07-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
+                Topic Resolution
+            </span>
+
+            <h2>
+                Aerospace Topic Performance
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div class="analytics07-topic-list">
+
+        {% for topic in topic_stats %}
+
+        <article>
+
+            <div>
+
+                <strong>
+                    {{ topic.name }}
+                </strong>
+
+                <span>
+                    {{ topic.tracked }}
+                    tracked item{{ topic.tracked|pluralize }}
+                </span>
+
+            </div>
+
+            <div class="analytics07-topic-score">
+                {{ topic.accuracy }}%
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <div class="adaptive-empty compact">
+            No Aerospace topic data yet.
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
 
 {% endblock %}
