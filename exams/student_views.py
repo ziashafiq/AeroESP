@@ -1966,5 +1966,3 @@ def student_security_event(
             "kind": kind,
         }
     )
-
-
