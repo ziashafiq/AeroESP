@@ -1734,5 +1734,3 @@ def teacher_exam_integrity_export(
         )
 
     return response
-
-
