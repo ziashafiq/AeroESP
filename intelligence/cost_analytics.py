@@ -15,15 +15,15 @@ def build_ai_performance():
 
     providers = (
         AIInteractionEvent.objects
-        .values("provider")
+        .values_list(
+            "provider",
+            flat=True,
+        )
         .distinct()
     )
 
 
-    for item in providers:
-
-        provider = item["provider"]
-
+    for provider in providers:
 
         events = (
             AIInteractionEvent.objects
