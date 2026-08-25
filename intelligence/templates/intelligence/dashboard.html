@@ -102,6 +102,67 @@ AI Intelligence
 
             <hr>
 
+            <h3>
+                AI Feedback Learning Loop
+            </h3>
+
+            <p>
+                <strong>
+                    Total Feedback:
+                </strong>
+                {{ feedback_summary.total_feedback }}
+            </p>
+
+            <p>
+                <strong>
+                    Teacher Accepted:
+                </strong>
+                {{ feedback_summary.accepted }}
+            </p>
+
+            <p>
+                <strong>
+                    Teacher Edited:
+                </strong>
+                {{ feedback_summary.edited }}
+            </p>
+
+            <p>
+                <strong>
+                    Teacher Rejected:
+                </strong>
+                {{ feedback_summary.rejected }}
+            </p>
+
+            <p>
+                <strong>
+                    Average Feedback Quality Score:
+                </strong>
+                {{ feedback_summary.average_score }}
+            </p>
+
+            <h4>
+                Provider Usage
+            </h4>
+
+            {% for provider in feedback_summary.providers %}
+
+            <p>
+                {{ provider.provider }}
+                :
+                {{ provider.total }}
+            </p>
+
+            {% empty %}
+
+            <p>
+                No provider feedback data.
+            </p>
+
+            {% endfor %}
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}

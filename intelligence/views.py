@@ -27,6 +27,9 @@ from .services import (
     build_learner_insight,
     get_question_generator,
 )
+from .feedback import (
+    build_ai_feedback_summary,
+)
 
 
 def _require_teacher(user):
@@ -272,6 +275,9 @@ def ai_dashboard(request):
             "ai_stats": ai_stats,
             "provider_stats": provider_stats,
             "recent_ai_events": recent_ai_events,
+            "feedback_summary": (
+                build_ai_feedback_summary()
+            ),
         },
     )
 
