@@ -353,7 +353,6 @@ def generate_question_view(request):
             try:
                 provider_name = data.get("provider", "BASELINE_V1")
                 generator = get_question_generator(provider_name)
-
                 result = generator.generate(
                     track=data["track"],
                     skill=data["skill"],
@@ -368,18 +367,6 @@ def generate_question_view(request):
                         )
                     ),
                 )
-
-                AIInteractionEvent.objects.create(
-                    user=request.user,
-                    event_type="GENERATION_STARTED",
-                    provider=provider_name,
-                    metadata={
-                        "track": str(data["track"]),
-                        "skill": str(data["skill"]),
-                        "difficulty": str(data["difficulty"]),
-                    },
-                )
-
                 draft = (
                     GeneratedQuestionDraft
                     .objects
@@ -434,6 +421,35 @@ def generate_question_view(request):
                             result["metadata"]
                         ),
                     )
+                )
+
+                AIInteractionEvent.objects.create(
+                    actor=request.user,
+                    draft=draft,
+                    event_type="GENERATION_SUCCESS",
+                    provider=result.get(
+                        "provider",
+                        provider_name,
+                    ),
+                    model_name=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "model",
+                        "",
+                    ),
+                    success=True,
+                    metadata={
+                        "track": str(
+                            data["track"]
+                        ),
+                        "skill": str(
+                            data["skill"]
+                        ),
+                        "difficulty": str(
+                            data["difficulty"]
+                        ),
+                    },
                 )
 
                 return redirect(
