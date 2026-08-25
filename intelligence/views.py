@@ -12,6 +12,7 @@ from assessment.models import Question
 
 from learning.models import Enrollment
 from .quality import evaluate_question_quality
+from .quality_advisor import build_quality_advice
 from .forms import QuestionGenerationForm
 from .models import (
     GeneratedQuestionDraft,
@@ -99,6 +100,17 @@ def ai_dashboard(request):
         "drafts_rejected": GeneratedQuestionDraft.objects.filter(
             status="REJECTED"
         ).count(),
+                "quality_good": GeneratedQuestionDraft.objects.filter(
+                    generation_metadata__quality__status="GOOD"
+                ).count(),
+
+                "quality_review": GeneratedQuestionDraft.objects.filter(
+                    generation_metadata__quality__status="REVIEW"
+                ).count(),
+
+                "quality_poor": GeneratedQuestionDraft.objects.filter(
+                    generation_metadata__quality__status="POOR"
+                ).count(),
     }
 
     provider_stats = []
@@ -443,6 +455,12 @@ def generate_question_view(request):
 
 
                 result["metadata"]["quality"] = quality_report
+
+                result["metadata"]["quality_advice"] = (
+                    build_quality_advice(
+                        quality_report
+                    )
+                )
                 draft = (
                     GeneratedQuestionDraft
                     .objects
