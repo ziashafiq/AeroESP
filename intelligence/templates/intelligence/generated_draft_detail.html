@@ -81,6 +81,46 @@ Generated Question Draft | AeroESP
             {{ draft.generation_metadata.quality.checks.explanation }}
         </p>
 
+        {% if draft.generation_metadata.quality_advice %}
+
+        <div class="card">
+
+            <h3>
+                AI Review Recommendation
+            </h3>
+
+            <p>
+                <strong>
+                    Decision:
+                </strong>
+
+                {{ draft.generation_metadata.quality_advice.decision }}
+            </p>
+
+            <p>
+                <strong>
+                    Message:
+                </strong>
+
+                {{ draft.generation_metadata.quality_advice.message }}
+            </p>
+
+            {% if draft.generation_metadata.quality_advice.warnings %}
+
+            <p>
+                <strong>
+                    Warnings:
+                </strong>
+
+                {{ draft.generation_metadata.quality_advice.warnings }}
+            </p>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
     </div>
 
     {% endif %}
