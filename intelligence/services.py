@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from decimal import Decimal
 
 from django.conf import settings
@@ -852,6 +853,7 @@ class OpenAIQuestionGenerator(
                 api_key=api_key,
                 timeout=self.timeout,
             )
+            start_time = time.perf_counter()
 
             response = client.responses.create(
                 model=self.model,
@@ -869,6 +871,10 @@ class OpenAIQuestionGenerator(
                 or ""
             ).strip()
 
+            latency_ms = int(
+                (time.perf_counter() - start_time) * 1000
+            )
+
             data = json.loads(content)
 
             # Validate the result
@@ -885,11 +891,18 @@ class OpenAIQuestionGenerator(
             data["metadata"] = {
                 "model": self.model,
                 "api_family": "responses",
-                "response_id": getattr(
+                "request_id": getattr(
                     response,
                     "id",
                     None,
                 ),
+
+                "prompt_version": (
+                    "QUESTION_GENERATION_V1"
+                ),
+
+                "latency_ms": latency_ms,
+"latency_ms": latency_ms,
                 "input_tokens": getattr(
                     usage,
                     "input_tokens",

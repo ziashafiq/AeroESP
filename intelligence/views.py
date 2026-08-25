@@ -505,6 +505,55 @@ def generate_question_view(request):
                         "model",
                         "",
                     ),
+
+                    latency_ms=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "latency_ms",
+                        0,
+                    ),
+
+                    input_tokens=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "input_tokens",
+                        0,
+                    ),
+
+                    output_tokens=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "output_tokens",
+                        0,
+                    ),
+
+                    total_tokens=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "total_tokens",
+                        0,
+                    ),
+
+                    request_id=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "request_id",
+                        "",
+                    ),
+
+                    prompt_version=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "prompt_version",
+                        "",
+                    ),
+
                     success=True,
                     metadata={
                         "track": str(
