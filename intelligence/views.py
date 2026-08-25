@@ -1105,7 +1105,7 @@ def reject_generated_draft(
         ]
     )
 
-    AIInteractionEvent.objects.create(
+    reject_event = AIInteractionEvent.objects.create(
         actor=request.user,
         draft=draft,
         event_type="DRAFT_REJECTED",
@@ -1113,6 +1113,43 @@ def reject_generated_draft(
         success=True,
         metadata={
             "action": "rejected_by_teacher",
+        },
+    )
+
+    AIQualitySnapshot.objects.create(
+        draft=draft,
+        event=reject_event,
+        score=draft.generation_metadata.get(
+            "quality",
+            {},
+        ).get(
+            "score",
+            0,
+        ),
+        status=draft.generation_metadata.get(
+            "quality",
+            {},
+        ).get(
+            "status",
+            "",
+        ),
+        decision=draft.generation_metadata.get(
+            "quality_advice",
+            {},
+        ).get(
+            "decision",
+            "",
+        ),
+        quality_data={
+            "action": "teacher_reject",
+            "quality": draft.generation_metadata.get(
+                "quality",
+                {},
+            ),
+            "advice": draft.generation_metadata.get(
+                "quality_advice",
+                {},
+            ),
         },
     )
 
