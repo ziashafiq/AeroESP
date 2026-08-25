@@ -459,6 +459,26 @@ def generate_question_view(request):
                 )
 
             except QuestionGenerationError as exc:
+
+                AIInteractionEvent.objects.create(
+                    actor=request.user,
+                    event_type="GENERATION_FAILURE",
+                    provider=provider_name,
+                    success=False,
+                    metadata={
+                        "error": str(exc),
+                        "track": str(
+                            data.get("track")
+                        ),
+                        "skill": str(
+                            data.get("skill")
+                        ),
+                        "difficulty": str(
+                            data.get("difficulty")
+                        ),
+                    },
+                )
+
                 form.add_error(
                     None,
                     str(exc),
