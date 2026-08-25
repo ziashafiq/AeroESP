@@ -68,6 +68,62 @@ def ai_dashboard(request):
         .select_related("student")
     )
 
+    from django.db.models import Count, Q
+
+    ai_events = AIInteractionEvent.objects.all()
+
+    if not request.user.is_superuser:
+        ai_events = ai_events.filter(
+            actor=request.user
+        )
+
+    ai_stats = {
+        "total_events": ai_events.count(),
+
+        "success_events": ai_events.filter(
+            event_type="GENERATION_SUCCESS"
+        ).count(),
+
+        "failure_events": ai_events.filter(
+            event_type="GENERATION_FAILURE"
+        ).count(),
+
+        "drafts_pending": GeneratedQuestionDraft.objects.filter(
+            status="PENDING"
+        ).count(),
+
+        "drafts_accepted": GeneratedQuestionDraft.objects.filter(
+            status="ACCEPTED"
+        ).count(),
+
+        "drafts_rejected": GeneratedQuestionDraft.objects.filter(
+            status="REJECTED"
+        ).count(),
+    }
+
+    provider_stats = (
+        ai_events
+        .values("provider")
+        .annotate(
+            total=Count("id"),
+            success=Count(
+                "id",
+                filter=Q(success=True),
+            ),
+            failure=Count(
+                "id",
+                filter=Q(success=False),
+            ),
+        )
+        .order_by("-total")
+    )
+
+    recent_ai_events = (
+        ai_events
+        .select_related("actor", "draft")
+        .order_by("-created_at")[:10]
+    )
+
     if not request.user.is_superuser:
 
         suggestions = (
@@ -99,6 +155,9 @@ def ai_dashboard(request):
         {
             "suggestions": suggestions,
             "insights": insights,
+            "ai_stats": ai_stats,
+            "provider_stats": provider_stats,
+            "recent_ai_events": recent_ai_events,
         },
     )
 
