@@ -181,7 +181,54 @@ Generated Question Draft | AeroESP
 
 </div>
 
+<div class="card">
 
+    <h2>
+        AI Quality Timeline
+    </h2>
+
+
+    {% for snapshot in quality_history %}
+
+    <div class="card">
+
+        <p>
+            <strong>
+                {{ snapshot.quality_data.action }}
+            </strong>
+        </p>
+
+        <p>
+            Score:
+            {{ snapshot.score }}
+        </p>
+
+        <p>
+            Status:
+            {{ snapshot.status }}
+        </p>
+
+        <p>
+            Decision:
+            {{ snapshot.decision }}
+        </p>
+
+        <p>
+            Time:
+            {{ snapshot.created_at }}
+        </p>
+
+    </div>
+
+    {% empty %}
+
+    <p>
+        No quality history available.
+    </p>
+
+    {% endfor %}
+
+</div>
 {% if question_form_errors %}
 
 <div class="card">

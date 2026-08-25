@@ -696,6 +696,11 @@ def generated_draft_detail(
         ),
         {
             "draft": draft,
+            "quality_history": (
+                draft
+                .quality_snapshots
+                .all()
+            ),
         },
     )
 
