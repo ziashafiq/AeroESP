@@ -1,5 +1,6 @@
 from functools import wraps
 
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 
@@ -31,9 +32,7 @@ def approved_teacher_required(view_func):
             return view_func(request, *args, **kwargs)
 
         if not hasattr(request.user, "teacher_profile"):
-            return HttpResponseForbidden(
-                "Teacher access required."
-            )
+            raise PermissionDenied("Teacher access required.")
 
         if not request.user.teacher_profile.is_approved:
             return HttpResponseForbidden(

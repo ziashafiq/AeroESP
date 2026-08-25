@@ -1,537 +1,396 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+{% extends "aeroesp/public_base.html" %}
+{% load static %}
 
-    <title>AeroESP</title>
+{% block title %}
+AeroESP · Aerospace English Platform
+{% endblock %}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+{% block meta_description %}
+AeroESP integrates General English, IELTS, Aerospace ESP, adaptive learning, secure assessment and learning analytics.
+{% endblock %}
 
-        body {
-            margin: 0;
-            font-family:
-                Inter,
-                Arial,
-                sans-serif;
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #07172c,
-                    #0c2848 55%,
-                    #123b64
-                );
+{% block content %}
 
-            color: #ffffff;
-            min-height: 100vh;
-        }
 
-        .nav {
-            max-width: 1180px;
-            margin: auto;
-            padding: 24px 28px;
+<section class="public-hero">
 
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+    <div class="public-hero-copy">
 
-        .brand {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .brand span {
-            color: #57b8ff;
-        }
-
-        .nav-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 20px;
-
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 700;
-
-            transition:
-                transform 0.15s ease,
-                opacity 0.15s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            opacity: 0.94;
-        }
-
-        .btn-primary {
-            background: #ffffff;
-            color: #0a2746;
-        }
-
-        .btn-outline {
-            border: 1px solid
-                rgba(255,255,255,.35);
-
-            color: #ffffff;
-        }
-
-        .hero {
-            max-width: 1180px;
-            margin: auto;
-
-            padding:
-                100px 28px
-                70px;
-
-            display: grid;
-
-            grid-template-columns:
-                minmax(0, 1.15fr)
-                minmax(320px, .85fr);
-
-            gap: 70px;
-            align-items: center;
-        }
-
-        .badge {
-            display: inline-block;
-
-            background:
-                rgba(87,184,255,.13);
-
-            border:
-                1px solid
-                rgba(87,184,255,.35);
-
-            color: #8bd0ff;
-
-            padding: 8px 14px;
-            border-radius: 100px;
-
-            font-size: 13px;
-            font-weight: 700;
-
-            margin-bottom: 24px;
-        }
-
-        h1 {
-            font-size:
-                clamp(
-                    42px,
-                    6vw,
-                    72px
-                );
-
-            line-height: 1.04;
-            margin: 0 0 26px;
-
-            max-width: 760px;
-        }
-
-        .accent {
-            color: #65c3ff;
-        }
-
-        .lead {
-            font-size: 19px;
-            line-height: 1.75;
-
-            max-width: 680px;
-
-            color:
-                rgba(255,255,255,.76);
-
-            margin-bottom: 34px;
-        }
-
-        .hero-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-        }
-
-        .panel {
-            background:
-                rgba(255,255,255,.08);
-
-            border:
-                1px solid
-                rgba(255,255,255,.14);
-
-            backdrop-filter: blur(15px);
-
-            border-radius: 22px;
-            padding: 28px;
-        }
-
-        .panel h2 {
-            margin-top: 0;
-            margin-bottom: 8px;
-        }
-
-        .panel-sub {
-            color:
-                rgba(255,255,255,.65);
-
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-
-        .feature {
-            padding: 17px 0;
-
-            border-bottom:
-                1px solid
-                rgba(255,255,255,.10);
-        }
-
-        .feature:last-child {
-            border-bottom: none;
-        }
-
-        .feature strong {
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .feature span {
-            color:
-                rgba(255,255,255,.62);
-
-            font-size: 14px;
-            line-height: 1.55;
-        }
-
-        .features {
-            max-width: 1180px;
-            margin: auto;
-
-            padding:
-                30px 28px
-                90px;
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap: 20px;
-        }
-
-        .card {
-            background: #ffffff;
-            color: #10253b;
-
-            padding: 28px;
-
-            border-radius: 18px;
-        }
-
-        .card-label {
-            font-size: 12px;
-            font-weight: 800;
-
-            color: #53708c;
-
-            letter-spacing: .08em;
-            text-transform: uppercase;
-        }
-
-        .card h3 {
-            font-size: 21px;
-            margin: 10px 0;
-        }
-
-        .card p {
-            color: #5a6d80;
-            line-height: 1.65;
-            margin-bottom: 0;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px;
-
-            color:
-                rgba(255,255,255,.48);
-
-            font-size: 13px;
-        }
-
-        @media (
-            max-width: 850px
-        ) {
-
-            .hero {
-                grid-template-columns: 1fr;
-                padding-top: 65px;
-            }
-
-            .features {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<nav class="nav">
-
-    <div class="brand">
-        Aero<span>ESP</span>
-    </div>
-
-    <div class="nav-actions">
-
-        {% if user.is_authenticated %}
-
-            <a
-                href="{% url 'accounts:account_center' %}"
-                class="btn btn-outline"
-            >
-                Account
-            </a>
-
-            {% if dashboard_target %}
-
-                <a
-                    href="{{ dashboard_target }}"
-                    class="btn btn-primary"
-                >
-                    Open Dashboard
-                </a>
-
-            {% endif %}
-
-        {% else %}
-
-            <a
-                href="{% url 'accounts:login' %}"
-                class="btn btn-primary"
-            >
-                Sign In
-            </a>
-
-        {% endif %}
-
-    </div>
-
-</nav>
-
-
-<main>
-
-<section class="hero">
-
-    <div>
-
-        <div class="badge">
-            Aerospace English Learning
-            & Assessment Platform
-        </div>
+        <span class="public-eyebrow">
+            Aerospace English · Learning · Assessment
+        </span>
 
         <h1>
-            English for
-            <span class="accent">
-                Aerospace Engineering
+            English built around
+            <span>
+                aerospace engineering.
             </span>
         </h1>
 
-        <p class="lead">
-            AeroESP combines General English,
-            IELTS preparation, Aerospace ESP,
-            adaptive practice, assessment,
-            learning analytics and
-            AI-assisted educational tools
-            in one integrated platform.
+        <p>
+            AeroESP brings General English,
+            IELTS preparation and domain-specific
+            Aerospace ESP into one intelligent
+            learning and assessment environment.
         </p>
 
-        <div class="hero-actions">
+
+        <div class="public-hero-actions">
 
             {% if user.is_authenticated %}
 
-                {% if dashboard_target %}
-
-                    <a
-                        href="{{ dashboard_target }}"
-                        class="btn btn-primary"
-                    >
-                        Continue to Dashboard
-                    </a>
-
-                {% endif %}
+                <a
+                    href="{% url 'accounts:role_redirect' %}"
+                    class="public-button public-button-primary public-button-large"
+                >
+                    Continue to Workspace
+                </a>
 
             {% else %}
 
                 <a
                     href="{% url 'accounts:login' %}"
-                    class="btn btn-primary"
+                    class="public-button public-button-primary public-button-large"
                 >
-                    Get Started
+                    Enter AeroESP
                 </a>
 
             {% endif %}
 
+
             <a
                 href="{% url 'quiz' %}"
-                class="btn btn-outline"
+                class="public-button public-button-secondary public-button-large"
             >
                 Try Assessment
             </a>
 
         </div>
 
+
+        <div class="public-hero-signals">
+
+            <div>
+                <strong>
+                    Adaptive
+                </strong>
+
+                <span>
+                    Practice & review
+                </span>
+            </div>
+
+            <div>
+                <strong>
+                    Domain-aware
+                </strong>
+
+                <span>
+                    Aerospace ESP
+                </span>
+            </div>
+
+            <div>
+                <strong>
+                    Evidence-based
+                </strong>
+
+                <span>
+                    Learning analytics
+                </span>
+            </div>
+
+        </div>
+
     </div>
 
 
-    <div class="panel">
+    <div class="aero-hero-visual-card">
+        <img
+            src="{% static 'aeroesp/brand/final/aeroesp-landing-hero.png' %}"
+            alt="AeroESP learning ecosystem"
+            class="aero-hero-visual-image"
+        >
+    </div>
+
+</section>
+
+
+
+<section class="public-trust-strip">
+
+    <span>
+        General English
+    </span>
+
+    <i></i>
+
+    <span>
+        IELTS
+    </span>
+
+    <i></i>
+
+    <span>
+        Aerospace ESP
+    </span>
+
+    <i></i>
+
+    <span>
+        Adaptive Learning
+    </span>
+
+    <i></i>
+
+    <span>
+        Secure Assessment
+    </span>
+
+    <i></i>
+
+    <span>
+        Analytics
+    </span>
+
+</section>
+
+
+
+<section class="public-section">
+
+    <header class="public-section-heading">
+
+        <div>
+
+            <span class="public-eyebrow">
+                The learning system
+            </span>
+
+            <h2>
+                More than a question bank.
+            </h2>
+
+        </div>
+
+        <p>
+            AeroESP connects learning,
+            assessment and diagnostic data
+            instead of treating them as
+            separate tools.
+        </p>
+
+    </header>
+
+
+    <div class="public-feature-grid">
+
+        <article>
+
+            <span class="public-card-index">
+                01
+            </span>
+
+            <h3>
+                Aerospace ESP
+            </h3>
+
+            <p>
+                Technical English organized
+                around aerospace disciplines,
+                domains and topics.
+            </p>
+
+        </article>
+
+
+        <article>
+
+            <span class="public-card-index">
+                02
+            </span>
+
+            <h3>
+                Adaptive Learning
+            </h3>
+
+            <p>
+                Weak areas, mastery,
+                spaced review and personalized
+                recommendations work together.
+            </p>
+
+        </article>
+
+
+        <article>
+
+            <span class="public-card-index">
+                03
+            </span>
+
+            <h3>
+                Secure Assessment
+            </h3>
+
+            <p>
+                Managed exam attempts,
+                integrity telemetry and
+                instructor-led evidence review.
+            </p>
+
+        </article>
+
+
+        <article>
+
+            <span class="public-card-index">
+                04
+            </span>
+
+            <h3>
+                Learning Analytics
+            </h3>
+
+            <p>
+                Student, class and topic-level
+                performance can be examined
+                from connected learning data.
+            </p>
+
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<section class="public-split-section">
+
+    <div>
+
+        <span class="public-eyebrow">
+            Student experience
+        </span>
 
         <h2>
-            One learning ecosystem
+            Know what to learn next.
         </h2>
 
-        <div class="panel-sub">
-            Learning, assessment,
-            analytics and research.
-        </div>
+        <p>
+            Placement, progress, errors,
+            review demand and mastery signals
+            guide the learner toward the next
+            useful activity.
+        </p>
 
-        <div class="feature">
-            <strong>
-                General English & IELTS
-            </strong>
+        {% if user.is_authenticated %}
 
-            <span>
-                Vocabulary, grammar,
-                reading, listening,
-                writing and speaking.
-            </span>
-        </div>
+            <a
+                href="{% url 'accounts:role_redirect' %}"
+                class="public-text-link"
+            >
+                Open your workspace →
+            </a>
 
-        <div class="feature">
-            <strong>
-                Aerospace ESP
-            </strong>
+        {% else %}
 
-            <span>
-                Domain-aware technical
-                English organized by
-                aerospace disciplines.
-            </span>
-        </div>
+            <a
+                href="{% url 'accounts:login' %}"
+                class="public-text-link"
+            >
+                Sign in to AeroESP →
+            </a>
 
-        <div class="feature">
-            <strong>
-                Adaptive Learning
-            </strong>
+        {% endif %}
 
-            <span>
-                Personalized review,
-                error analysis and
-                learning paths.
-            </span>
-        </div>
+    </div>
 
-        <div class="feature">
-            <strong>
-                AI & Analytics
-            </strong>
+
+    <div class="public-system-stack">
+
+        <article>
 
             <span>
-                Teacher-assisted question
-                generation and explainable
-                learner insights.
+                Diagnose
             </span>
-        </div>
+
+            <strong>
+                Placement & errors
+            </strong>
+
+        </article>
+
+        <article>
+
+            <span>
+                Adapt
+            </span>
+
+            <strong>
+                Practice & review
+            </strong>
+
+        </article>
+
+        <article>
+
+            <span>
+                Measure
+            </span>
+
+            <strong>
+                Mastery & analytics
+            </strong>
+
+        </article>
 
     </div>
 
 </section>
 
 
-<section class="features">
 
-    <div class="card">
+<section class="public-final-cta">
 
-        <div class="card-label">
-            Placement
-        </div>
+    <span class="public-eyebrow">
+        AeroESP
+    </span>
 
-        <h3>
-            Start at the right level
-        </h3>
+    <h2>
+        Build language competency
+        around the engineering context.
+    </h2>
 
-        <p>
-            Placement assessment evaluates
-            core language skills and supports
-            initial learning-path assignment.
-        </p>
+    <p>
+        Learn, assess and understand
+        technical-English performance
+        in one environment.
+    </p>
 
-    </div>
+    {% if user.is_authenticated %}
 
+        <a
+            href="{% url 'accounts:role_redirect' %}"
+            class="public-button public-button-primary public-button-large"
+        >
+            Open Workspace
+        </a>
 
-    <div class="card">
+    {% else %}
 
-        <div class="card-label">
-            Learning
-        </div>
+        <a
+            href="{% url 'accounts:login' %}"
+            class="public-button public-button-primary public-button-large"
+        >
+            Sign In
+        </a>
 
-        <h3>
-            Practice with purpose
-        </h3>
-
-        <p>
-            Progress tracking, review queues,
-            personalized practice and
-            aerospace-specific learning
-            content work together.
-        </p>
-
-    </div>
-
-
-    <div class="card">
-
-        <div class="card-label">
-            Assessment
-        </div>
-
-        <h3>
-            Structured exam workflows
-        </h3>
-
-        <p>
-            Teachers build controlled
-            assessments while students
-            receive managed attempts,
-            scoring and feedback.
-        </p>
-
-    </div>
+    {% endif %}
 
 </section>
 
-</main>
 
-
-<footer>
-    AeroESP · Aerospace English Learning
-    & Assessment Platform
-</footer>
-
-</body>
-</html>
+{% endblock %}

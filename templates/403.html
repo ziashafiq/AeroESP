@@ -1,0 +1,64 @@
+{% extends "aeroesp/public_base.html" %}
+
+{% block title %}
+Access Denied · AeroESP
+{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+
+    <div class="error-number">
+        403
+    </div>
+
+    <span class="public-eyebrow">
+        Access restricted
+    </span>
+
+    <h1>
+        You do not have permission
+        to open this workspace.
+    </h1>
+
+    <p>
+        Your account is authenticated,
+        but the requested AeroESP resource
+        is not available for your current role
+        or permission level.
+    </p>
+
+    <div class="status-actions">
+
+        <a
+            href="{% url 'home' %}"
+            class="public-button public-button-secondary"
+        >
+            AeroESP Home
+        </a>
+
+        {% if user.is_authenticated %}
+
+            <a
+                href="{% url 'accounts:role_redirect' %}"
+                class="public-button public-button-primary"
+            >
+                My Workspace
+            </a>
+
+        {% else %}
+
+            <a
+                href="{% url 'accounts:login' %}"
+                class="public-button public-button-primary"
+            >
+                Sign In
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,27 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Teacher Approval Pending</title>
-</head>
+{% extends "aeroesp/public_base.html" %}
 
-<body>
+{% block title %}
+Teacher Approval · AeroESP
+{% endblock %}
 
-    <h1>Teacher Account</h1>
+
+{% block content %}
+
+<section class="status-page">
+
+    <div class="status-code status-code-pending">
+        T
+    </div>
+
+    <span class="public-eyebrow">
+        Teacher account
+    </span>
+
+    <h1>
+        Approval is pending.
+    </h1>
 
     <p>
-        Your teacher account is awaiting administrator approval.
+        Your teacher profile exists,
+        but teaching permissions are not
+        active yet. An AeroESP administrator
+        must approve the account before
+        teacher tools become available.
     </p>
 
-    <form
-        method="post"
-        action="{% url 'accounts:logout' %}"
-    >
-        {% csrf_token %}
-        <button type="submit">
-            Logout
-        </button>
-    </form>
 
-</body>
-</html>
+    <div class="status-actions">
+
+        <a
+            href="{% url 'home' %}"
+            class="public-button public-button-secondary"
+        >
+            AeroESP Home
+        </a>
+
+
+        <form
+            method="post"
+            action="{% url 'accounts:logout' %}"
+        >
+
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="public-button public-button-primary"
+            >
+                Sign Out
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -22,7 +22,7 @@
     <link
         rel="icon"
         type="image/svg+xml"
-        href="{% static 'aeroesp/brand/favicon.svg' %}"
+        href="{% static 'aeroesp/brand/final/aeroesp-app-icon.png' %}?v=ui17"
     >
 
     <script>
@@ -46,7 +46,7 @@
 
     <link
         rel="stylesheet"
-        href="{% static 'aeroesp/css/app.css' %}?v=ui07"
+        href="{% static 'aeroesp/css/app.css' %}?v=ui17"
     >
 
     {% block extra_css %}
@@ -64,6 +64,14 @@
 >
 
 
+<a
+    href="#main-content"
+    class="skip-link"
+>
+    Skip to main content
+</a>
+
+
 <div class="app-shell">
 
 
@@ -72,26 +80,24 @@
          ========================================== -->
 
     <aside
+        id="app-sidebar"
         class="app-sidebar"
         data-sidebar
+        aria-label="Primary navigation"
     >
 
-        <a href="/" class="app-brand">
-            <span class="app-brand-mark">
+        <a href="/" class="aero-brand" aria-label="AeroESP home">
+            <span class="aero-brand__logo">
                 <img
-                    src="{% static 'aeroesp/brand/aeroesp-symbol.svg' %}"
-                    class="app-brand-symbol"
+                    src="{% static 'aeroesp/brand/final/aeroesp-logo-light.png' %}"
                     alt="AeroESP"
+                    class="aero-brand__img aero-brand__img--light"
                 >
-            </span>
-
-            <span class="app-brand-text">
-                <span class="app-brand-name">
-                    Aero<span>ESP</span>
-                </span>
-                <span class="app-brand-tagline">
-                    Aerospace English Platform
-                </span>
+                <img
+                    src="{% static 'aeroesp/brand/final/aeroesp-logo-dark.png' %}"
+                    alt="AeroESP"
+                    class="aero-brand__img aero-brand__img--dark"
+                >
             </span>
         </a>
 
@@ -538,6 +544,12 @@
 
         </div>
 
+
+        <div class="aeroesp-designer-credit aeroesp-designer-credit-sidebar">
+            Designed &amp; Developed by
+            <strong>Habib Ziashaiq</strong>
+        </div>
+
     </aside>
 
 
@@ -567,8 +579,18 @@
                     data-sidebar-toggle
                     aria-label="Open navigation"
                     aria-expanded="false"
+                    aria-controls="app-sidebar"
                 >
-                    <span></span>
+
+                    <span
+                        class="mobile-menu-icon"
+                        aria-hidden="true"
+                    >
+                        <i></i>
+                        <i></i>
+                        <i></i>
+                    </span>
+
                 </button>
 
 
@@ -587,7 +609,12 @@
                     Platform online
                 </div>
 
-                <div class="theme-control" data-theme-control>
+                <div
+                    class="theme-control"
+                    data-theme-control
+                    role="group"
+                    aria-label="Appearance"
+                >
 
                     <button type="button"
                             class="theme-choice"
@@ -646,14 +673,22 @@
 
 
 
-        <main class="app-main">
+        <main
+            class="app-main"
+            id="main-content"
+            tabindex="-1"
+        >
 
             <div class="app-content">
 
 
                 {% if messages %}
 
-                    <div class="app-messages">
+                    <div
+                        class="app-messages"
+                        role="status"
+                        aria-live="polite"
+                    >
 
                         {% for message in messages %}
 
@@ -693,7 +728,7 @@
 
 
 <script
-    src="{% static 'aeroesp/js/app.js' %}?v=ui07"
+    src="{% static 'aeroesp/js/app.js' %}?v=ui17"
 ></script>
 
 

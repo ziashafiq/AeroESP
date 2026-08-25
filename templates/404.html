@@ -1,0 +1,63 @@
+{% extends "aeroesp/public_base.html" %}
+
+{% block title %}
+Page Not Found · AeroESP
+{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+
+    <div class="error-number">
+        404
+    </div>
+
+    <span class="public-eyebrow">
+        Navigation
+    </span>
+
+    <h1>
+        This page is outside
+        the current flight path.
+    </h1>
+
+    <p>
+        The address may be incorrect,
+        the resource may have moved,
+        or the page may no longer exist.
+    </p>
+
+    <div class="status-actions">
+
+        <a
+            href="{% url 'home' %}"
+            class="public-button public-button-secondary"
+        >
+            AeroESP Home
+        </a>
+
+        {% if user.is_authenticated %}
+
+            <a
+                href="{% url 'accounts:role_redirect' %}"
+                class="public-button public-button-primary"
+            >
+                My Workspace
+            </a>
+
+        {% else %}
+
+            <a
+                href="{% url 'accounts:login' %}"
+                class="public-button public-button-primary"
+            >
+                Sign In
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+{% endblock %}

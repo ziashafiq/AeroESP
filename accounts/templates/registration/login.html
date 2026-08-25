@@ -1,273 +1,183 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+{% extends "aeroesp/public_base.html" %}
+{% load static %}
 
-    <meta charset="UTF-8">
+{% block title %}
+Sign In · AeroESP
+{% endblock %}
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
 
-    <title>
-        Sign In · AeroESP
-    </title>
+{% block public_nav_action %}
 
-    <style>
+<a
+    href="{% url 'home' %}"
+    class="public-button public-button-secondary"
+>
+    Back Home
+</a>
 
-        * {
-            box-sizing: border-box;
-        }
+{% endblock %}
 
-        body {
-            margin: 0;
 
-            font-family:
-                Inter,
-                Arial,
-                sans-serif;
+{% block content %}
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #07172c,
-                    #123b64
-                );
 
-            min-height: 100vh;
+<div class="auth-layout">
 
-            display: grid;
-            place-items: center;
+    <section class="auth-story">
 
-            padding: 24px;
-        }
+        <span class="public-eyebrow">
+            AeroESP Workspace
+        </span>
 
-        .login-card {
-            width: 100%;
-            max-width: 430px;
+        <h1>
+            Continue your
+            aerospace-English journey.
+        </h1>
 
-            background: #ffffff;
+        <p>
+            Students and approved teachers
+            are automatically routed to the
+            correct AeroESP workspace after
+            authentication.
+        </p>
 
-            border-radius: 22px;
 
-            padding:
-                38px 36px;
+        <div class="auth-story-grid">
 
-            box-shadow:
-                0 25px 70px
-                rgba(0,0,0,.25);
-        }
+            <div>
+                <strong>
+                    Student
+                </strong>
 
-        .brand {
-            text-align: center;
+                <span>
+                    Learning, practice,
+                    exams and analytics.
+                </span>
+            </div>
 
-            font-size: 28px;
-            font-weight: 800;
+            <div>
+                <strong>
+                    Teacher
+                </strong>
 
-            color: #0b2948;
+                <span>
+                    Content, assessment,
+                    analytics and integrity review.
+                </span>
+            </div>
 
-            margin-bottom: 6px;
-        }
-
-        .brand span {
-            color: #258bd0;
-        }
-
-        .subtitle {
-            text-align: center;
-
-            color: #728293;
-
-            margin-bottom: 30px;
-
-            line-height: 1.6;
-        }
-
-        label {
-            display: block;
-
-            color: #263c51;
-
-            font-size: 13px;
-            font-weight: 700;
-
-            margin-bottom: 7px;
-        }
-
-        input {
-            width: 100%;
-
-            border:
-                1px solid #d5dee7;
-
-            border-radius: 10px;
-
-            padding: 13px 14px;
-
-            font-size: 15px;
-
-            margin-bottom: 18px;
-
-            outline: none;
-        }
-
-        input:focus {
-            border-color: #258bd0;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(37,139,208,.11);
-        }
-
-        button {
-            border: none;
-
-            width: 100%;
-
-            background: #0c355b;
-
-            color: #ffffff;
-
-            padding: 14px;
-
-            border-radius: 10px;
-
-            font-size: 15px;
-            font-weight: 800;
-
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #124776;
-        }
-
-        .error {
-            background: #fff0f0;
-            color: #a92d2d;
-
-            padding: 12px 14px;
-
-            border-radius: 9px;
-
-            margin-bottom: 20px;
-
-            font-size: 13px;
-        }
-
-        .back {
-            text-align: center;
-            margin-top: 22px;
-        }
-
-        .back a {
-            color: #5f7488;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .back a:hover {
-            color: #258bd0;
-        }
-
-        .role-note {
-            margin-top: 24px;
-
-            padding-top: 18px;
-
-            border-top:
-                1px solid #edf1f5;
-
-            text-align: center;
-
-            color: #8a98a6;
-
-            font-size: 12px;
-
-            line-height: 1.6;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-<div class="login-card">
-
-    <div class="brand">
-        Aero<span>ESP</span>
-    </div>
-
-    <div class="subtitle">
-        Sign in to your learning
-        or teaching workspace.
-    </div>
-
-
-    {% if form.errors %}
-
-        <div class="error">
-            Username or password
-            is incorrect.
         </div>
 
-    {% endif %}
+    </section>
 
 
-    <form method="post">
+    <section class="auth-card">
 
-        {% csrf_token %}
+        <a href="/" class="aero-brand aero-brand--login" aria-label="AeroESP home">
+            <span class="aero-brand__logo">
+                <img
+                    src="{% static 'aeroesp/brand/final/aeroesp-logo-light.png' %}"
+                    alt="AeroESP"
+                    class="aero-brand__img aero-brand__img--light"
+                >
+                <img
+                    src="{% static 'aeroesp/brand/final/aeroesp-logo-dark.png' %}"
+                    alt="AeroESP"
+                    class="aero-brand__img aero-brand__img--dark"
+                >
+            </span>
+        </a>
 
-        {% if next %}
+        <div class="auth-card-brand">
 
-            <input
-                type="hidden"
-                name="next"
-                value="{{ next }}"
+            <span class="public-panel-kicker">
+                Secure access
+            </span>
+
+            <h2>
+                Sign in
+            </h2>
+
+            <p>
+                Enter your AeroESP account credentials.
+            </p>
+
+        </div>
+
+
+        {% if form.errors %}
+
+            <div
+                class="auth-error"
+                role="alert"
             >
+                The username or password
+                you entered is incorrect.
+            </div>
 
         {% endif %}
 
 
-        <label for="id_username">
-            Username
-        </label>
+        <form method="post">
 
-        {{ form.username }}
+            {% csrf_token %}
 
 
-        <label for="id_password">
-            Password
-        </label>
+            {% if next %}
 
-        {{ form.password }}
+                <input
+                    type="hidden"
+                    name="next"
+                    value="{{ next }}"
+                >
 
-
-        <button type="submit">
-            Sign In
-        </button>
-
-    </form>
+            {% endif %}
 
 
-    <div class="role-note">
-        Students, approved teachers
-        and administrators are routed
-        automatically to the appropriate
-        AeroESP workspace.
-    </div>
+            <div class="auth-field">
+
+                <label for="id_username">
+                    Username
+                </label>
+
+                {{ form.username }}
+
+            </div>
 
 
-    <div class="back">
+            <div class="auth-field">
 
-        <a href="{% url 'home' %}">
-            ← Back to AeroESP
-        </a>
+                <label for="id_password">
+                    Password
+                </label>
 
-    </div>
+                {{ form.password }}
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="auth-submit"
+            >
+                Sign In
+            </button>
+
+        </form>
+
+
+        <div class="auth-security-note">
+
+            <span class="auth-security-dot"></span>
+
+            Authentication is required for
+            learning and assessment workspaces.
+
+        </div>
+
+    </section>
 
 </div>
 
-</body>
-</html>
+
+{% endblock %}

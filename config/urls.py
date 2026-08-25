@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 from accounts import views as account_views
 
@@ -25,6 +26,14 @@ urlpatterns = [
         "",
         account_views.home,
         name="home",
+    ),
+
+    path(
+        "favicon.ico",
+        RedirectView.as_view(
+            url="/static/aeroesp/brand/final/aeroesp-app-icon.png?v=ui17",
+            permanent=False,
+        ),
     ),
 
     path("admin/", admin.site.urls),
@@ -66,3 +75,8 @@ urlpatterns = [
         include("intelligence.urls"),
     ),
 ]
+
+
+handler403 = "accounts.views.error_403"
+handler404 = "accounts.views.error_404"
+handler500 = "accounts.views.error_500"

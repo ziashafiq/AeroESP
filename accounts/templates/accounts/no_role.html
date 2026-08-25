@@ -1,18 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>AeroESP Account</title>
-</head>
+{% extends "aeroesp/public_base.html" %}
 
-<body>
+{% block title %}
+Account Access · AeroESP
+{% endblock %}
 
-    <h1>AeroESP</h1>
+
+{% block content %}
+
+<section class="status-page">
+
+    <div class="status-code">
+        AC
+    </div>
+
+    <span class="public-eyebrow">
+        Account configuration
+    </span>
+
+    <h1>
+        Workspace access
+        has not been assigned.
+    </h1>
 
     <p>
-        No Student or Teacher role has been assigned
-        to this account.
+        This AeroESP account currently has
+        neither a Student profile nor a
+        Teacher profile. An administrator
+        must assign the appropriate role
+        before workspace access is available.
     </p>
 
-</body>
-</html>
+
+    <div class="status-actions">
+
+        <a
+            href="{% url 'accounts:account_center' %}"
+            class="public-button public-button-secondary"
+        >
+            Account Center
+        </a>
+
+
+        <form
+            method="post"
+            action="{% url 'accounts:logout' %}"
+        >
+
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="public-button public-button-primary"
+            >
+                Sign Out
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}

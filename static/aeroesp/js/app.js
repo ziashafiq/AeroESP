@@ -20,6 +20,7 @@
         );
 
 
+
     function openSidebar() {
 
         body.classList.add(
@@ -85,45 +86,8 @@
     }
 
 
-    document.addEventListener(
-        "keydown",
-        (event) => {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeSidebar();
-            }
-        }
-    );
 
 
-    if (sidebar) {
-
-        sidebar
-            .querySelectorAll(
-                "a"
-            )
-            .forEach(
-                (link) => {
-
-                    link.addEventListener(
-                        "click",
-                        () => {
-
-                            if (
-                                window.innerWidth
-                                <= 860
-                            ) {
-
-                                closeSidebar();
-                            }
-                        }
-                    );
-                }
-            );
-    }
 
 
     /* ===============================================
@@ -328,5 +292,106 @@
     });
 
     apply(getPreference());
+
+
+
+    /* ===============================================
+       UI-08 Accessibility + responsive polish
+       =============================================== */
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            if (
+                window.innerWidth
+                > 860
+                &&
+                body.classList.contains(
+                    "sidebar-open"
+                )
+            ) {
+                closeSidebar();
+            }
+        }
+    );
+
+
+    if (
+        menuButton
+        &&
+        sidebar
+    ) {
+
+        menuButton.addEventListener(
+            "click",
+            () => {
+
+                if (
+                    body.classList.contains(
+                        "sidebar-open"
+                    )
+                ) {
+
+                    window.requestAnimationFrame(
+                        () => {
+
+                            const target =
+                                sidebar.querySelector(
+                                    "a, button"
+                                );
+
+                            if (target) {
+                                target.focus();
+                            }
+                        }
+                    );
+                }
+            }
+        );
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                event.key === "Escape"
+                &&
+                body.classList.contains(
+                    "sidebar-open"
+                )
+            ) {
+
+                closeSidebar();
+
+                if (menuButton) {
+                    menuButton.focus();
+                }
+            }
+        },
+        true
+    );
+
+
+    /*
+    Prevent stale mobile navigation state
+    when returning through browser history.
+    */
+
+    window.addEventListener(
+        "pageshow",
+        () => {
+
+            if (
+                window.innerWidth
+                > 860
+            ) {
+                closeSidebar();
+            }
+        }
+    );
+
 
 })();

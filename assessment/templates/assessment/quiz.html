@@ -1,181 +1,235 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "aeroesp/public_base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-
-    <title>AeroESP Assessment</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f7fa;
-            margin: 0;
-            padding: 0;
-            color: #1f2937;
-        }
-
-        .container {
-            width: 80%;
-            max-width: 900px;
-            margin: 40px auto;
-        }
-
-        .header {
-            background: #173b5e;
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-        }
-
-        .header h1 {
-            margin: 0 0 10px;
-        }
-
-        .question {
-            background: white;
-            padding: 25px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .metadata {
-            color: #607080;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
-        .option {
-            display: block;
-            margin: 12px 0;
-            padding: 10px;
-            background: #f6f8fa;
-            border-radius: 6px;
-        }
-
-        button {
-            background: #173b5e;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #24547e;
-        }
-    </style>
-</head>
+{% block title %}
+AeroESP Assessment
+{% endblock %}
 
 
-<body>
+{% block content %}
 
-<div class="container">
-
-    <div class="header">
-
-        <h1>AeroESP</h1>
-
-        <h2>Aerospace Engineering English Assessment</h2>
-
-        <p>
-            Prototype v0.1
-        </p>
-
-    </div>
+<section class="quiz15-shell">
 
 
-    <form method="post">
+    <header class="quiz15-hero">
+
+        <div>
+
+            <span class="public-eyebrow">
+                Aerospace English Assessment
+            </span>
+
+            <h1>
+                Test your
+                <span>
+                    aerospace English.
+                </span>
+            </h1>
+
+            <p>
+                A short diagnostic assessment covering
+                technical language, grammar, reading
+                and aerospace-domain knowledge.
+            </p>
+
+        </div>
+
+
+        <div class="quiz15-summary">
+
+            <span>
+                Assessment
+            </span>
+
+            <strong>
+                {{ questions|length }}
+            </strong>
+
+            <small>
+                questions
+            </small>
+
+        </div>
+
+    </header>
+
+
+    {% if questions %}
+
+    <form
+        method="post"
+        class="quiz15-form"
+    >
 
         {% csrf_token %}
 
+
         {% for question in questions %}
 
-            <div class="question">
+        <article class="quiz15-question">
 
-                <div class="metadata">
 
-                    {{ question.get_skill_display }}
-                    |
-                    {{ question.get_aerospace_domain_display }}
-                    |
-                    {{ question.get_difficulty_display }}
+            <header class="quiz15-question-header">
 
+                <div class="quiz15-number">
+                    {{ forloop.counter|stringformat:"02d" }}
                 </div>
 
 
-                <h3>
-                    {{ forloop.counter }}.
-                    {{ question.question_text|linebreaksbr }}
-                </h3>
+                <div class="quiz15-meta">
+
+                    <span>
+                        {{ question.get_skill_display }}
+                    </span>
+
+                    <span>
+                        {{ question.get_aerospace_domain_display }}
+                    </span>
+
+                    <span>
+                        {{ question.get_difficulty_display }}
+                    </span>
+
+                </div>
+
+            </header>
 
 
-                <label class="option">
+            <h2>
+                {{ question.question_text|linebreaksbr }}
+            </h2>
+
+
+            <div class="quiz15-options">
+
+
+                <label class="quiz15-option">
+
                     <input
                         type="radio"
                         name="question_{{ question.id }}"
                         value="A"
                     >
-                    A) {{ question.option_a }}
+
+                    <span class="quiz15-letter">
+                        A
+                    </span>
+
+                    <span>
+                        {{ question.option_a }}
+                    </span>
+
                 </label>
 
 
-                <label class="option">
+                <label class="quiz15-option">
+
                     <input
                         type="radio"
                         name="question_{{ question.id }}"
                         value="B"
                     >
-                    B) {{ question.option_b }}
+
+                    <span class="quiz15-letter">
+                        B
+                    </span>
+
+                    <span>
+                        {{ question.option_b }}
+                    </span>
+
                 </label>
 
 
-                <label class="option">
+                <label class="quiz15-option">
+
                     <input
                         type="radio"
                         name="question_{{ question.id }}"
                         value="C"
                     >
-                    C) {{ question.option_c }}
+
+                    <span class="quiz15-letter">
+                        C
+                    </span>
+
+                    <span>
+                        {{ question.option_c }}
+                    </span>
+
                 </label>
 
 
-                <label class="option">
+                <label class="quiz15-option">
+
                     <input
                         type="radio"
                         name="question_{{ question.id }}"
                         value="D"
                     >
-                    D) {{ question.option_d }}
+
+                    <span class="quiz15-letter">
+                        D
+                    </span>
+
+                    <span>
+                        {{ question.option_d }}
+                    </span>
+
                 </label>
+
 
             </div>
 
-        {% empty %}
-
-            <p>
-                No questions are currently available.
-            </p>
+        </article>
 
         {% endfor %}
 
 
-        {% if questions %}
+        <div class="quiz15-submit">
 
-            <button type="submit">
+            <div>
+
+                <span>
+                    Ready to finish?
+                </span>
+
+                <strong>
+                    Submit your assessment
+                    when all questions are complete.
+                </strong>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="public-button public-button-primary public-button-large"
+            >
                 Submit Assessment
             </button>
 
-        {% endif %}
+        </div>
 
     </form>
 
-</div>
 
-</body>
+    {% else %}
 
-</html>
+    <section class="quiz15-empty">
+
+        <h2>
+            No assessment questions available.
+        </h2>
+
+        <p>
+            The assessment bank is currently empty.
+        </p>
+
+    </section>
+
+    {% endif %}
+
+
+</section>
+
+{% endblock %}

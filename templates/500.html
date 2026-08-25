@@ -1,0 +1,43 @@
+{% extends "aeroesp/public_base.html" %}
+
+{% block title %}
+System Error · AeroESP
+{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+
+    <div class="error-number">
+        500
+    </div>
+
+    <span class="public-eyebrow">
+        Platform status
+    </span>
+
+    <h1>
+        AeroESP could not complete
+        this request.
+    </h1>
+
+    <p>
+        An unexpected server error occurred.
+        Your request was not completed.
+        Return to the platform and try again.
+    </p>
+
+    <div class="status-actions">
+
+        <a
+            href="{% url 'home' %}"
+            class="public-button public-button-primary"
+        >
+            Return Home
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}
