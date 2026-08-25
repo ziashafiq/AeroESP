@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 from decimal import Decimal
 
@@ -853,17 +853,22 @@ class OpenAIQuestionGenerator(
                 timeout=self.timeout,
             )
 
-            response = client.chat.completions.create(
+            response = client.responses.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert in creating high-quality multiple-choice questions for aerospace English and General English contexts."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=500,
-                response_format={"type": "json_object"},
+                instructions=(
+                    "You are an expert in creating "
+                    "high-quality multiple-choice "
+                    "questions for aerospace English "
+                    "and General English contexts."
+                ),
+                input=prompt,
             )
-            content = response.choices[0].message.content
+
+            content = (
+                response.output_text
+                or ""
+            ).strip()
+
             data = json.loads(content)
 
             # Validate the result
@@ -871,11 +876,33 @@ class OpenAIQuestionGenerator(
 
             # Add provider and metadata
             data["provider"] = self.provider_name
+            usage = getattr(
+                response,
+                "usage",
+                None,
+            )
+
             data["metadata"] = {
                 "model": self.model,
+                "api_family": "responses",
                 "response_id": getattr(
                     response,
                     "id",
+                    None,
+                ),
+                "input_tokens": getattr(
+                    usage,
+                    "input_tokens",
+                    None,
+                ),
+                "output_tokens": getattr(
+                    usage,
+                    "output_tokens",
+                    None,
+                ),
+                "total_tokens": getattr(
+                    usage,
+                    "total_tokens",
                     None,
                 ),
                 "track": track,
