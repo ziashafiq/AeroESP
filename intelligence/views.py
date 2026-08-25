@@ -30,6 +30,9 @@ from .services import (
 from .feedback import (
     build_ai_feedback_summary,
 )
+from .prompt_analytics import (
+    build_prompt_performance,
+)
 
 
 def _require_teacher(user):
@@ -277,6 +280,9 @@ def ai_dashboard(request):
             "recent_ai_events": recent_ai_events,
             "feedback_summary": (
                 build_ai_feedback_summary()
+            ),
+            "prompt_performance": (
+                build_prompt_performance()
             ),
         },
     )

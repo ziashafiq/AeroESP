@@ -163,6 +163,82 @@ AI Intelligence
 
             <hr>
 
+            <h3>
+                Prompt Performance Analytics
+            </h3>
+
+            {% for prompt in prompt_performance %}
+
+            <div class="card">
+
+                <p>
+                    <strong>
+                        Version:
+                    </strong>
+
+                    {{ prompt.version }}
+                </p>
+
+                <p>
+                    <strong>
+                        Provider:
+                    </strong>
+
+                    {{ prompt.provider }}
+                </p>
+
+                <p>
+                    <strong>
+                        Generations:
+                    </strong>
+
+                    {{ prompt.generations }}
+                </p>
+
+                <p>
+                    <strong>
+                        Average Quality Score:
+                    </strong>
+
+                    {{ prompt.average_score }}
+                </p>
+
+                <p>
+                    <strong>
+                        Accepted:
+                    </strong>
+
+                    {{ prompt.accepted }}
+                </p>
+
+                <p>
+                    <strong>
+                        Edited:
+                    </strong>
+
+                    {{ prompt.edited }}
+                </p>
+
+                <p>
+                    <strong>
+                        Rejected:
+                    </strong>
+
+                    {{ prompt.rejected }}
+                </p>
+
+            </div>
+
+            {% empty %}
+
+            <p>
+                No prompt performance data available.
+            </p>
+
+            {% endfor %}
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}
