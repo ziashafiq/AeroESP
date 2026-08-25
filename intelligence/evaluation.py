@@ -1,13 +1,10 @@
-from django.db.models import (
-    Count,
-    Avg,
-    Q,
-)
+from django.db.models import Avg
 
 from .models import (
     AIInteractionEvent,
     AIQualitySnapshot,
     AIPromptVersion,
+    GeneratedQuestionDraft,
 )
 
 
@@ -16,22 +13,25 @@ def build_prompt_evaluation():
     results = []
 
 
-    prompts = (
-        AIPromptVersion.objects
-        .all()
-    )
+    prompts = AIPromptVersion.objects.all()
 
 
     for prompt in prompts:
 
-
         generation_events = (
             AIInteractionEvent.objects
             .filter(
-                prompt_version=prompt.version,
-                event_type=(
-                    "GENERATION_SUCCESS"
-                ),
+                event_type="GENERATION_SUCCESS",
+                draft__isnull=False,
+            )
+        )
+
+
+        drafts = GeneratedQuestionDraft.objects.filter(
+            id__in=
+            generation_events.values_list(
+                "draft_id",
+                flat=True,
             )
         )
 
@@ -39,20 +39,18 @@ def build_prompt_evaluation():
         snapshots = (
             AIQualitySnapshot.objects
             .filter(
-                event__in=generation_events
+                draft__in=drafts
             )
         )
 
 
-        total = generation_events.count()
+        total = drafts.count()
 
 
         accepted = (
             snapshots
             .filter(
-                quality_data__action=(
-                    "teacher_accept"
-                )
+                quality_data__action="teacher_accept"
             )
             .count()
         )
@@ -61,9 +59,7 @@ def build_prompt_evaluation():
         edited = (
             snapshots
             .filter(
-                quality_data__action=(
-                    "teacher_edit"
-                )
+                quality_data__action="teacher_edit"
             )
             .count()
         )
@@ -72,12 +68,35 @@ def build_prompt_evaluation():
         rejected = (
             snapshots
             .filter(
-                quality_data__action=(
-                    "teacher_reject"
-                )
+                quality_data__action="teacher_reject"
             )
             .count()
         )
+
+
+        reviewed = (
+            accepted
+            + edited
+            + rejected
+        )
+
+
+        review_rate = 0
+
+        if total:
+            review_rate = round(
+                reviewed / total * 100,
+                2,
+            )
+
+
+        decision_acceptance_rate = 0
+
+        if reviewed:
+            decision_acceptance_rate = round(
+                accepted / reviewed * 100,
+                2,
+            )
 
 
         average_quality = (
@@ -89,77 +108,46 @@ def build_prompt_evaluation():
         )
 
 
-        if total:
+        acceptance_rate = 0
 
+        if total:
             acceptance_rate = round(
                 accepted / total * 100,
                 2,
             )
 
-        else:
 
-            acceptance_rate = 0
+        if average_quality and average_quality >= 80:
+            recommendation = "GOOD"
 
-
-
-        if (
-            average_quality
-            and average_quality >= 80
-        ):
-
-            recommendation = (
-                "GOOD"
-            )
-
-        elif (
-            average_quality
-            and average_quality >= 60
-        ):
-
-            recommendation = (
-                "REVIEW"
-            )
+        elif average_quality and average_quality >= 60:
+            recommendation = "REVIEW"
 
         else:
-
-            recommendation = (
-                "POOR"
-            )
+            recommendation = "POOR"
 
 
         results.append(
             {
-                "version":
-                    prompt.version,
-
-                "provider":
-                    prompt.provider,
-
-                "generations":
-                    total,
-
-                "average_quality":
+                "version": prompt.version,
+                "provider": prompt.provider,
+                "generations": total,
+                "average_quality": (
                     round(
                         average_quality,
-                        2
+                        2,
                     )
                     if average_quality
-                    else 0,
-
-                "accepted":
-                    accepted,
-
-                "edited":
-                    edited,
-
-                "rejected":
-                    rejected,
-
-                "acceptance_rate":
-                    acceptance_rate,
-
-                "recommendation":
-                    recommendation,
+                    else 0
+                ),
+                "accepted": accepted,
+                "edited": edited,
+                "rejected": rejected,
+                "acceptance_rate": acceptance_rate,
+                "recommendation": recommendation,
+                "reviewed": reviewed,
+                "review_rate": review_rate,
+                "decision_acceptance_rate": decision_acceptance_rate,
             }
         )
 

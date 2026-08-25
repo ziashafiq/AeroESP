@@ -36,6 +36,9 @@ from .prompt_analytics import (
 from .cost_analytics import (
     build_ai_performance,
 )
+from .evaluation import (
+    build_prompt_evaluation,
+)
 
 
 def _require_teacher(user):
@@ -289,6 +292,9 @@ def ai_dashboard(request):
             ),
             "ai_performance": (
                 build_ai_performance()
+            ),
+            "prompt_evaluation": (
+                build_prompt_evaluation()
             ),
         },
     )
