@@ -25,7 +25,8 @@ def build_prompt_performance():
         events = (
             AIInteractionEvent.objects
             .filter(
-                prompt_version=prompt.version
+                prompt_version=prompt.version,
+                event_type="GENERATION_SUCCESS",
             )
         )
 
