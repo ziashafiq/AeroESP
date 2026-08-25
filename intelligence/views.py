@@ -11,7 +11,7 @@ from assessment.forms import TeacherQuestionForm
 from assessment.models import Question
 
 from learning.models import Enrollment
-
+from .quality import evaluate_question_quality
 from .forms import QuestionGenerationForm
 from .models import (
     GeneratedQuestionDraft,
@@ -434,6 +434,15 @@ def generate_question_view(request):
                         )
                     ),
                 )
+                quality_report = evaluate_question_quality(
+                    result=result,
+                    track=data["track"],
+                    skill=data["skill"],
+                    difficulty=data["difficulty"],
+                )
+
+
+                result["metadata"]["quality"] = quality_report
                 draft = (
                     GeneratedQuestionDraft
                     .objects
