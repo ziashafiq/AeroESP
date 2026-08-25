@@ -695,6 +695,18 @@ def edit_generated_draft(
 
         draft.save()
 
+        AIInteractionEvent.objects.create(
+            actor=request.user,
+            draft=draft,
+            event_type="DRAFT_EDITED",
+            provider=draft.provider,
+            success=True,
+            metadata={
+                "action": "teacher_edit",
+                "fields": fields,
+            },
+        )
+
         return redirect(
             "intelligence:"
             "generated_draft_detail",
@@ -854,6 +866,18 @@ def accept_generated_draft(
         ]
     )
 
+    AIInteractionEvent.objects.create(
+        actor=request.user,
+        draft=draft,
+        question=question,
+        event_type="DRAFT_ACCEPTED",
+        provider=draft.provider,
+        success=True,
+        metadata={
+            "action": "accepted_to_question_bank",
+        },
+    )
+
     return redirect(
         "intelligence:"
         "generated_draft_detail",
@@ -916,6 +940,17 @@ def reject_generated_draft(
             "reviewed_by",
             "reviewed_at",
         ]
+    )
+
+    AIInteractionEvent.objects.create(
+        actor=request.user,
+        draft=draft,
+        event_type="DRAFT_REJECTED",
+        provider=draft.provider,
+        success=True,
+        metadata={
+            "action": "rejected_by_teacher",
+        },
     )
 
     return redirect(
