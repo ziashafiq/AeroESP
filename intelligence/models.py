@@ -343,7 +343,43 @@ class GeneratedQuestionDraft(models.Model):
             f"AI Draft {self.pk} - "
             f"{self.status}"
         )
+class AIPromptVersion(models.Model):
 
+    version = models.CharField(
+        max_length=80,
+        unique=True,
+    )
+
+    provider = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+    )
+
+    description = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    active = models.BooleanField(
+        default=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+
+    class Meta:
+
+        ordering = [
+            "-created_at",
+        ]
+
+
+    def __str__(self):
+
+        return self.version
 
 # =========================================================
 # AI / Research Telemetry
