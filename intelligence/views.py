@@ -369,6 +369,17 @@ def generate_question_view(request):
                     ),
                 )
 
+                AIInteractionEvent.objects.create(
+                    user=request.user,
+                    event_type="GENERATION_STARTED",
+                    provider=provider_name,
+                    metadata={
+                        "track": str(data["track"]),
+                        "skill": str(data["skill"]),
+                        "difficulty": str(data["difficulty"]),
+                    },
+                )
+
                 draft = (
                     GeneratedQuestionDraft
                     .objects
