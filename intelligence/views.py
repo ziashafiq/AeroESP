@@ -992,7 +992,7 @@ def accept_generated_draft(
         ]
     )
 
-    AIInteractionEvent.objects.create(
+    accept_event = AIInteractionEvent.objects.create(
         actor=request.user,
         draft=draft,
         question=question,
@@ -1001,6 +1001,43 @@ def accept_generated_draft(
         success=True,
         metadata={
             "action": "accepted_to_question_bank",
+        },
+    )
+
+    AIQualitySnapshot.objects.create(
+        draft=draft,
+        event=accept_event,
+        score=draft.generation_metadata.get(
+            "quality",
+            {},
+        ).get(
+            "score",
+            0,
+        ),
+        status=draft.generation_metadata.get(
+            "quality",
+            {},
+        ).get(
+            "status",
+            "",
+        ),
+        decision=draft.generation_metadata.get(
+            "quality_advice",
+            {},
+        ).get(
+            "decision",
+            "",
+        ),
+        quality_data={
+            "action": "teacher_accept",
+            "quality": draft.generation_metadata.get(
+                "quality",
+                {},
+            ),
+            "advice": draft.generation_metadata.get(
+                "quality_advice",
+                {},
+            ),
         },
     )
 
