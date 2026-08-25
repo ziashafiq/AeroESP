@@ -302,6 +302,78 @@ AI Intelligence
 
             <hr>
 
+            <h3>
+                AI Prompt Evaluation
+            </h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Prompt</th>
+                        <th>Provider</th>
+                        <th>Generations</th>
+                        <th>Quality</th>
+                        <th>Reviewed</th>
+                        <th>Review Rate</th>
+                        <th>Acceptance</th>
+                        <th>Recommendation</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for item in prompt_evaluation %}
+
+                    <tr>
+                        <td>
+                            {{ item.version }}
+                        </td>
+
+                        <td>
+                            {{ item.provider }}
+                        </td>
+
+                        <td>
+                            {{ item.generations }}
+                        </td>
+
+                        <td>
+                            {{ item.average_quality }}
+                        </td>
+
+                        <td>
+                            {{ item.reviewed }}
+                        </td>
+
+                        <td>
+                            {{ item.review_rate }}%
+                        </td>
+
+                        <td>
+                            {{ item.decision_acceptance_rate }}%
+                        </td>
+
+                        <td>
+                            {{ item.recommendation }}
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="8">
+                            No evaluation data available.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}
