@@ -784,7 +784,7 @@ def edit_generated_draft(
 
         draft.save()
 
-        AIInteractionEvent.objects.create(
+        edit_event = AIInteractionEvent.objects.create(
             actor=request.user,
             draft=draft,
             event_type="DRAFT_EDITED",
@@ -793,6 +793,43 @@ def edit_generated_draft(
             metadata={
                 "action": "teacher_edit",
                 "fields": fields,
+            },
+        )
+
+        AIQualitySnapshot.objects.create(
+            draft=draft,
+            event=edit_event,
+            score=draft.generation_metadata.get(
+                "quality",
+                {},
+            ).get(
+                "score",
+                0,
+            ),
+            status=draft.generation_metadata.get(
+                "quality",
+                {},
+            ).get(
+                "status",
+                "",
+            ),
+            decision=draft.generation_metadata.get(
+                "quality_advice",
+                {},
+            ).get(
+                "decision",
+                "",
+            ),
+            quality_data={
+                "action": "teacher_edit",
+                "quality": draft.generation_metadata.get(
+                    "quality",
+                    {},
+                ),
+                "advice": draft.generation_metadata.get(
+                    "quality_advice",
+                    {},
+                ),
             },
         )
 
