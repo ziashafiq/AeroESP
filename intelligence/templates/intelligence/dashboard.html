@@ -42,7 +42,26 @@ AI Intelligence
             <p>Total Events: {{ ai_stats.total_events }}</p>
             <p>Successful: {{ ai_stats.success_events }}</p>
             <p>Failed: {{ ai_stats.failure_events }}</p>
+            <p>
+                <strong>
+                    Quality Good:
+                </strong>
+                {{ ai_stats.quality_good }}
+            </p>
 
+            <p>
+                <strong>
+                    Quality Review:
+                </strong>
+                {{ ai_stats.quality_review }}
+            </p>
+
+            <p>
+                <strong>
+                    Quality Poor:
+                </strong>
+                {{ ai_stats.quality_poor }}
+            </p>
             <p>Pending Drafts: {{ ai_stats.drafts_pending }}</p>
             <p>Accepted Drafts: {{ ai_stats.drafts_accepted }}</p>
             <p>Rejected Drafts: {{ ai_stats.drafts_rejected }}</p>
