@@ -33,6 +33,57 @@ Generated Question Draft | AeroESP
     </p>
 
     {% endif %}
+    {% if draft.generation_metadata.quality %}
+
+    <div class="card">
+
+        <h3>
+            AI Quality Evaluation
+        </h3>
+
+        <p>
+            <strong>
+                Score:
+            </strong>
+
+            {{ draft.generation_metadata.quality.score }}
+        </p>
+
+        <p>
+            <strong>
+                Status:
+            </strong>
+
+            {{ draft.generation_metadata.quality.status }}
+        </p>
+
+        <p>
+            <strong>
+                Completeness:
+            </strong>
+
+            {{ draft.generation_metadata.quality.checks.completeness }}
+        </p>
+
+        <p>
+            <strong>
+                Options:
+            </strong>
+
+            {{ draft.generation_metadata.quality.checks.options }}
+        </p>
+
+        <p>
+            <strong>
+                Explanation:
+            </strong>
+
+            {{ draft.generation_metadata.quality.checks.explanation }}
+        </p>
+
+    </div>
+
+    {% endif %}
 
     <p>
         <strong>Track:</strong>
