@@ -46,6 +46,24 @@ AI Intelligence
             <p>Pending Drafts: {{ ai_stats.drafts_pending }}</p>
             <p>Accepted Drafts: {{ ai_stats.drafts_accepted }}</p>
             <p>Rejected Drafts: {{ ai_stats.drafts_rejected }}</p>
+
+            <hr>
+
+            <h3>Provider Analytics</h3>
+
+            {% for item in provider_stats %}
+                <div>
+                    <strong>{{ item.provider }}</strong>
+                    <br>
+                    Total: {{ item.total }}
+                    |
+                    Success: {{ item.success }}
+                    |
+                    Failure: {{ item.failure }}
+                </div>
+            {% empty %}
+                <p>No provider data available.</p>
+            {% endfor %}
         </section>
 
 
@@ -73,6 +91,59 @@ AI Intelligence
             </a>
 
         </article>
+
+    </div>
+
+</section>
+
+
+
+<section class="section">
+
+    <div class="section-header">
+        <div>
+            <div class="page-eyebrow">
+                AI Telemetry
+            </div>
+            <h2>
+                Recent AI Events
+            </h2>
+        </div>
+    </div>
+
+
+    <div class="ai-feature-grid">
+
+        {% for event in recent_ai_events %}
+
+        <article class="ai-feature-card">
+
+            <span class="app-badge">
+                {{ event.get_event_type_display }}
+            </span>
+
+            <h3>
+                {{ event.provider }}
+            </h3>
+
+            <p>
+                Success:
+                {{ event.success }}
+            </p>
+
+            <p>
+                {{ event.created_at }}
+            </p>
+
+        </article>
+
+        {% empty %}
+
+        <p>
+            No AI events recorded.
+        </p>
+
+        {% endfor %}
 
     </div>
 

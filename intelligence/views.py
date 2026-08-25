@@ -101,22 +101,30 @@ def ai_dashboard(request):
         ).count(),
     }
 
-    provider_stats = (
+    provider_stats = []
+
+    for row in (
         ai_events
         .values("provider")
-        .annotate(
-            total=Count("id"),
-            success=Count(
-                "id",
-                filter=Q(success=True),
-            ),
-            failure=Count(
-                "id",
-                filter=Q(success=False),
-            ),
-        )
+        .annotate(total=Count("id"))
         .order_by("-total")
-    )
+    ):
+        provider_events = ai_events.filter(
+            provider=row["provider"]
+        )
+
+        provider_stats.append(
+            {
+                "provider": row["provider"],
+                "total": row["total"],
+                "success": provider_events.filter(
+                    success=True
+                ).count(),
+                "failure": provider_events.filter(
+                    success=False
+                ).count(),
+            }
+        )
 
     recent_ai_events = (
         ai_events
