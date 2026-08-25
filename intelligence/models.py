@@ -511,3 +511,53 @@ class AIInteractionEvent(models.Model):
             f"{self.event_type} - "
             f"{self.created_at}"
         )
+class AIQualitySnapshot(models.Model):
+
+    draft = models.ForeignKey(
+        "GeneratedQuestionDraft",
+        on_delete=models.CASCADE,
+        related_name="quality_snapshots",
+    )
+
+    event = models.ForeignKey(
+        "AIInteractionEvent",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="quality_snapshots",
+    )
+
+    score = models.PositiveIntegerField(
+        default=0,
+    )
+
+    status = models.CharField(
+        max_length=50,
+        blank=True,
+    )
+
+    decision = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    quality_data = models.JSONField(
+        default=dict,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+
+        ordering = [
+            "-created_at"
+        ]
+
+    def __str__(self):
+
+        return (
+            f"{self.draft_id} "
+            f"- {self.decision}"
+        )

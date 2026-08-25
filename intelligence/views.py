@@ -17,6 +17,7 @@ from .forms import QuestionGenerationForm
 from .models import (
     GeneratedQuestionDraft,
     AIInteractionEvent,
+    AIQualitySnapshot,
     LearnerInsightSnapshot,
     QuestionAISuggestion,
 )
@@ -517,7 +518,7 @@ def generate_question_view(request):
                     )
                 )
 
-                AIInteractionEvent.objects.create(
+                success_event = AIInteractionEvent.objects.create(
                     actor=request.user,
                     draft=draft,
                     event_type="GENERATION_SUCCESS",
@@ -592,6 +593,18 @@ def generate_question_view(request):
                         "difficulty": str(
                             data["difficulty"]
                         ),
+                    },
+                )
+
+                AIQualitySnapshot.objects.create(
+                    draft=draft,
+                    event=success_event,
+                    score=result["metadata"]["quality"]["score"],
+                    status=result["metadata"]["quality"]["status"],
+                    decision=result["metadata"]["quality_advice"]["decision"],
+                    quality_data={
+                        "quality": result["metadata"]["quality"],
+                        "advice": result["metadata"]["quality_advice"],
                     },
                 )
 
