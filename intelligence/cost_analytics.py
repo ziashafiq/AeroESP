@@ -5,7 +5,9 @@ from django.db.models import (
 )
 
 from .models import AIInteractionEvent
-
+from .cost_estimator import (
+    estimate_cost,
+)
 
 
 def build_ai_performance():
@@ -41,6 +43,7 @@ def build_ai_performance():
 
 
         stats = events.aggregate(
+
             total=Count("id"),
 
             avg_latency=Avg(
@@ -54,6 +57,21 @@ def build_ai_performance():
             total_tokens=Sum(
                 "total_tokens"
             ),
+
+            total_input_tokens=Sum(
+                "input_tokens"
+            ),
+
+            total_output_tokens=Sum(
+                "output_tokens"
+            ),
+        )
+
+
+        estimated_cost = estimate_cost(
+            provider,
+            stats["total_input_tokens"] or 0,
+            stats["total_output_tokens"] or 0,
         )
 
 
@@ -98,6 +116,8 @@ def build_ai_performance():
                     ]
                     or 0
                 ),
+
+                "estimated_cost": estimated_cost,
             }
         )
 
