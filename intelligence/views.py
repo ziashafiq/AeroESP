@@ -15,6 +15,7 @@ from learning.models import Enrollment
 from .forms import QuestionGenerationForm
 from .models import (
     GeneratedQuestionDraft,
+    AIInteractionEvent,
     LearnerInsightSnapshot,
     QuestionAISuggestion,
 )
