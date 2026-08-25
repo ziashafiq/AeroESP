@@ -239,6 +239,61 @@ AI Intelligence
 
             <hr>
 
+            <h3>
+                AI Performance Analytics
+            </h3>
+
+            {% for item in ai_performance %}
+
+            <div class="card">
+
+                <p>
+                    <strong>
+                        Provider:
+                    </strong>
+                    {{ item.provider }}
+                </p>
+
+                <p>
+                    <strong>
+                        Requests:
+                    </strong>
+                    {{ item.requests }}
+                </p>
+
+                <p>
+                    <strong>
+                        Average Latency:
+                    </strong>
+                    {{ item.average_latency_ms }} ms
+                </p>
+
+                <p>
+                    <strong>
+                        Average Tokens:
+                    </strong>
+                    {{ item.average_tokens }}
+                </p>
+
+                <p>
+                    <strong>
+                        Total Tokens:
+                    </strong>
+                    {{ item.total_tokens }}
+                </p>
+
+            </div>
+
+            {% empty %}
+
+            <p>
+                No AI performance data available.
+            </p>
+
+            {% endfor %}
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}

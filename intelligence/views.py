@@ -33,6 +33,9 @@ from .feedback import (
 from .prompt_analytics import (
     build_prompt_performance,
 )
+from .cost_analytics import (
+    build_ai_performance,
+)
 
 
 def _require_teacher(user):
@@ -283,6 +286,9 @@ def ai_dashboard(request):
             ),
             "prompt_performance": (
                 build_prompt_performance()
+            ),
+            "ai_performance": (
+                build_ai_performance()
             ),
         },
     )
