@@ -13,13 +13,17 @@ def build_ai_performance():
     result = []
 
 
-    providers = (
-        AIInteractionEvent.objects
-        .values_list(
-            "provider",
-            flat=True,
+    providers = sorted(
+        set(
+            p.strip()
+            for p in
+            AIInteractionEvent.objects
+            .values_list(
+                "provider",
+                flat=True,
+            )
+            if p
         )
-        .distinct()
     )
 
 
