@@ -68,6 +68,40 @@ AI Intelligence
 
             <hr>
 
+            <h3>
+                AI Governance Analytics
+            </h3>
+
+            <p>
+                <strong>
+                    Average Quality Score:
+                </strong>
+                {{ ai_stats.average_quality_score }}
+            </p>
+
+            <p>
+                <strong>
+                    Teacher Acceptance Rate:
+                </strong>
+                {{ ai_stats.acceptance_rate }} %
+            </p>
+
+            <p>
+                <strong>
+                    Teacher Edit Rate:
+                </strong>
+                {{ ai_stats.edit_rate }} %
+            </p>
+
+            <p>
+                <strong>
+                    Teacher Rejection Rate:
+                </strong>
+                {{ ai_stats.rejection_rate }} %
+            </p>
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}

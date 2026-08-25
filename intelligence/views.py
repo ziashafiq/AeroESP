@@ -101,18 +101,111 @@ def ai_dashboard(request):
         "drafts_rejected": GeneratedQuestionDraft.objects.filter(
             status="REJECTED"
         ).count(),
-                "quality_good": GeneratedQuestionDraft.objects.filter(
-                    generation_metadata__quality__status="GOOD"
-                ).count(),
 
-                "quality_review": GeneratedQuestionDraft.objects.filter(
-                    generation_metadata__quality__status="REVIEW"
-                ).count(),
+        "quality_good": GeneratedQuestionDraft.objects.filter(
+            generation_metadata__quality__status="GOOD"
+        ).count(),
 
-                "quality_poor": GeneratedQuestionDraft.objects.filter(
-                    generation_metadata__quality__status="POOR"
-                ).count(),
+        "quality_review": GeneratedQuestionDraft.objects.filter(
+            generation_metadata__quality__status="REVIEW"
+        ).count(),
+
+        "quality_poor": GeneratedQuestionDraft.objects.filter(
+            generation_metadata__quality__status="POOR"
+        ).count(),
+
+        "acceptance_rate": 0,
+
+        "edit_rate": 0,
+
+        "rejection_rate": 0,
+
+        "average_quality_score": 0,
     }
+
+    # Compute additional statistics
+    total_reviewed = (
+        GeneratedQuestionDraft.objects
+        .filter(
+            status__in=[
+                "ACCEPTED",
+                "REJECTED",
+            ]
+        )
+        .count()
+    )
+
+    accepted_count = (
+        GeneratedQuestionDraft.objects
+        .filter(
+            status="ACCEPTED"
+        )
+        .count()
+    )
+
+    rejected_count = (
+        GeneratedQuestionDraft.objects
+        .filter(
+            status="REJECTED"
+        )
+        .count()
+    )
+
+    edited_count = (
+        AIInteractionEvent.objects
+        .filter(
+            event_type="DRAFT_EDITED"
+        )
+        .count()
+    )
+
+    snapshots = (
+        AIQualitySnapshot.objects
+        .all()
+    )
+
+    if total_reviewed:
+
+        ai_stats["acceptance_rate"] = round(
+            accepted_count
+            /
+            total_reviewed
+            *
+            100,
+            2,
+        )
+
+        ai_stats["rejection_rate"] = round(
+            rejected_count
+            /
+            total_reviewed
+            *
+            100,
+            2,
+        )
+
+    if ai_events.count():
+
+        ai_stats["edit_rate"] = round(
+            edited_count
+            /
+            ai_events.count()
+            *
+            100,
+            2,
+        )
+
+    if snapshots.exists():
+
+        ai_stats["average_quality_score"] = round(
+            sum(
+                s.score
+                for s in snapshots
+            )
+            /
+            snapshots.count(),
+            2,
+        )
 
     provider_stats = []
 
