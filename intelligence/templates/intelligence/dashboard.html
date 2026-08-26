@@ -505,6 +505,10 @@ AI Intelligence
                         <th>Average Quality</th>
                         <th>Average Acceptance</th>
                         <th>Recommendation</th>
+                        <th>AI Score</th>
+                        <th>Human Score</th>
+                        <th>AI-Human Gap</th>
+                        <th>Agreement</th>
                     </tr>
                 </thead>
 
@@ -530,6 +534,18 @@ AI Intelligence
                         </td>
                         <td>
                             {{ item.recommendation }}
+                        </td>
+                        <td>
+                            {{ item.average_ai_score }}
+                        </td>
+                        <td>
+                            {{ item.average_human_score }}
+                        </td>
+                        <td>
+                            {{ item.ai_human_gap }}
+                        </td>
+                        <td>
+                            {{ item.ai_human_agreement }}
                         </td>
                     </tr>
 
