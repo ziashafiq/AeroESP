@@ -62,6 +62,12 @@ def build_experiment_summary(
             "average_human_score": round(avg_human, 2),
             "ai_human_gap": round(gap, 2),
             "ai_human_agreement": round(100 - gap, 2),
+            "comparison_data": {
+                "provider": item["provider"],
+                "ai_score": round(avg_ai, 2),
+                "human_score": round(avg_human, 2),
+                "agreement": round(100 - gap, 2),
+            },
         })
 
     return summary
