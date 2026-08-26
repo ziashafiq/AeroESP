@@ -1,4 +1,8 @@
-from django.db.models import Avg, Count
+from django.db.models import (
+    Avg,
+    Count,
+    Max,
+)
 
 from .models import (
     AIExperimentResult,
@@ -14,24 +18,25 @@ def build_experiment_summary(
         .filter(
             experiment_id=experiment_id
         )
-    )
-
-
-    summary = (
-        results
         .values(
             "provider"
         )
         .annotate(
             runs=Count("id"),
+
             average_quality=Avg(
                 "quality_score"
             ),
+
             average_acceptance=Avg(
                 "acceptance_rate"
+            ),
+
+            recommendation=Max(
+                "recommendation"
             ),
         )
     )
 
 
-    return list(summary)
+    return list(results)
