@@ -50,6 +50,7 @@ def build_experiment_summary(
     for item in results:
         avg_ai = item["average_ai_score"] or 0
         avg_human = item["average_human_score"] or 0
+        gap = abs(avg_ai - avg_human)
 
         summary.append({
             "provider": item["provider"],
@@ -59,7 +60,8 @@ def build_experiment_summary(
             "recommendation": item["recommendation"] or "",
             "average_ai_score": round(avg_ai, 2),
             "average_human_score": round(avg_human, 2),
-            "ai_human_gap": round(abs(avg_ai - avg_human), 2),
+            "ai_human_gap": round(gap, 2),
+            "ai_human_agreement": round(100 - gap, 2),
         })
 
     return summary
