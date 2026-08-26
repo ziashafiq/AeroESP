@@ -659,6 +659,11 @@ class AIExperimentResult(models.Model):
         default=0,
     )
 
+    recommendation = models.CharField(
+        max_length=50,
+        default="",
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
     )

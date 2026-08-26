@@ -48,6 +48,11 @@ def create_model_comparison_experiment():
             estimated_cost=(
                 item["estimated_cost"]
             ),
+
+            recommendation=item.get(
+                "recommendation",
+                "",
+            ),
         )
 
 
