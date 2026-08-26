@@ -621,6 +621,30 @@ class AIExperiment(models.Model):
         blank=True,
     )
 
+    prompt_version = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+    )
+
+    model_version = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+    )
+
+    dataset_version = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+    )
+
+    evaluation_method = models.CharField(
+        max_length=120,
+        blank=True,
+        default="",
+    )
+
     def __str__(self):
         return self.name
 
@@ -635,6 +659,32 @@ class AIExperimentResult(models.Model):
 
     provider = models.CharField(
         max_length=100,
+    )
+
+    model_name = models.CharField(
+        max_length=120,
+        blank=True,
+        default="",
+    )
+
+    prompt_version = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+    )
+
+    dataset_version = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+    )
+
+    human_score = models.FloatField(
+        default=0,
+    )
+
+    ai_score = models.FloatField(
+        default=0,
     )
 
     generations = models.PositiveIntegerField(
