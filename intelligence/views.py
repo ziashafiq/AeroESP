@@ -42,6 +42,9 @@ from .evaluation import (
 from .model_comparison import (
     build_model_comparison,
 )
+from .recommendation import (
+    build_model_recommendation,
+)
 
 
 def _require_teacher(user):
@@ -278,6 +281,8 @@ def ai_dashboard(request):
         .order_by("-generated_at")[:30]
     )
 
+    model_comparison_data = build_model_comparison()
+
     return render(
         request,
         "intelligence/dashboard.html",
@@ -299,8 +304,11 @@ def ai_dashboard(request):
             "prompt_evaluation": (
                 build_prompt_evaluation()
             ),
-            "model_comparison": (
-                build_model_comparison()
+            "model_comparison": model_comparison_data,
+            "model_recommendation": (
+                build_model_recommendation(
+                    model_comparison_data
+                )
             ),
         },
     )
