@@ -55,6 +55,9 @@ from .experiment_builder import (
 from .experiment_report import (
     build_experiment_report,
 )
+from .generation_experiment import (
+    log_generation_experiment,
+)
 
 
 def _require_teacher(user):
@@ -750,6 +753,15 @@ def generate_question_view(request):
                         "quality": result["metadata"]["quality"],
                         "advice": result["metadata"]["quality_advice"],
                     },
+                )
+
+                log_generation_experiment(
+                    provider=result.get(
+                        "provider",
+                        provider_name,
+                    ),
+                    quality_score=result["metadata"]["quality"]["score"],
+                    recommendation=result["metadata"]["quality"]["status"],
                 )
 
                 return redirect(
