@@ -374,6 +374,80 @@ AI Intelligence
 
             <hr>
 
+            <h3>AI Model Comparison</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Generations</th>
+                        <th>Quality</th>
+                        <th>Accepted</th>
+                        <th>Edited</th>
+                        <th>Rejected</th>
+                        <th>Acceptance Rate</th>
+                        <th>Cost</th>
+                        <th>Recommendation</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for item in model_comparison %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.provider }}
+                        </td>
+
+                        <td>
+                            {{ item.generations }}
+                        </td>
+
+                        <td>
+                            {{ item.average_quality }}
+                        </td>
+
+                        <td>
+                            {{ item.accepted }}
+                        </td>
+
+                        <td>
+                            {{ item.edited }}
+                        </td>
+
+                        <td>
+                            {{ item.rejected }}
+                        </td>
+
+                        <td>
+                            {{ item.acceptance_rate }}%
+                        </td>
+
+                        <td>
+                            {{ item.estimated_cost }}
+                        </td>
+
+                        <td>
+                            {{ item.recommendation }}
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="9">No model comparison data available.</td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}
