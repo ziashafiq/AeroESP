@@ -11,6 +11,7 @@
             <th>Date</th>
             <th>Providers</th>
             <th>Results</th>
+            <th>Report</th>
         </tr>
     </thead>
 
@@ -37,6 +38,12 @@
 
             <td>
                 {{ experiment.results.count }}
+            </td>
+
+            <td>
+                <a href="{% url 'intelligence:experiment_report' experiment.id %}">
+                    View Report
+                </a>
             </td>
 
         </tr>
