@@ -298,6 +298,7 @@ def ai_dashboard(request):
     )
 
     model_comparison_data = build_model_comparison()
+    experiment_summary_data = build_experiment_summary(1)
 
     return render(
         request,
@@ -326,9 +327,8 @@ def ai_dashboard(request):
                     model_comparison_data
                 )
             ),
-            "experiment_summary": (
-                build_experiment_summary(1)
-            ),
+            "experiment_summary": experiment_summary_data,
+            "experiment_chart_data": experiment_summary_data,
         },
     )
 

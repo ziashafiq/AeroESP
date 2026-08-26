@@ -788,4 +788,75 @@ AI Intelligence
 </section>
 
 
+<hr>
+
+<h3>AI Comparison Chart</h3>
+
+<canvas id="aiComparisonChart" width="400" height="200"></canvas>
+
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    const aiExperimentData = {{ experiment_chart_data|safe }};
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const labels = aiExperimentData.map(
+        item => item.provider
+    );
+
+    const aiScores = aiExperimentData.map(
+        item => item.comparison_data.ai_score
+    );
+
+    const humanScores = aiExperimentData.map(
+        item => item.comparison_data.human_score
+    );
+
+    new Chart(
+        document.getElementById(
+            "aiComparisonChart"
+        ),
+        {
+            type: "bar",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [
+                    {
+                        label: "AI Score",
+                        data: aiScores,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+
+                    {
+                        label: "Human Score",
+                        data: humanScores,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        }
+    );
+</script>
 {% endblock %}
