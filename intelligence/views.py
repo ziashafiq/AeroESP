@@ -39,6 +39,9 @@ from .cost_analytics import (
 from .evaluation import (
     build_prompt_evaluation,
 )
+from .model_comparison import (
+    build_model_comparison,
+)
 
 
 def _require_teacher(user):
@@ -295,6 +298,9 @@ def ai_dashboard(request):
             ),
             "prompt_evaluation": (
                 build_prompt_evaluation()
+            ),
+            "model_comparison": (
+                build_model_comparison()
             ),
         },
     )
