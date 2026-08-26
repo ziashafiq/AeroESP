@@ -1,0 +1,49 @@
+{% extends "intelligence/dashboard.html" %}
+
+{% block content %}
+
+<h2>AI Experiment History</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Providers</th>
+            <th>Results</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+    {% for experiment in experiments %}
+
+        <tr>
+
+            <td>
+                {{ experiment.name }}
+            </td>
+
+            <td>
+                {{ experiment.created_at }}
+            </td>
+
+            <td>
+                {% for result in experiment.results.all %}
+                    {{ result.provider }}
+                    <br>
+                {% endfor %}
+            </td>
+
+            <td>
+                {{ experiment.results.count }}
+            </td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+</table>
+
+{% endblock %}

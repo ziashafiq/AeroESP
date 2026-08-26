@@ -73,4 +73,10 @@ urlpatterns = [
         views.run_ai_experiment,
         name="run_ai_experiment",
     ),
+
+    path(
+        "experiments/",
+        views.experiment_history,
+        name="experiment_history",
+    ),
 ]

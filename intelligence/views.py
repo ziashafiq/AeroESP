@@ -20,6 +20,7 @@ from .models import (
     AIQualitySnapshot,
     LearnerInsightSnapshot,
     QuestionAISuggestion,
+    AIExperiment,
 )
 from .services import (
     QuestionGenerationError,
@@ -1309,3 +1310,20 @@ def reject_generated_draft(
 def run_ai_experiment(request):
     experiment = create_model_comparison_experiment()
     return redirect("intelligence:dashboard")
+
+
+@login_required
+def experiment_history(request):
+    experiments = (
+        AIExperiment.objects
+        .prefetch_related("results")
+        .order_by("-created_at")
+    )
+
+    return render(
+        request,
+        "intelligence/experiment_history.html",
+        {
+            "experiments": experiments,
+        },
+    )
