@@ -65,6 +65,12 @@ def create_model_comparison_experiment():
                 "FOUNDATION_V1"
             ),
 
+            generations=item["generations"],
+
+            quality_score=(
+                item["average_quality"]
+            ),
+
             ai_score=(
                 item.get(
                     "average_quality",
@@ -77,12 +83,6 @@ def create_model_comparison_experiment():
                     "human_score",
                     0,
                 )
-            ),
-
-            generations=item["generations"],
-
-            quality_score=(
-                item["average_quality"]
             ),
 
             acceptance_rate=(
