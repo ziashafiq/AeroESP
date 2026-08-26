@@ -1,5 +1,6 @@
 from .models import (
     AIExperimentResult,
+    AIInteractionEvent,
 )
 
 
@@ -55,6 +56,8 @@ def update_human_score(
     )
 
     return result
+
+
 def calculate_from_events(events):
 
     accepted = 0
@@ -78,4 +81,28 @@ def calculate_from_events(events):
         accepted,
         edited,
         rejected,
+    )
+
+
+def update_result_human_score_from_events(
+    result_id,
+    draft_id,
+):
+
+    events = (
+        AIInteractionEvent.objects
+        .filter(
+            draft_id=draft_id
+        )
+    )
+
+
+    score = calculate_from_events(
+        events
+    )
+
+
+    return update_human_score(
+        result_id,
+        score,
     )
