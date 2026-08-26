@@ -111,6 +111,23 @@ def build_model_comparison():
         )
 
 
+        if reviewed == 0:
+
+            recommendation = "NO_REVIEW"
+
+        elif average_quality >= 80:
+
+            recommendation = "GOOD"
+
+        elif average_quality >= 60:
+
+            recommendation = "REVIEW"
+
+        else:
+
+            recommendation = "POOR"
+
+
         acceptance_rate = 0
 
         if reviewed:
@@ -137,37 +154,32 @@ def build_model_comparison():
 
         results.append(
             {
-                "provider":
-                    provider,
+                "provider": provider,
 
-                "generations":
-                    generations,
+                "generations": generations,
 
-                "average_quality":
+                "average_quality": (
                     round(
                         average_quality,
                         2,
                     )
                     if average_quality
-                    else 0,
+                    else 0
+                ),
 
-                "accepted":
-                    accepted,
+                "accepted": accepted,
 
-                "edited":
-                    edited,
+                "edited": edited,
 
-                "rejected":
-                    rejected,
+                "rejected": rejected,
 
-                "acceptance_rate":
-                    acceptance_rate,
+                "acceptance_rate": acceptance_rate,
 
-                "total_tokens":
-                    total_tokens,
+                "total_tokens": total_tokens,
 
-                "estimated_cost":
-                    estimated_cost,
+                "estimated_cost": estimated_cost,
+
+                "recommendation": recommendation,
             }
         )
 
