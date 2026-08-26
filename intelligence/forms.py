@@ -11,6 +11,7 @@ class QuestionGenerationForm(forms.Form):
 
     provider = forms.ChoiceField(
         choices=[
+            ("AUTO", "Automatic Selection"),
             (
                 "BASELINE_V1",
                 "Explainable Baseline",
@@ -20,7 +21,7 @@ class QuestionGenerationForm(forms.Form):
                 "OpenAI LLM",
             ),
         ],
-        initial="BASELINE_V1",
+        initial="AUTO",
         label="Generation Provider",
     )
 

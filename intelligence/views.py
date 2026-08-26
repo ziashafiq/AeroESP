@@ -58,6 +58,9 @@ from .experiment_report import (
 from .generation_experiment import (
     log_generation_experiment,
 )
+from .provider_selector import (
+    select_best_provider,
+)
 
 
 def _require_teacher(user):
@@ -578,7 +581,14 @@ def generate_question_view(request):
             data = form.cleaned_data
 
             try:
-                provider_name = data.get("provider", "BASELINE_V1")
+                provider_name = data.get(
+                    "provider",
+                    "AUTO",
+                )
+
+                if provider_name == "AUTO":
+                    provider_name = select_best_provider()
+
                 generator = get_question_generator(provider_name)
                 result = generator.generate(
                     track=data["track"],
