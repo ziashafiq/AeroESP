@@ -1,0 +1,60 @@
+{% extends "intelligence/dashboard.html" %}
+
+{% block content %}
+
+<h2>AI Experiment Report</h2>
+
+<h3>
+    {{ report.experiment }}
+</h3>
+
+<p>
+Winner:
+{{ report.winner }}
+</p>
+
+
+<table>
+
+<thead>
+<tr>
+    <th>Provider</th>
+    <th>Quality</th>
+    <th>Acceptance</th>
+    <th>Recommendation</th>
+</tr>
+</thead>
+
+
+<tbody>
+
+{% for item in report.results %}
+
+<tr>
+
+<td>
+{{ item.provider }}
+</td>
+
+<td>
+{{ item.quality }}
+</td>
+
+<td>
+{{ item.acceptance }}
+</td>
+
+<td>
+{{ item.recommendation }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+
+{% endblock %}

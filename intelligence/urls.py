@@ -79,4 +79,10 @@ urlpatterns = [
         views.experiment_history,
         name="experiment_history",
     ),
+
+    path(
+        "experiments/<int:experiment_id>/report/",
+        views.experiment_report_view,
+        name="experiment_report",
+    ),
 ]

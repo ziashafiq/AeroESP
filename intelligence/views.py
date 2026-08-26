@@ -52,6 +52,9 @@ from .experiment_analytics import (
 from .experiment_builder import (
     create_model_comparison_experiment,
 )
+from .experiment_report import (
+    build_experiment_report,
+)
 
 
 def _require_teacher(user):
@@ -1325,5 +1328,24 @@ def experiment_history(request):
         "intelligence/experiment_history.html",
         {
             "experiments": experiments,
+        },
+    )
+
+
+@login_required
+def experiment_report_view(
+    request,
+    experiment_id,
+):
+
+    report = build_experiment_report(
+        experiment_id
+    )
+
+    return render(
+        request,
+        "intelligence/experiment_report.html",
+        {
+            "report": report,
         },
     )
