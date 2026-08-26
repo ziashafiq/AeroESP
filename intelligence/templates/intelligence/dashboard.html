@@ -484,6 +484,47 @@ AI Intelligence
 
             <hr>
 
+            <h3>AI Experiment Summary</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Runs</th>
+                        <th>Average Quality</th>
+                        <th>Average Acceptance</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for item in experiment_summary %}
+
+                    <tr>
+                        <td>
+                            {{ item.provider }}
+                        </td>
+
+                        <td>
+                            {{ item.runs }}
+                        </td>
+
+                        <td>
+                            {{ item.average_quality }}
+                        </td>
+
+                        <td>
+                            {{ item.average_acceptance }}
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}

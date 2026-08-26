@@ -45,6 +45,9 @@ from .model_comparison import (
 from .recommendation import (
     build_model_recommendation,
 )
+from .experiment_analytics import (
+    build_experiment_summary,
+)
 
 
 def _require_teacher(user):
@@ -309,6 +312,9 @@ def ai_dashboard(request):
                 build_model_recommendation(
                     model_comparison_data
                 )
+            ),
+            "experiment_summary": (
+                build_experiment_summary(1)
             ),
         },
     )

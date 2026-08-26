@@ -343,6 +343,8 @@ class GeneratedQuestionDraft(models.Model):
             f"AI Draft {self.pk} - "
             f"{self.status}"
         )
+
+
 class AIPromptVersion(models.Model):
 
     version = models.CharField(
@@ -369,17 +371,16 @@ class AIPromptVersion(models.Model):
         auto_now_add=True,
     )
 
-
     class Meta:
 
         ordering = [
             "-created_at",
         ]
 
-
     def __str__(self):
 
         return self.version
+
 
 # =========================================================
 # AI / Research Telemetry
@@ -547,6 +548,8 @@ class AIInteractionEvent(models.Model):
             f"{self.event_type} - "
             f"{self.created_at}"
         )
+
+
 class AIQualitySnapshot(models.Model):
 
     draft = models.ForeignKey(
@@ -596,4 +599,72 @@ class AIQualitySnapshot(models.Model):
         return (
             f"{self.draft_id} "
             f"- {self.decision}"
+        )
+
+
+class AIExperiment(models.Model):
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class AIExperimentResult(models.Model):
+
+    experiment = models.ForeignKey(
+        AIExperiment,
+        on_delete=models.CASCADE,
+        related_name="results",
+    )
+
+    provider = models.CharField(
+        max_length=100,
+    )
+
+    generations = models.PositiveIntegerField(
+        default=0,
+    )
+
+    quality_score = models.FloatField(
+        default=0,
+    )
+
+    acceptance_rate = models.FloatField(
+        default=0,
+    )
+
+    total_tokens = models.PositiveIntegerField(
+        default=0,
+    )
+
+    estimated_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        default=0,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return (
+            f"{self.provider} - "
+            f"{self.experiment.name}"
         )
