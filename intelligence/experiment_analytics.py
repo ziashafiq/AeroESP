@@ -48,14 +48,18 @@ def build_experiment_summary(
 
     summary = []
     for item in results:
+        avg_ai = item["average_ai_score"] or 0
+        avg_human = item["average_human_score"] or 0
+
         summary.append({
             "provider": item["provider"],
             "runs": item["runs"],
             "average_quality": round(item["average_quality"], 2) if item["average_quality"] else 0,
             "average_acceptance": round(item["average_acceptance"], 2) if item["average_acceptance"] else 0,
             "recommendation": item["recommendation"] or "",
-            "average_ai_score": round(item["average_ai_score"], 2) if item["average_ai_score"] else 0,
-            "average_human_score": round(item["average_human_score"], 2) if item["average_human_score"] else 0,
+            "average_ai_score": round(avg_ai, 2),
+            "average_human_score": round(avg_human, 2),
+            "ai_human_gap": round(abs(avg_ai - avg_human), 2),
         })
 
     return summary
