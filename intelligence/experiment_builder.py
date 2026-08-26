@@ -7,8 +7,14 @@ from .model_comparison import (
     build_model_comparison,
 )
 
+from .dataset_builder import (
+    create_foundation_dataset,
+)
+
 
 def create_model_comparison_experiment():
+
+    dataset = create_foundation_dataset()
 
     experiment = AIExperiment.objects.create(
         name="AI Provider Comparison Experiment",
@@ -33,6 +39,8 @@ def create_model_comparison_experiment():
         evaluation_method=(
             "AI quality score + teacher feedback"
         ),
+
+        dataset=dataset,
 
         metadata={
             "type": "model_comparison",

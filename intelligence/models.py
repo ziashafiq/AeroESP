@@ -645,6 +645,14 @@ class AIExperiment(models.Model):
         default="",
     )
 
+    dataset = models.ForeignKey(
+        "AIEvaluationDataset",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="experiments",
+    )
+
     def __str__(self):
         return self.name
 
@@ -722,4 +730,38 @@ class AIExperimentResult(models.Model):
         return (
             f"{self.provider} - "
             f"{self.experiment.name}"
+        )
+
+
+class AIEvaluationDataset(models.Model):
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+    version = models.CharField(
+        max_length=80,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    domain = models.CharField(
+        max_length=120,
+        blank=True,
+    )
+
+    size = models.PositiveIntegerField(
+        default=0,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return (
+            f"{self.name} "
+            f"- {self.version}"
         )
