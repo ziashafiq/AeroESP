@@ -448,6 +448,42 @@ AI Intelligence
 
             <hr>
 
+            <h3>AI Model Recommendation</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Score</th>
+                        <th>Decision</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for item in model_recommendation %}
+
+                    <tr>
+                        <td>
+                            {{ item.provider }}
+                        </td>
+
+                        <td>
+                            {{ item.score }}
+                        </td>
+
+                        <td>
+                            {{ item.decision }}
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            <hr>
+
             <h3>Provider Analytics</h3>
 
             {% for item in provider_stats %}
