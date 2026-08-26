@@ -48,6 +48,9 @@ from .recommendation import (
 from .experiment_analytics import (
     build_experiment_summary,
 )
+from .experiment_builder import (
+    create_model_comparison_experiment,
+)
 
 
 def _require_teacher(user):
@@ -1300,3 +1303,9 @@ def reject_generated_draft(
         "generated_draft_detail",
         draft_id=draft.pk,
     )
+
+
+@login_required
+def run_ai_experiment(request):
+    experiment = create_model_comparison_experiment()
+    return redirect("intelligence:dashboard")

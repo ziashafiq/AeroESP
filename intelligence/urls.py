@@ -67,4 +67,10 @@ urlpatterns = [
         views.reject_generated_draft,
         name="reject_generated_draft",
     ),
+
+    path(
+        "experiment/run/",
+        views.run_ai_experiment,
+        name="run_ai_experiment",
+    ),
 ]
