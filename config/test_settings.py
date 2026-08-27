@@ -1,3 +1,20 @@
+import os
+
+
+os.environ["DJANGO_ENV"] = "development"
+
+os.environ["DJANGO_DEBUG"] = "0"
+
+os.environ["DJANGO_SECRET_KEY"] = (
+    "aeroesp-test-only-django-secret-key-"
+    "not-for-production-2026-abcdef123456789"
+)
+
+os.environ["AEROESP_SECRET_KEY"] = (
+    "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+)
+
+
 from .settings import *
 
 
@@ -35,3 +52,7 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
 SECURE_HSTS_SECONDS = 0
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+
+SECURE_HSTS_PRELOAD = False
