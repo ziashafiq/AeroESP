@@ -816,3 +816,143 @@ class AIEvaluationProtocol(models.Model):
             f"{self.name} "
             f"- {self.version}"
         )
+
+
+# =========================================================
+# AI Provider Configuration (per user)
+# =========================================================
+
+class AIProviderConfiguration(models.Model):
+
+    class Provider(models.TextChoices):
+        BASELINE = "BASELINE_V1", "Baseline Free"
+        OPENAI = "OPENAI_RESPONSES_V1", "OpenAI"
+        DEEPSEEK = "DEEPSEEK_V1", "DeepSeek"
+        GEMINI = "GEMINI_V1", "Gemini"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="ai_provider_configs",
+    )
+
+    provider_name = models.CharField(
+        max_length=50,
+        choices=Provider.choices,
+        default=Provider.BASELINE,
+    )
+
+    model_name = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
+
+    api_key = models.TextField(
+        blank=True,
+        default="",
+        help_text="Encrypted API key storage",
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    monthly_budget = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        unique_together = [
+            "user",
+            "provider_name",
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.user} - "
+            f"{self.provider_name}"
+        )
+
+
+# =========================================================
+# AI Generation Log
+# =========================================================
+
+class AIGenerationLog(models.Model):
+
+    class Status(models.TextChoices):
+        SUCCESS = "SUCCESS", "Success"
+        FAILED = "FAILED", "Failed"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    provider = models.CharField(
+        max_length=50,
+    )
+
+    model = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.SUCCESS,
+    )
+
+    request_data = models.JSONField(
+        default=dict,
+    )
+
+    response_data = models.JSONField(
+        default=dict,
+    )
+
+    input_tokens = models.IntegerField(
+        null=True,
+        blank=True,
+    )
+
+    output_tokens = models.IntegerField(
+        null=True,
+        blank=True,
+    )
+
+    total_tokens = models.IntegerField(
+        null=True,
+        blank=True,
+    )
+
+    latency_ms = models.IntegerField(
+        null=True,
+        blank=True,
+    )
+
+    error_message = models.TextField(
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return (
+            f"{self.provider} - "
+            f"{self.user}"
+        )

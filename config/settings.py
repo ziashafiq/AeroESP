@@ -221,7 +221,7 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 
 AEROESP_AI_PROVIDER = os.getenv(
     "AEROESP_AI_PROVIDER",
-    "BASELINE_V1",
+    "OPENAI_RESPONSES_V1",
 )
 
 AEROESP_OPENAI_MODEL = os.getenv(
@@ -235,6 +235,11 @@ AEROESP_OPENAI_TIMEOUT = int(
         "45",
     )
 )
+
+AEROESP_SECRET_KEY = os.getenv(
+    "AEROESP_SECRET_KEY",
+    "",
+).strip()
 
 
 # =========================================================

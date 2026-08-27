@@ -5,6 +5,7 @@ from .models import (
     GeneratedQuestionDraft,
     LearnerInsightSnapshot,
     QuestionAISuggestion,
+    AIProviderConfiguration,  # <--- اضافه شد
 )
 
 
@@ -133,4 +134,33 @@ class AIInteractionEventAdmin(
 
     readonly_fields = (
         "created_at",
+    )
+
+
+# =========================================================
+# AI Provider Configuration Admin
+# =========================================================
+
+@admin.register(AIProviderConfiguration)
+class AIProviderConfigurationAdmin(
+    admin.ModelAdmin
+):
+    list_display = (
+        "user",
+        "provider_name",
+        "model_name",
+        "is_active",
+        "monthly_budget",
+        "updated_at",
+    )
+
+    list_filter = (
+        "provider_name",
+        "is_active",
+    )
+
+    search_fields = (
+        "user__username",
+        "provider_name",
+        "model_name",
     )

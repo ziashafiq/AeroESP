@@ -1,0 +1,100 @@
+{% extends "aeroesp/base.html" %}
+
+{% block content %}
+
+<h1>
+    AI Provider Settings
+</h1>
+
+
+<p>
+    Configure your personal AI providers.
+</p>
+
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+
+    <button type="submit">
+        Save Provider
+    </button>
+
+</form>
+
+
+<hr>
+
+
+<h2>
+    Current Providers
+</h2>
+
+
+{% if providers %}
+
+<table>
+
+<tr>
+    <th>
+        Provider
+    </th>
+
+    <th>
+        Model
+    </th>
+
+    <th>
+        Status
+    </th>
+</tr>
+
+
+{% for provider in providers %}
+
+<tr>
+
+<td>
+    {{ provider.provider_name }}
+</td>
+
+
+<td>
+    {{ provider.model_name }}
+</td>
+
+
+<td>
+
+{% if provider.is_active %}
+
+Active
+
+{% else %}
+
+Disabled
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+
+{% else %}
+
+<p>
+No provider configured yet.
+</p>
+
+{% endif %}
+
+
+{% endblock %}

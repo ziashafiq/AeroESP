@@ -77,4 +77,4 @@ node_modules/
 
 # Other
 *.bak
-*.tmp
+*.tmpai*_test.py

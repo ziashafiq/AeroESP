@@ -6,6 +6,9 @@ from django.shortcuts import (
     render,
 )
 from django.utils import timezone
+from django.contrib import messages
+from django.views.decorators.http import require_POST
+
 from .generation_experiment_builder import (
     create_generation_experiment,
 )
@@ -15,7 +18,10 @@ from assessment.models import Question
 from learning.models import Enrollment
 from .quality import evaluate_question_quality
 from .quality_advisor import build_quality_advice
-from .forms import QuestionGenerationForm
+from .forms import (
+    QuestionGenerationForm,
+    AIProviderConfigurationForm,
+)
 from .models import (
     GeneratedQuestionDraft,
     AIInteractionEvent,
@@ -23,7 +29,9 @@ from .models import (
     LearnerInsightSnapshot,
     QuestionAISuggestion,
     AIExperiment,
-    AIExperimentResult,  # <--- اضافه شد
+    AIExperimentResult,
+    AIProviderConfiguration,
+    AIGenerationLog,
 )
 from .services import (
     QuestionGenerationError,
@@ -68,6 +76,19 @@ from .human_feedback import (
 )
 from .provider_selector import (
     select_best_provider,
+)
+
+from .provider_context import (
+    get_user_provider_key,
+    get_active_user_provider,
+)
+
+from .provider_service import (
+    save_provider_api_key,
+)
+
+from .provider_errors import (
+    normalize_provider_error,
 )
 
 
@@ -594,24 +615,130 @@ def generate_question_view(request):
                     "AUTO",
                 )
 
-                if provider_name == "AUTO":
-                    provider_name = select_best_provider()
+                provider_context = None
+                api_key = None
+                model_name = None
 
-                generator = get_question_generator(provider_name)
+                if provider_name == "AUTO":
+
+                    provider_context = (
+                        get_active_user_provider(
+                            request.user
+                        )
+                    )
+
+                    if (
+                        provider_context
+                        and provider_context[
+                            "provider_name"
+                        ]
+                        in {
+                            "OPENAI_RESPONSES_V1",
+                            "DEEPSEEK_V1",
+                        }
+                        and provider_context.get(
+                            "api_key"
+                        )
+                    ):
+
+                        effective_provider = (
+                            provider_context[
+                                "provider_name"
+                            ]
+                        )
+
+                        api_key = (
+                            provider_context[
+                                "api_key"
+                            ]
+                        )
+
+                        model_name = (
+                            provider_context.get(
+                                "model_name"
+                            )
+                        )
+
+                    else:
+
+                        effective_provider = (
+                            "BASELINE_V1"
+                        )
+
+                elif (
+                    provider_name
+                    == "BASELINE_V1"
+                ):
+
+                    effective_provider = (
+                        "BASELINE_V1"
+                    )
+
+                else:
+
+                    provider_context = (
+                        get_active_user_provider(
+                            request.user,
+                            provider_name,
+                        )
+                    )
+
+                    if (
+                        not provider_context
+                        or not provider_context.get(
+                            "api_key"
+                        )
+                    ):
+                        raise QuestionGenerationError(
+                            (
+                                "No API key is configured "
+                                "for the selected provider."
+                            )
+                        )
+
+                    effective_provider = (
+                        provider_context[
+                            "provider_name"
+                        ]
+                    )
+
+                    api_key = (
+                        provider_context[
+                            "api_key"
+                        ]
+                    )
+
+                    model_name = (
+                        provider_context.get(
+                            "model_name"
+                        )
+                    )
+
+
+                generator = get_question_generator(
+                    effective_provider
+                )
+
                 result = generator.generate(
                     track=data["track"],
                     skill=data["skill"],
                     difficulty=data["difficulty"],
                     domain=data.get("domain"),
                     topic=data.get("topic"),
-                    theme=data.get("theme", ""),
+                    theme=data.get(
+                        "theme",
+                        "",
+                    ),
                     teacher_instructions=(
                         data.get(
                             "teacher_instructions",
                             "",
                         )
                     ),
+                    api_key=api_key,
+                    model_name=model_name,
                 )
+
                 quality_report = evaluate_question_quality(
                     result=result,
                     track=data["track"],
@@ -629,7 +756,7 @@ def generate_question_view(request):
                 )
 
                 experiment = create_generation_experiment(
-                    provider_name
+                    effective_provider
                 )
 
                 draft = (
@@ -694,7 +821,7 @@ def generate_question_view(request):
                     event_type="GENERATION_SUCCESS",
                     provider=result.get(
                         "provider",
-                        provider_name,
+                        effective_provider,
                     ),
                     model_name=result.get(
                         "metadata",
@@ -778,7 +905,6 @@ def generate_question_view(request):
                     },
                 )
 
-                # ===== تغییر دوم: به‌روزرسانی AIExperimentResult =====
                 AIExperimentResult.objects.filter(
                     experiment=experiment
                 ).update(
@@ -793,18 +919,57 @@ def generate_question_view(request):
                         0,
                     ),
                 )
-                # =====================================================
 
-                # ===== تغییر سوم: حذف خط زیر (log_generation_experiment) =====
-                # log_generation_experiment(
-                #     provider=result.get(
-                #         "provider",
-                #         provider_name,
-                #     ),
-                #     quality_score=result["metadata"]["quality"]["score"],
-                #     recommendation=result["metadata"]["quality"]["status"],
-                # )
-                # ============================================================
+                AIGenerationLog.objects.create(
+                    user=request.user,
+                    provider=result.get(
+                        "provider",
+                        effective_provider,
+                    ),
+                    model=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "model",
+                        "",
+                    ),
+                    status=AIGenerationLog.Status.SUCCESS,
+                    request_data={
+                        "track": str(data["track"]),
+                        "skill": str(data["skill"]),
+                        "difficulty": str(data["difficulty"]),
+                        "provider": effective_provider,
+                    },
+                    response_data=result,
+                    input_tokens=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "input_tokens",
+                        None,
+                    ),
+                    output_tokens=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "output_tokens",
+                        None,
+                    ),
+                    total_tokens=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "total_tokens",
+                        None,
+                    ),
+                    latency_ms=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "latency_ms",
+                        None,
+                    ),
+                )
 
                 return redirect(
                     "intelligence:"
@@ -814,28 +979,97 @@ def generate_question_view(request):
 
             except QuestionGenerationError as exc:
 
+                failed_provider = locals().get(
+                    "effective_provider",
+                    locals().get(
+                        "provider_name",
+                        "UNKNOWN",
+                    ),
+                )
+
+                (
+                    error_code,
+                    user_message,
+                ) = normalize_provider_error(
+                    exc,
+                    failed_provider,
+                )
+
+                AIGenerationLog.objects.create(
+                    user=request.user,
+                    provider=failed_provider,
+                    model=(
+                        locals().get(
+                            "model_name"
+                        )
+                        or ""
+                    ),
+                    status=(
+                        AIGenerationLog
+                        .Status
+                        .FAILED
+                    ),
+                    request_data={
+                        "track": str(
+                            data.get(
+                                "track",
+                                "",
+                            )
+                        ),
+                        "skill": str(
+                            data.get(
+                                "skill",
+                                "",
+                            )
+                        ),
+                        "difficulty": str(
+                            data.get(
+                                "difficulty",
+                                "",
+                            )
+                        ),
+                        "provider": (
+                            failed_provider
+                        ),
+                        "error_code": (
+                            error_code
+                        ),
+                    },
+                    response_data={},
+                    error_message=user_message,
+                )
+
                 AIInteractionEvent.objects.create(
                     actor=request.user,
                     event_type="GENERATION_FAILURE",
-                    provider=provider_name,
+                    provider=failed_provider,
                     success=False,
                     metadata={
-                        "error": str(exc),
+                        "error_code": error_code,
                         "track": str(
-                            data.get("track")
+                            data.get(
+                                "track",
+                                "",
+                            )
                         ),
                         "skill": str(
-                            data.get("skill")
+                            data.get(
+                                "skill",
+                                "",
+                            )
                         ),
                         "difficulty": str(
-                            data.get("difficulty")
+                            data.get(
+                                "difficulty",
+                                "",
+                            )
                         ),
                     },
                 )
 
                 form.add_error(
                     None,
-                    str(exc),
+                    user_message,
                 )
 
     else:
@@ -1372,22 +1606,47 @@ def reject_generated_draft(
 
 
 @login_required
-def run_ai_experiment(request):
-    experiment = create_model_comparison_experiment()
-    return redirect("intelligence:dashboard")
+@require_POST
+def run_ai_experiment(
+    request,
+):
+
+    _require_teacher(
+        request.user
+    )
+
+    create_model_comparison_experiment()
+
+    return redirect(
+        "intelligence:dashboard"
+    )
 
 
 @login_required
-def experiment_history(request):
+def experiment_history(
+    request,
+):
+
+    _require_teacher(
+        request.user
+    )
+
     experiments = (
         AIExperiment.objects
-        .prefetch_related("results")
-        .order_by("-created_at")
+        .prefetch_related(
+            "results"
+        )
+        .order_by(
+            "-created_at"
+        )
     )
 
     return render(
         request,
-        "intelligence/experiment_history.html",
+        (
+            "intelligence/"
+            "experiment_history.html"
+        ),
         {
             "experiments": experiments,
         },
@@ -1400,14 +1659,158 @@ def experiment_report_view(
     experiment_id,
 ):
 
+    _require_teacher(
+        request.user
+    )
+
     report = build_experiment_report(
         experiment_id
     )
 
     return render(
         request,
-        "intelligence/experiment_report.html",
+        (
+            "intelligence/"
+            "experiment_report.html"
+        ),
         {
             "report": report,
+        },
+    )
+
+
+@login_required
+def provider_settings_view(
+    request,
+):
+
+    _require_teacher(
+        request.user
+    )
+
+    providers = (
+        AIProviderConfiguration.objects
+        .filter(
+            user=request.user
+        )
+        .order_by(
+            "provider_name"
+        )
+    )
+
+    if request.method == "POST":
+
+        form = (
+            AIProviderConfigurationForm(
+                request.POST
+            )
+        )
+
+        if form.is_valid():
+
+            provider_name = (
+                form.cleaned_data[
+                    "provider_name"
+                ]
+            )
+
+            model_name = (
+                form.cleaned_data.get(
+                    "model_name",
+                    "",
+                )
+                or ""
+            )
+
+            api_key = (
+                form.cleaned_data.get(
+                    "api_key",
+                    "",
+                )
+                or ""
+            )
+
+            is_active = (
+                form.cleaned_data.get(
+                    "is_active",
+                    True,
+                )
+            )
+
+            config, _ = (
+                AIProviderConfiguration
+                .objects
+                .get_or_create(
+                    user=request.user,
+                    provider_name=(
+                        provider_name
+                    ),
+                    defaults={
+                        "model_name": (
+                            model_name
+                        ),
+                        "is_active": (
+                            is_active
+                        ),
+                    },
+                )
+            )
+
+            config.model_name = (
+                model_name
+            )
+
+            config.is_active = (
+                is_active
+            )
+
+            if (
+                provider_name
+                == "BASELINE_V1"
+            ):
+                config.api_key = ""
+
+            config.save()
+
+            if (
+                provider_name
+                != "BASELINE_V1"
+                and api_key
+            ):
+                save_provider_api_key(
+                    config,
+                    api_key,
+                )
+
+            messages.success(
+                request,
+                (
+                    "AI provider configuration "
+                    "saved successfully."
+                ),
+            )
+
+            return redirect(
+                (
+                    "intelligence:"
+                    "provider_settings"
+                )
+            )
+
+    else:
+
+        form = (
+            AIProviderConfigurationForm()
+        )
+
+    return render(
+        request,
+        (
+            "intelligence/"
+            "provider_settings.html"
+        ),
+        {
+            "form": form,
+            "providers": providers,
         },
     )

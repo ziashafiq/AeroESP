@@ -1,3 +1,5 @@
+# forms.py
+
 from django import forms
 
 from assessment.models import (
@@ -6,19 +8,32 @@ from assessment.models import (
     Question,
 )
 
+from .models import (
+    AIProviderConfiguration,
+)
+
+from .crypto import encrypt_api_key  # Ensure this module exists
+
 
 class QuestionGenerationForm(forms.Form):
 
     provider = forms.ChoiceField(
         choices=[
-            ("AUTO", "Automatic Selection"),
+            (
+                "AUTO",
+                "Automatic Selection",
+            ),
             (
                 "BASELINE_V1",
-                "Explainable Baseline",
+                "Explainable Baseline (Free)",
             ),
             (
                 "OPENAI_RESPONSES_V1",
-                "OpenAI LLM",
+                "OpenAI LLM (Premium)",
+            ),
+            (
+                "DEEPSEEK_V1",
+                "DeepSeek (Low Cost)",
             ),
         ],
         initial="AUTO",
@@ -182,3 +197,64 @@ class QuestionGenerationForm(forms.Form):
             )
 
         return cleaned
+
+
+class AIProviderConfigurationForm(forms.ModelForm):
+
+    api_key = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": (
+                    "Enter API key"
+                ),
+            }
+        ),
+        label="API Key",
+    )
+
+    class Meta:
+
+        model = AIProviderConfiguration
+
+        fields = [
+            "provider_name",
+            "model_name",
+            "api_key",
+            "is_active",
+        ]
+
+        labels = {
+            "provider_name": (
+                "AI Provider"
+            ),
+            "model_name": (
+                "Model Name"
+            ),
+            "is_active": (
+                "Enable Provider"
+            ),
+        }
+
+    def save(
+        self,
+        commit=True,
+    ):
+
+        instance = super().save(
+            commit=False
+        )
+
+        api_key = self.cleaned_data.get(
+            "api_key"
+        )
+
+        if api_key:
+            instance.api_key = encrypt_api_key(
+                api_key
+            )
+
+        if commit:
+            instance.save()
+
+        return instance

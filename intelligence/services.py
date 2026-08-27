@@ -23,6 +23,10 @@ from .models import (
     QuestionAISuggestion,
 )
 
+from .provider_registry import (
+    get_provider_info,
+)
+
 
 AEROSPACE_KEYWORDS = {
     "aircraft",
@@ -639,6 +643,41 @@ def build_learner_insight(
 
 
 # =========================================================
+# Helper: parse JSON from LLM responses (with markdown)
+# =========================================================
+
+def _parse_generated_json(
+    content,
+):
+
+    content = (
+        content
+        or ""
+    ).strip()
+
+    if content.startswith("```"):
+
+        lines = content.splitlines()
+
+        if lines:
+            lines = lines[1:]
+
+        if (
+            lines
+            and lines[-1].strip() == "```"
+        ):
+            lines = lines[:-1]
+
+        content = "\n".join(
+            lines
+        ).strip()
+
+    return json.loads(
+        content
+    )
+
+
+# =========================================================
 # Question Generator Framework
 # =========================================================
 
@@ -656,6 +695,8 @@ class BaseQuestionGenerator:
         topic=None,
         theme="",
         teacher_instructions="",
+        api_key=None,
+        model_name=None,
     ):
         raise NotImplementedError
 
@@ -676,7 +717,11 @@ class BaselineQuestionGenerator(
         topic=None,
         theme="",
         teacher_instructions="",
+        api_key=None,
+        model_name=None,
     ):
+
+        start_time = time.perf_counter()
 
         subject = (
             theme.strip()
@@ -767,6 +812,14 @@ class BaselineQuestionGenerator(
                 "teacher review."
             )
 
+        latency_ms = int(
+            (
+                time.perf_counter()
+                - start_time
+            )
+            * 1000
+        )
+
         return {
             "question_text": question_text,
             "option_a": option_a,
@@ -777,6 +830,17 @@ class BaselineQuestionGenerator(
             "explanation": explanation,
             "provider": self.provider_name,
             "metadata": {
+                "model": "baseline-v1",
+                "provider": self.provider_name,
+                "api_family": "local",
+                "prompt_version": (
+                    "QUESTION_GENERATION_V1"
+                ),
+                "latency_ms": latency_ms,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0,
+                "request_id": "",
                 "track": track,
                 "skill": skill,
                 "difficulty": difficulty,
@@ -798,137 +862,23 @@ class OpenAIQuestionGenerator(
     BaseQuestionGenerator
 ):
 
-    provider_name = "OPENAI_RESPONSES_V1"
+    provider_name = (
+        "OPENAI_RESPONSES_V1"
+    )
 
     def __init__(self):
+
         self.model = getattr(
             settings,
             "AEROESP_OPENAI_MODEL",
-            "gpt-4o-mini",
+            "gpt-5.6-luna",
         )
+
         self.timeout = getattr(
             settings,
             "AEROESP_OPENAI_TIMEOUT",
             45,
         )
-
-    def generate(
-        self,
-        *,
-        track,
-        skill,
-        difficulty,
-        domain=None,
-        topic=None,
-        theme="",
-        teacher_instructions="",
-    ):
-        # Check API key
-        api_key = os.getenv(
-            "OPENAI_API_KEY",
-            "",
-        ).strip()
-        if not api_key:
-            raise QuestionGenerationError(
-                "OPENAI_API_KEY is not configured."
-            )
-
-        domain_name = domain.name if domain else "general aerospace"
-        topic_name = topic.name if topic else ""
-        theme_text = theme.strip() or topic_name or domain_name
-
-        # Build prompt
-        prompt = (
-            f"Generate a multiple-choice question for the {track} track, "
-            f"skill: {skill}, difficulty: {difficulty}. "
-            f"Domain: {domain_name}. Topic: {theme_text}. "
-            f"Teacher instructions: {teacher_instructions or 'None'}. "
-            "Provide a question with four options (A, B, C, D) and a correct answer. "
-            "Return the result in JSON format with keys: question_text, option_a, option_b, option_c, option_d, correct_answer, explanation."
-        )
-
-        try:
-            from openai import OpenAI
-            client = OpenAI(
-                api_key=api_key,
-                timeout=self.timeout,
-            )
-            start_time = time.perf_counter()
-
-            response = client.responses.create(
-                model=self.model,
-                instructions=(
-                    "You are an expert in creating "
-                    "high-quality multiple-choice "
-                    "questions for aerospace English "
-                    "and General English contexts."
-                ),
-                input=prompt,
-            )
-
-            content = (
-                response.output_text
-                or ""
-            ).strip()
-
-            latency_ms = int(
-                (time.perf_counter() - start_time) * 1000
-            )
-
-            data = json.loads(content)
-
-            # Validate the result
-            self._validate_result(data)
-
-            # Add provider and metadata
-            data["provider"] = self.provider_name
-            usage = getattr(
-                response,
-                "usage",
-                None,
-            )
-
-            data["metadata"] = {
-                "model": self.model,
-                "api_family": "responses",
-                "request_id": getattr(
-                    response,
-                    "id",
-                    None,
-                ),
-
-                "prompt_version": (
-                    "QUESTION_GENERATION_V1"
-                ),
-
-                "latency_ms": latency_ms,
-"latency_ms": latency_ms,
-                "input_tokens": getattr(
-                    usage,
-                    "input_tokens",
-                    None,
-                ),
-                "output_tokens": getattr(
-                    usage,
-                    "output_tokens",
-                    None,
-                ),
-                "total_tokens": getattr(
-                    usage,
-                    "total_tokens",
-                    None,
-                ),
-                "track": track,
-                "skill": skill,
-                "difficulty": difficulty,
-                "domain": domain_name,
-                "topic": topic_name,
-                "theme": theme_text,
-            }
-            return data
-
-        except Exception as e:
-            raise QuestionGenerationError(f"OpenAI generation failed: {str(e)}")
 
     def _validate_result(
         self,
@@ -958,10 +908,11 @@ class OpenAIQuestionGenerator(
                 )
                 or not value.strip()
             ):
-
                 raise QuestionGenerationError(
-                    f"Generated field "
-                    f"'{field}' is invalid."
+                    (
+                        "Generated field "
+                        f"'{field}' is invalid."
+                    )
                 )
 
         if (
@@ -973,10 +924,11 @@ class OpenAIQuestionGenerator(
                 "D",
             }
         ):
-
             raise QuestionGenerationError(
-                "Generated correct answer "
-                "must be A, B, C, or D."
+                (
+                    "Generated correct answer "
+                    "must be A, B, C, or D."
+                )
             )
 
         options = [
@@ -987,21 +939,470 @@ class OpenAIQuestionGenerator(
         ]
 
         if len(set(options)) != 4:
-
             raise QuestionGenerationError(
-                "Generated answer options "
-                "must be unique."
+                (
+                    "Generated answer options "
+                    "must be unique."
+                )
             )
 
         for option in options:
 
             if len(option) > 500:
-
                 raise QuestionGenerationError(
-                    "A generated option exceeded "
-                    "the Question Bank length limit."
+                    (
+                        "A generated option "
+                        "exceeded the Question "
+                        "Bank length limit."
+                    )
                 )
 
+    def generate(
+        self,
+        *,
+        track,
+        skill,
+        difficulty,
+        domain=None,
+        topic=None,
+        theme="",
+        teacher_instructions="",
+        api_key=None,
+        model_name=None,
+    ):
+
+        effective_api_key = (
+            api_key.strip()
+            if api_key
+            else os.getenv(
+                "OPENAI_API_KEY",
+                "",
+            ).strip()
+        )
+
+        if not effective_api_key:
+            raise QuestionGenerationError(
+                (
+                    "OPENAI_API_KEY is not "
+                    "configured and no API key "
+                    "was provided."
+                )
+            )
+
+        effective_model = (
+            model_name.strip()
+            if model_name
+            else self.model
+        )
+
+        domain_name = (
+            domain.name
+            if domain
+            else "general aerospace"
+        )
+
+        topic_name = (
+            topic.name
+            if topic
+            else ""
+        )
+
+        theme_text = (
+            theme.strip()
+            or topic_name
+            or domain_name
+        )
+
+        prompt = (
+            "Generate one high-quality "
+            "multiple-choice educational item. "
+            f"Track: {track}. "
+            f"Skill: {skill}. "
+            f"Difficulty: {difficulty}. "
+            f"Domain: {domain_name}. "
+            f"Topic: {theme_text}. "
+            "Teacher instructions: "
+            f"{teacher_instructions or 'None'}. "
+            "Return JSON only with exactly these "
+            "keys: question_text, option_a, "
+            "option_b, option_c, option_d, "
+            "correct_answer, explanation. "
+            "correct_answer must be one of "
+            "A, B, C, or D."
+        )
+
+        try:
+
+            from openai import OpenAI
+
+            client = OpenAI(
+                api_key=effective_api_key,
+                timeout=self.timeout,
+            )
+
+            start_time = (
+                time.perf_counter()
+            )
+
+            response = (
+                client.responses.create(
+                    model=effective_model,
+                    instructions=(
+                        "You are an expert "
+                        "educational item writer "
+                        "for Aerospace English, "
+                        "ESP, and General English."
+                    ),
+                    input=prompt,
+                )
+            )
+
+            latency_ms = int(
+                (
+                    time.perf_counter()
+                    - start_time
+                )
+                * 1000
+            )
+
+            data = _parse_generated_json(
+                response.output_text
+            )
+
+            self._validate_result(
+                data
+            )
+
+            usage = getattr(
+                response,
+                "usage",
+                None,
+            )
+
+            data["provider"] = (
+                self.provider_name
+            )
+
+            data["metadata"] = {
+                "model": effective_model,
+                "provider": self.provider_name,
+                "api_family": "responses",
+                "request_id": (
+                    getattr(
+                        response,
+                        "id",
+                        "",
+                    )
+                    or ""
+                ),
+                "prompt_version": (
+                    "QUESTION_GENERATION_V1"
+                ),
+                "latency_ms": latency_ms,
+                "input_tokens": (
+                    getattr(
+                        usage,
+                        "input_tokens",
+                        0,
+                    )
+                    or 0
+                ),
+                "output_tokens": (
+                    getattr(
+                        usage,
+                        "output_tokens",
+                        0,
+                    )
+                    or 0
+                ),
+                "total_tokens": (
+                    getattr(
+                        usage,
+                        "total_tokens",
+                        0,
+                    )
+                    or 0
+                ),
+                "track": track,
+                "skill": skill,
+                "difficulty": difficulty,
+                "domain": domain_name,
+                "topic": topic_name,
+                "theme": theme_text,
+            }
+
+            return data
+
+        except QuestionGenerationError:
+            raise
+
+        except Exception as exc:
+            raise QuestionGenerationError(
+                (
+                    "OpenAI generation failed: "
+                    f"{exc}"
+                )
+            ) from exc
+
+
+class DeepSeekQuestionGenerator(
+    OpenAIQuestionGenerator
+):
+
+    provider_name = "DEEPSEEK_V1"
+
+    def __init__(self):
+
+        self.model = getattr(
+            settings,
+            "AEROESP_DEEPSEEK_MODEL",
+            "deepseek-chat",
+        )
+
+        self.timeout = getattr(
+            settings,
+            "AEROESP_OPENAI_TIMEOUT",
+            45,
+        )
+
+        self.base_url = (
+            "https://api.deepseek.com"
+        )
+
+    def generate(
+        self,
+        *,
+        track,
+        skill,
+        difficulty,
+        domain=None,
+        topic=None,
+        theme="",
+        teacher_instructions="",
+        api_key=None,
+        model_name=None,
+    ):
+
+        effective_api_key = (
+            api_key.strip()
+            if api_key
+            else os.getenv(
+                "DEEPSEEK_API_KEY",
+                "",
+            ).strip()
+        )
+
+        if not effective_api_key:
+            raise QuestionGenerationError(
+                "DeepSeek API key is missing."
+            )
+
+        effective_model = (
+            model_name.strip()
+            if model_name
+            else self.model
+        )
+
+        domain_name = (
+            domain.name
+            if domain
+            else "general aerospace"
+        )
+
+        topic_name = (
+            topic.name
+            if topic
+            else ""
+        )
+
+        theme_text = (
+            theme.strip()
+            or topic_name
+            or domain_name
+        )
+
+        prompt = (
+            "Generate one high-quality "
+            "multiple-choice educational item. "
+            f"Track: {track}. "
+            f"Skill: {skill}. "
+            f"Difficulty: {difficulty}. "
+            f"Domain: {domain_name}. "
+            f"Topic: {theme_text}. "
+            "Teacher instructions: "
+            f"{teacher_instructions or 'None'}. "
+            "Return raw JSON only with exactly "
+            "these keys: question_text, "
+            "option_a, option_b, option_c, "
+            "option_d, correct_answer, "
+            "explanation. correct_answer must "
+            "be A, B, C, or D."
+        )
+
+        try:
+
+            from openai import OpenAI
+
+            client = OpenAI(
+                api_key=effective_api_key,
+                base_url=self.base_url,
+                timeout=self.timeout,
+            )
+
+            start_time = (
+                time.perf_counter()
+            )
+
+            response = (
+                client.chat.completions.create(
+                    model=effective_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are an expert "
+                                "educational item "
+                                "writer for Aerospace "
+                                "English, ESP, and "
+                                "General English."
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        },
+                    ],
+                )
+            )
+
+            latency_ms = int(
+                (
+                    time.perf_counter()
+                    - start_time
+                )
+                * 1000
+            )
+
+            content = (
+                response
+                .choices[0]
+                .message
+                .content
+            )
+
+            data = _parse_generated_json(
+                content
+            )
+
+            self._validate_result(
+                data
+            )
+
+            usage = getattr(
+                response,
+                "usage",
+                None,
+            )
+
+            data["provider"] = (
+                self.provider_name
+            )
+
+            data["metadata"] = {
+                "model": effective_model,
+                "provider": self.provider_name,
+                "api_family": (
+                    "chat.completions"
+                ),
+                "request_id": (
+                    getattr(
+                        response,
+                        "id",
+                        "",
+                    )
+                    or ""
+                ),
+                "prompt_version": (
+                    "QUESTION_GENERATION_V1"
+                ),
+                "latency_ms": latency_ms,
+                "input_tokens": (
+                    getattr(
+                        usage,
+                        "prompt_tokens",
+                        0,
+                    )
+                    or 0
+                ),
+                "output_tokens": (
+                    getattr(
+                        usage,
+                        "completion_tokens",
+                        0,
+                    )
+                    or 0
+                ),
+                "total_tokens": (
+                    getattr(
+                        usage,
+                        "total_tokens",
+                        0,
+                    )
+                    or 0
+                ),
+                "track": track,
+                "skill": skill,
+                "difficulty": difficulty,
+                "domain": domain_name,
+                "topic": topic_name,
+                "theme": theme_text,
+            }
+
+            return data
+
+        except QuestionGenerationError:
+            raise
+
+        except Exception as exc:
+            raise QuestionGenerationError(
+                (
+                    "DeepSeek generation failed: "
+                    f"{exc}"
+                )
+            ) from exc
+
+
+class GeminiQuestionGenerator(
+    BaseQuestionGenerator
+):
+
+    provider_name = "GEMINI_V1"
+
+    def generate(
+        self,
+        *,
+        track,
+        skill,
+        difficulty,
+        domain=None,
+        topic=None,
+        theme="",
+        teacher_instructions="",
+        api_key=None,
+        model_name=None,
+    ):
+
+        raise QuestionGenerationError(
+            (
+                "Gemini provider is not enabled "
+                "in this beta."
+            )
+        )
+
+
+# =========================================================
+# Generator Factory
+# =========================================================
 
 def get_question_generator(
     provider_name=None,
@@ -1013,6 +1414,18 @@ def get_question_generator(
             settings,
             "AEROESP_AI_PROVIDER",
             "BASELINE_V1",
+        )
+
+    provider_info = get_provider_info(
+        provider_name
+    )
+
+    if not provider_info:
+        raise QuestionGenerationError(
+            (
+                "Unknown question generation "
+                f"provider: {provider_name}"
+            )
         )
 
     if (
@@ -1031,7 +1444,25 @@ def get_question_generator(
             OpenAIQuestionGenerator()
         )
 
+    if (
+        provider_name
+        == "DEEPSEEK_V1"
+    ):
+        return (
+            DeepSeekQuestionGenerator()
+        )
+
+    if (
+        provider_name
+        == "GEMINI_V1"
+    ):
+        return (
+            GeminiQuestionGenerator()
+        )
+
     raise QuestionGenerationError(
-        "Unknown question generation "
-        f"provider: {provider_name}"
+        (
+            "Unknown question generation "
+            f"provider: {provider_name}"
+        )
     )

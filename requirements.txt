@@ -5,4 +5,4 @@ psycopg-binary==3.3.4
 python-dotenv==1.2.2
 sqlparse==0.5.5
 tzdata==2026.3
-openai==3.3.1
+openai==3.3.1cryptography==50.0.1

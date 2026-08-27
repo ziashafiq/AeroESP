@@ -85,4 +85,10 @@ urlpatterns = [
         views.experiment_report_view,
         name="experiment_report",
     ),
+
+    path(
+        "settings/providers/",
+        views.provider_settings_view,
+        name="provider_settings",
+    ),
 ]

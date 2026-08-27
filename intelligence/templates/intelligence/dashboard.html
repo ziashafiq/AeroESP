@@ -38,9 +38,18 @@ AI Intelligence
 
 <h2>AI Experiments</h2>
 
-<a href="{% url 'intelligence:run_ai_experiment' %}">
-    Run AI Comparison Experiment
-</a>
+<form
+    method="post"
+    action="{% url 'intelligence:run_ai_experiment' %}"
+>
+    {% csrf_token %}
+
+    <button
+        type="submit"
+    >
+        Run AI Comparison Experiment
+    </button>
+</form>
 
 
 <section class="section">
