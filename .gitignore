@@ -78,3 +78,4 @@ node_modules/
 # Other
 *.bak
 *.tmpai*_test.py
+deployment/production.env

@@ -193,7 +193,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
 STATIC_ROOT = (
     BASE_DIR
     / "staticfiles"
@@ -243,10 +243,22 @@ AEROESP_SECRET_KEY = os.getenv(
 
 
 # =========================================================
-# Production security
+# Production Security
 # =========================================================
 
 if IS_PRODUCTION:
+
+    if not SECRET_KEY:
+        raise RuntimeError(
+            "DJANGO_SECRET_KEY is required "
+            "in production."
+        )
+
+    if not AEROESP_SECRET_KEY:
+        raise RuntimeError(
+            "AEROESP_SECRET_KEY is required "
+            "in production."
+        )
 
     SECURE_SSL_REDIRECT = True
 
@@ -254,22 +266,46 @@ if IS_PRODUCTION:
 
     CSRF_COOKIE_SECURE = True
 
-    SECURE_HSTS_SECONDS = int(
-        os.getenv(
-            "DJANGO_SECURE_HSTS_SECONDS",
-            "31536000",
-        )
-    )
+    SESSION_COOKIE_HTTPONLY = True
 
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-
-    SECURE_HSTS_PRELOAD = True
+    CSRF_COOKIE_HTTPONLY = False
 
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    X_FRAME_OPTIONS = "DENY"
+
+    SECURE_REFERRER_POLICY = (
+        "strict-origin-when-cross-origin"
+    )
 
     SECURE_PROXY_SSL_HEADER = (
         "HTTP_X_FORWARDED_PROTO",
         "https",
+    )
+
+    USE_X_FORWARDED_HOST = True
+
+    SECURE_HSTS_SECONDS = int(
+        os.getenv(
+            "DJANGO_SECURE_HSTS_SECONDS",
+            "3600",
+        )
+    )
+
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = (
+        os.getenv(
+            "DJANGO_HSTS_INCLUDE_SUBDOMAINS",
+            "0",
+        )
+        == "1"
+    )
+
+    SECURE_HSTS_PRELOAD = (
+        os.getenv(
+            "DJANGO_HSTS_PRELOAD",
+            "0",
+        )
+        == "1"
     )
 
 else:
