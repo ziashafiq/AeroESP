@@ -2,13 +2,15 @@
 
 set -euo pipefail
 
+python config/production_check.py
+
 python manage.py check
+
+python manage.py check --deploy
 
 python manage.py migrate --noinput
 
 python manage.py collectstatic --noinput
-
-python manage.py check --deploy
 
 exec gunicorn \
     config.wsgi:application \

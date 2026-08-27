@@ -204,10 +204,70 @@ STATICFILES_DIRS = [
 ]
 
 
+# =========================================================
 # Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# =========================================================
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = os.getenv(
+    "DJANGO_EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
+
+EMAIL_HOST = os.getenv(
+    "DJANGO_EMAIL_HOST",
+    "",
+)
+
+EMAIL_PORT = int(
+    os.getenv(
+        "DJANGO_EMAIL_PORT",
+        "587",
+    )
+)
+
+EMAIL_USE_TLS = (
+    os.getenv(
+        "DJANGO_EMAIL_USE_TLS",
+        "1",
+    )
+    == "1"
+)
+
+EMAIL_USE_SSL = (
+    os.getenv(
+        "DJANGO_EMAIL_USE_SSL",
+        "0",
+    )
+    == "1"
+)
+
+EMAIL_HOST_USER = os.getenv(
+    "DJANGO_EMAIL_HOST_USER",
+    "",
+)
+
+EMAIL_HOST_PASSWORD = os.getenv(
+    "DJANGO_EMAIL_HOST_PASSWORD",
+    "",
+)
+
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    "AeroESP <noreply@example.com>",
+)
+
+SERVER_EMAIL = os.getenv(
+    "DJANGO_SERVER_EMAIL",
+    DEFAULT_FROM_EMAIL,
+)
+
+EMAIL_TIMEOUT = int(
+    os.getenv(
+        "DJANGO_EMAIL_TIMEOUT",
+        "20",
+    )
+)
+
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 LOGIN_URL = "accounts:login"
@@ -221,7 +281,7 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 
 AEROESP_AI_PROVIDER = os.getenv(
     "AEROESP_AI_PROVIDER",
-    "OPENAI_RESPONSES_V1",
+    "BASELINE_V1",
 )
 
 AEROESP_OPENAI_MODEL = os.getenv(
