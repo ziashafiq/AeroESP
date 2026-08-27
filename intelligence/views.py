@@ -6,7 +6,9 @@ from django.shortcuts import (
     render,
 )
 from django.utils import timezone
-
+from .generation_experiment_builder import (
+    create_generation_experiment,
+)
 from assessment.forms import TeacherQuestionForm
 from assessment.models import Question
 
@@ -57,6 +59,7 @@ from .experiment_report import (
 )
 from .generation_experiment import (
     log_generation_experiment,
+    update_experiment_human_score_from_draft,
 )
 from .provider_selector import (
     select_best_provider,
@@ -619,9 +622,13 @@ def generate_question_view(request):
                         quality_report
                     )
                 )
+
+                experiment = create_generation_experiment(
+                    provider_name
+                )
+
                 draft = (
-                    GeneratedQuestionDraft
-                    .objects
+                    GeneratedQuestionDraft.objects
                     .create(
                         created_by=request.user,
                         track=data["track"],
@@ -672,6 +679,7 @@ def generate_question_view(request):
                         generation_metadata=(
                             result["metadata"]
                         ),
+                        experiment=experiment,
                     )
                 )
 
@@ -835,8 +843,7 @@ def generated_draft_detail(
     )
 
     drafts = (
-        GeneratedQuestionDraft
-        .objects
+        GeneratedQuestionDraft.objects
         .select_related(
             "domain",
             "topic",
@@ -882,8 +889,7 @@ def edit_generated_draft(
     )
 
     drafts = (
-        GeneratedQuestionDraft
-        .objects
+        GeneratedQuestionDraft.objects
         .filter(
             status=(
                 GeneratedQuestionDraft
@@ -1004,6 +1010,10 @@ def edit_generated_draft(
             },
         )
 
+        update_experiment_human_score_from_draft(
+            draft.id
+        )
+
         return redirect(
             "intelligence:"
             "generated_draft_detail",
@@ -1036,8 +1046,7 @@ def accept_generated_draft(
         raise PermissionDenied()
 
     drafts = (
-        GeneratedQuestionDraft
-        .objects
+        GeneratedQuestionDraft.objects
         .filter(
             status=(
                 GeneratedQuestionDraft
@@ -1212,6 +1221,10 @@ def accept_generated_draft(
         },
     )
 
+    update_experiment_human_score_from_draft(
+        draft.id
+    )
+
     return redirect(
         "intelligence:"
         "generated_draft_detail",
@@ -1233,8 +1246,7 @@ def reject_generated_draft(
         raise PermissionDenied()
 
     drafts = (
-        GeneratedQuestionDraft
-        .objects
+        GeneratedQuestionDraft.objects
         .filter(
             status=(
                 GeneratedQuestionDraft
@@ -1322,6 +1334,10 @@ def reject_generated_draft(
                 {},
             ),
         },
+    )
+
+    update_experiment_human_score_from_draft(
+        draft.id
     )
 
     return redirect(

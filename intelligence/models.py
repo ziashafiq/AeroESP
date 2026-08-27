@@ -319,6 +319,14 @@ class GeneratedQuestionDraft(models.Model):
         blank=True,
     )
 
+    experiment = models.ForeignKey(
+        "AIExperiment",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="drafts",
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
     )
@@ -653,6 +661,19 @@ class AIExperiment(models.Model):
         related_name="experiments",
     )
 
+    protocol = models.ForeignKey(
+        "AIEvaluationProtocol",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="experiments",
+    )
+
+    experiment_type = models.CharField(
+        max_length=50,
+        default="COMPARISON",
+    )
+
     def __str__(self):
         return self.name
 
@@ -754,6 +775,36 @@ class AIEvaluationDataset(models.Model):
 
     size = models.PositiveIntegerField(
         default=0,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def __str__(self):
+        return (
+            f"{self.name} "
+            f"- {self.version}"
+        )
+
+
+class AIEvaluationProtocol(models.Model):
+
+    name = models.CharField(
+        max_length=200,
+    )
+
+    version = models.CharField(
+        max_length=80,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    metrics = models.JSONField(
+        default=list,
+        blank=True,
     )
 
     created_at = models.DateTimeField(

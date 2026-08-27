@@ -11,10 +11,15 @@ from .dataset_builder import (
     create_foundation_dataset,
 )
 
+from .protocol_builder import (
+    create_default_protocol,
+)
+
 
 def create_model_comparison_experiment():
 
     dataset = create_foundation_dataset()
+    protocol = create_default_protocol()
 
     experiment = AIExperiment.objects.create(
         name="AI Provider Comparison Experiment",
@@ -41,6 +46,8 @@ def create_model_comparison_experiment():
         ),
 
         dataset=dataset,
+
+        protocol=protocol,
 
         metadata={
             "type": "model_comparison",
