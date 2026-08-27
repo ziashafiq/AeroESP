@@ -30,8 +30,25 @@ def build_experiment_report(
                 "quality":
                     item.quality_score,
 
+                "ai_score":
+                    item.ai_score,
+
+                "human_score":
+                    item.human_score,
+
                 "acceptance":
                     item.acceptance_rate,
+
+                "generations":
+                    item.generations,
+
+                "tokens":
+                    item.total_tokens,
+
+                "cost":
+                    float(
+                        item.estimated_cost
+                    ),
 
                 "recommendation":
                     item.recommendation,

@@ -23,6 +23,7 @@ from .models import (
     LearnerInsightSnapshot,
     QuestionAISuggestion,
     AIExperiment,
+    AIExperimentResult,  # <--- اضافه شد
 )
 from .services import (
     QuestionGenerationError,
@@ -59,6 +60,10 @@ from .experiment_report import (
 )
 from .generation_experiment import (
     log_generation_experiment,
+)
+
+
+from .human_feedback import (
     update_experiment_human_score_from_draft,
 )
 from .provider_selector import (
@@ -773,14 +778,33 @@ def generate_question_view(request):
                     },
                 )
 
-                log_generation_experiment(
-                    provider=result.get(
-                        "provider",
-                        provider_name,
-                    ),
+                # ===== تغییر دوم: به‌روزرسانی AIExperimentResult =====
+                AIExperimentResult.objects.filter(
+                    experiment=experiment
+                ).update(
                     quality_score=result["metadata"]["quality"]["score"],
-                    recommendation=result["metadata"]["quality"]["status"],
+                    ai_score=result["metadata"]["quality"]["score"],
+                    generations=1,
+                    total_tokens=result.get(
+                        "metadata",
+                        {},
+                    ).get(
+                        "total_tokens",
+                        0,
+                    ),
                 )
+                # =====================================================
+
+                # ===== تغییر سوم: حذف خط زیر (log_generation_experiment) =====
+                # log_generation_experiment(
+                #     provider=result.get(
+                #         "provider",
+                #         provider_name,
+                #     ),
+                #     quality_score=result["metadata"]["quality"]["score"],
+                #     recommendation=result["metadata"]["quality"]["status"],
+                # )
+                # ============================================================
 
                 return redirect(
                     "intelligence:"

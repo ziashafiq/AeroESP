@@ -4,25 +4,67 @@
 
 <h2>AI Experiment Report</h2>
 
+
 <h3>
-    {{ report.experiment }}
+    {{ report.experiment.name }}
 </h3>
 
-<p>
+
+<table>
+
+<tr>
+    <th>Type</th>
+    <td>
+        {{ report.experiment.type }}
+    </td>
+</tr>
+
+<tr>
+    <th>Dataset</th>
+    <td>
+        {{ report.experiment.dataset }}
+    </td>
+</tr>
+
+<tr>
+    <th>Protocol</th>
+    <td>
+        {{ report.experiment.protocol }}
+    </td>
+</tr>
+
+<tr>
+    <th>Created At</th>
+    <td>
+        {{ report.experiment.created_at }}
+    </td>
+</tr>
+
+</table>
+
+
+<h3>
 Winner:
 {{ report.winner }}
-</p>
+</h3>
 
 
 <table>
 
 <thead>
+
 <tr>
     <th>Provider</th>
     <th>Quality</th>
+    <th>AI Score</th>
+    <th>Human Score</th>
     <th>Acceptance</th>
+    <th>Generations</th>
+    <th>Tokens</th>
+    <th>Cost</th>
     <th>Recommendation</th>
 </tr>
+
 </thead>
 
 
@@ -36,17 +78,46 @@ Winner:
 {{ item.provider }}
 </td>
 
+
 <td>
 {{ item.quality }}
 </td>
+
+
+<td>
+{{ item.ai_score }}
+</td>
+
+
+<td>
+{{ item.human_score }}
+</td>
+
 
 <td>
 {{ item.acceptance }}
 </td>
 
+
+<td>
+{{ item.generations }}
+</td>
+
+
+<td>
+{{ item.tokens }}
+</td>
+
+
+<td>
+{{ item.cost }}
+</td>
+
+
 <td>
 {{ item.recommendation }}
 </td>
+
 
 </tr>
 
