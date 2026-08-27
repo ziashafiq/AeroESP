@@ -1,0 +1,23 @@
+[Unit]
+Description=AeroESP Django Application
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+
+User=aeroesp
+Group=www-data
+
+WorkingDirectory=/var/www/aeroesp
+
+EnvironmentFile=/etc/aeroesp/aeroesp.env
+
+ExecStart=/var/www/aeroesp/.venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 120 --access-logfile - --error-logfile -
+
+Restart=always
+RestartSec=5
+
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
