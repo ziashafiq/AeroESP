@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class ResearchExperiment(models.Model):
@@ -314,6 +315,9 @@ class ReviewAssignment(models.Model):
 class ExpertReview(models.Model):
     """
     Human EVAL_V1 rating.
+
+    Draft reviews may be incomplete so that autosave works.
+    Finalized reviews must contain all mandatory EVAL_V1 fields.
     """
 
     DECISION_CHOICES = [
@@ -349,91 +353,127 @@ class ExpertReview(models.Model):
         related_name="review",
     )
 
-    # EVAL_V1
+    # =====================================================
+    # EVAL_V1 scores
+    # Draft reviews may leave these blank.
+    # =====================================================
+
     technical_correctness = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
 
     linguistic_accuracy = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
 
     clarity_answerability = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
 
     source_fidelity = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
 
     distractor_quality = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
 
     cefr_alignment = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
 
     difficulty_alignment = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
 
     pedagogical_value = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
         validators=[
             MinValueValidator(1),
             MaxValueValidator(5),
-        ]
+        ],
     )
+
+    # =====================================================
+    # Expert classifications
+    # =====================================================
 
     expert_cefr = models.CharField(
         max_length=10,
         choices=CEFR_CHOICES,
+        blank=True,
+        default="",
     )
 
     expert_cognitive_level = models.CharField(
         max_length=20,
         choices=COGNITIVE_CHOICES,
+        blank=True,
+        default="",
     )
 
     keyed_answer_correct = models.CharField(
         max_length=3,
         choices=YES_NO_CHOICES,
+        blank=True,
+        default="",
     )
 
     ambiguous = models.CharField(
         max_length=3,
         choices=YES_NO_CHOICES,
+        blank=True,
+        default="",
     )
 
     multiple_correct_answers = models.CharField(
         max_length=3,
         choices=YES_NO_CHOICES,
+        blank=True,
+        default="",
     )
 
     overall_decision = models.CharField(
         max_length=20,
         choices=DECISION_CHOICES,
+        blank=True,
+        default="",
     )
 
     error_codes = models.CharField(
@@ -454,12 +494,63 @@ class ExpertReview(models.Model):
         blank=True,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    def clean(self):
+        """
+        Draft reviews may be incomplete.
+
+        Once finalized, all mandatory EVAL_V1 fields
+        must be completed.
+        """
+
+        super().clean()
+
+        if not self.is_finalized:
+            return
+
+        required_fields = [
+            "technical_correctness",
+            "linguistic_accuracy",
+            "clarity_answerability",
+            "source_fidelity",
+            "distractor_quality",
+            "cefr_alignment",
+            "difficulty_alignment",
+            "pedagogical_value",
+            "expert_cefr",
+            "expert_cognitive_level",
+            "keyed_answer_correct",
+            "ambiguous",
+            "multiple_correct_answers",
+            "overall_decision",
+        ]
+
+        errors = {}
+
+        for field_name in required_fields:
+            value = getattr(
+                self,
+                field_name,
+            )
+
+            if value is None or value == "":
+                errors[field_name] = (
+                    "This field is required before final submission."
+                )
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         return (
-            f"{self.assignment.reviewer.user.username} — "
+            f"{self.assignment.reviewer.user.username} - "
             f"{self.assignment.question.blind_id}"
         )
 
