@@ -79,3 +79,4 @@ node_modules/
 *.bak
 *.tmpai*_test.py
 deployment/production.env
+~$*
