@@ -8,3 +8,4 @@ tzdata==2026.3
 openai==3.3.1
 cryptography==50.0.1
 gunicorn==23.0.0; platform_system != "Windows"
+openpyxl==3.1.5
