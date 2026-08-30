@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "exams.apps.ExamsConfig",
     "intelligence",
     "learning.apps.LearningConfig",
+    "research_review",
 ]
 
 MIDDLEWARE = [
