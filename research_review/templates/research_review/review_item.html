@@ -1,0 +1,245 @@
+{% extends "aeroesp/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{% static 'research_review/review.css' %}?v=3"
+>
+{% endblock %}
+
+{% block title %}
+{{ question.blind_id }} · Expert Review
+{% endblock %}
+
+{% block workspace_name %}
+Expert Review
+{% endblock %}
+
+{% block content %}
+
+
+<div class="review-item-header">
+
+    <div>
+
+        <div class="page-eyebrow">
+            Blinded Research Item
+        </div>
+
+        <h1>
+            {{ question.blind_id }}
+        </h1>
+
+        <div class="review-item-meta">
+
+            <span>
+                {{ question.get_skill_display }}
+            </span>
+
+            {% if locked %}
+                <span class="badge badge-success">
+                    Finalized
+                </span>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <a
+        href="{% url 'research_review:dashboard' %}"
+        class="button button-secondary"
+    >
+        Back to Dashboard
+    </a>
+
+</div>
+
+
+
+<section class="card source-material-card">
+
+    <h2>
+        Source Material
+    </h2>
+
+    <div class="source-material-text">
+        {{ experiment.source_material|linebreaks }}
+    </div>
+
+</section>
+
+
+
+<section class="card question-review-card">
+
+    <div class="page-eyebrow">
+        Assessment Item
+    </div>
+
+    <h2>
+        {{ question.stem }}
+    </h2>
+
+
+    <div class="review-options">
+
+        <div>
+            <strong>A</strong>
+            <span>{{ question.option_a }}</span>
+        </div>
+
+        <div>
+            <strong>B</strong>
+            <span>{{ question.option_b }}</span>
+        </div>
+
+        <div>
+            <strong>C</strong>
+            <span>{{ question.option_c }}</span>
+        </div>
+
+        <div>
+            <strong>D</strong>
+            <span>{{ question.option_d }}</span>
+        </div>
+
+    </div>
+
+
+    <div class="generated-answer-data">
+
+        <div>
+            <strong>
+                Keyed Answer
+            </strong>
+
+            <span>
+                {{ question.correct_answer }}
+            </span>
+        </div>
+
+
+        <div>
+            <strong>
+                Generated Explanation
+            </strong>
+
+            <p>
+                {{ question.explanation|default:"—" }}
+            </p>
+        </div>
+
+
+        <div>
+            <strong>
+                Generated Source Evidence
+            </strong>
+
+            <p>
+                {{ question.source_evidence|default:"—" }}
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="card evaluation-card">
+
+    <div class="page-eyebrow">
+        EVAL_V1
+    </div>
+
+    <h2>
+        Expert Evaluation
+    </h2>
+
+
+    {% if form.non_field_errors %}
+
+        <div class="review-form-errors">
+            {{ form.non_field_errors }}
+        </div>
+
+    {% endif %}
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        <div class="evaluation-grid">
+
+            {% for field in form %}
+
+                <div class="evaluation-field">
+
+                    <div class="evaluation-label">
+                        {{ field.label }}
+                    </div>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <div class="evaluation-help">
+                            {{ field.help_text }}
+                        </div>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        <div class="review-form-errors">
+                            {{ field.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        {% if not locked %}
+
+            <div class="review-form-actions">
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="draft"
+                    class="button button-secondary"
+                >
+                    Save Draft
+                </button>
+
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="finalize"
+                    class="button"
+                >
+                    Final Submit & Lock
+                </button>
+
+            </div>
+
+            <p class="final-submit-warning">
+                Final submission locks this review.
+                Submit only after checking all ratings.
+            </p>
+
+        {% endif %}
+
+    </form>
+
+</section>
+
+
+{% endblock %}

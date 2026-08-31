@@ -92,6 +92,13 @@ urlpatterns = [
     ),
 
     path(
+        "expert-review/",
+        include(
+            "research_review.urls"
+        ),
+    ),
+
+    path(
         "",
         include(
             "assessment.urls"

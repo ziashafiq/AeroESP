@@ -104,7 +104,6 @@
 
         <nav class="app-sidebar-nav">
 
-
             {% if request.user.is_superuser or request.user.teacher_profile.is_approved %}
 
 
@@ -236,6 +235,24 @@
                         AI Intelligence
 
                     </a>
+
+                    {% if request.user.expert_reviewer_profile.is_active_reviewer %}
+
+                        <a
+                            href="{% url 'research_review:dashboard' %}"
+                            class="app-nav-link"
+                            data-nav-link
+                        >
+
+                            <span class="app-nav-icon">
+                                ER
+                            </span>
+
+                            Expert Review
+
+                        </a>
+
+                    {% endif %}
 
                 </div>
 
@@ -496,6 +513,10 @@
                         {% if request.user.is_superuser %}
 
                             Administrator
+
+                        {% elif request.user.teacher_profile.is_approved and request.user.expert_reviewer_profile.is_active_reviewer %}
+
+                            Teacher · Expert Reviewer
 
                         {% elif request.user.teacher_profile.is_approved %}
 

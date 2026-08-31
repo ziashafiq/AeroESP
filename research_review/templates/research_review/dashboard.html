@@ -1,0 +1,226 @@
+{% extends "aeroesp/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{% static 'research_review/review.css' %}?v=3"
+>
+{% endblock %}
+
+{% block title %}
+Expert Review Dashboard · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+Expert Review
+{% endblock %}
+
+{% block content %}
+
+
+<section class="review-hero">
+
+    <div class="page-eyebrow">
+        Human Expert Validation
+    </div>
+
+    <h1>
+        Expert Review Dashboard
+    </h1>
+
+    <p>
+        Review the assigned AeroESP assessment items
+        independently using the EVAL_V1 evaluation framework.
+    </p>
+
+</section>
+
+
+
+<section class="review-stat-grid">
+
+    <div class="card stat-card">
+        <div class="stat-label">Assigned</div>
+        <div class="stat-number">{{ total }}</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-label">Not Started</div>
+        <div class="stat-number">{{ not_started }}</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-number">{{ in_progress }}</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-label">Finalized</div>
+        <div class="stat-number">{{ locked }}</div>
+    </div>
+
+</section>
+
+
+
+<section class="card review-progress-card">
+
+    <div class="course-progress-header">
+
+        <strong>
+            Review progress
+        </strong>
+
+        <span>
+            {{ progress_percent }}%
+        </span>
+
+    </div>
+
+    <div class="progress-track">
+
+        <div
+            class="progress-fill"
+            style="width: {{ progress_percent }}%;"
+        ></div>
+
+    </div>
+
+
+    {% if next_assignment %}
+
+        <div class="review-resume">
+
+            <a
+                href="{% url 'research_review:review_item' next_assignment.pk %}"
+                class="button"
+            >
+                Continue Review
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+
+<section class="review-list-section">
+
+    <h2>
+        Assigned Items
+    </h2>
+
+
+    {% if assignments %}
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Item ID</th>
+                        <th>Skill</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                    {% for assignment in assignments %}
+
+                        <tr>
+
+                            <td>
+                                {{ assignment.display_order }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ assignment.question.blind_id }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ assignment.question.get_skill_display }}
+                            </td>
+
+                            <td>
+
+                                {% if assignment.status == "LOCKED" %}
+
+                                    <span class="badge badge-success">
+                                        Finalized
+                                    </span>
+
+                                {% elif assignment.status == "IN_PROGRESS" %}
+
+                                    <span class="badge badge-warning">
+                                        In Progress
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge">
+                                        Not Started
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{% url 'research_review:review_item' assignment.pk %}"
+                                    class="button button-secondary"
+                                >
+
+                                    {% if assignment.status == "LOCKED" %}
+                                        View
+                                    {% else %}
+                                        Review
+                                    {% endif %}
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+    {% else %}
+
+        <div class="card">
+
+            <h3>
+                No items assigned
+            </h3>
+
+            <p>
+                No blinded research items have been
+                assigned to your reviewer account yet.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+{% endblock %}
