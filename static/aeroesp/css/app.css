@@ -10288,8 +10288,8 @@ textarea:focus-visible {
 
 .public-main {
     width: min(
-        calc(100% - 40px),
-        1240px
+        calc(100% - 64px),
+        1440px
     );
 
     flex: 1;
@@ -10312,8 +10312,8 @@ textarea:focus-visible {
 
 .public-footer {
     width: min(
-        calc(100% - 40px),
-        1240px
+        calc(100% - 64px),
+        1440px
     );
 
     margin: 0 auto;
