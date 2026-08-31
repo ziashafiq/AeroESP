@@ -1,0 +1,1515 @@
+/* =========================================================
+   AEROESP ADMIN — LAYOUT V2
+   ========================================================= */
+
+
+/* =========================================================
+   TOP HEADER
+   ========================================================= */
+
+#header {
+
+    min-height: 74px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 30px;
+
+    box-sizing: border-box;
+
+    padding:
+        10px
+        28px;
+
+    background:
+        linear-gradient(
+            110deg,
+            #061a27 0%,
+            #082839 55%,
+            #0a3448 100%
+        );
+}
+
+
+#branding {
+
+    flex:
+        0 0 auto;
+
+    min-width: 0;
+
+    margin: 0;
+}
+
+
+.aeroesp-admin-brand {
+
+    display: flex;
+    align-items: center;
+}
+
+
+.aeroesp-admin-brand-link {
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    text-decoration: none !important;
+}
+
+
+.aeroesp-admin-symbol {
+
+    width: 44px;
+    height: 44px;
+
+    object-fit: contain;
+
+    flex:
+        0 0 44px;
+}
+
+
+.aeroesp-admin-brand-text {
+
+    display: grid;
+
+    grid-template-columns:
+        auto auto;
+
+    column-gap: 9px;
+
+    align-items: baseline;
+}
+
+
+.aeroesp-admin-name {
+
+    color: #ffffff;
+
+    font-size: 20px;
+    font-weight: 900;
+
+    letter-spacing: -.035em;
+}
+
+
+.aeroesp-admin-section {
+
+    color: #7bd8f6;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    letter-spacing: .075em;
+
+    text-transform: uppercase;
+}
+
+
+.aeroesp-admin-brand-text small {
+
+    grid-column:
+        1 / -1;
+
+    margin-top: 1px;
+
+    color:
+        rgba(
+            206,
+            231,
+            241,
+            .68
+        );
+
+    font-size: 9px;
+
+    letter-spacing: .055em;
+}
+
+
+/* =========================================================
+   HEADER USER ACTIONS
+   ========================================================= */
+
+#user-tools {
+
+    flex:
+        0 0 auto;
+
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin: 0;
+
+    padding: 0;
+
+    white-space: nowrap;
+
+    font-size: 10px;
+
+    letter-spacing: .025em;
+}
+
+
+#user-tools a {
+
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 30px;
+
+    box-sizing: border-box;
+
+    padding:
+        6px
+        9px;
+
+    border-radius: 7px;
+
+    color: #cae2ec;
+
+    text-decoration: none;
+
+    transition:
+        background .15s ease,
+        color .15s ease;
+}
+
+
+#user-tools a:hover {
+
+    color: #ffffff;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .08
+        );
+}
+
+
+/* Django theme button */
+
+#user-tools .theme-toggle {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    margin-left: 5px;
+
+    padding: 0;
+
+    border:
+        1px solid
+        rgba(
+            133,
+            200,
+            227,
+            .16
+        );
+
+    border-radius: 9px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            .05
+        );
+}
+
+
+/* =========================================================
+   FULL WIDTH DASHBOARD
+   ========================================================= */
+
+.dashboard #content {
+
+    width: auto;
+    max-width: none;
+
+    box-sizing: border-box;
+
+    padding:
+        30px
+        30px
+        60px;
+}
+
+
+.dashboard #content-main {
+
+    float: none;
+
+    width: 100%;
+    max-width: none;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: 20px;
+
+    align-items: start;
+}
+
+
+/* Every Django app becomes a card */
+
+.dashboard #content-main > .module {
+
+    width: 100%;
+
+    min-width: 0;
+
+    margin: 0;
+
+    box-sizing: border-box;
+
+    border-radius: 16px;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   RECENT ACTIONS
+   ========================================================= */
+
+.dashboard #content-related {
+
+    float: none;
+
+    width: 100%;
+    max-width: none;
+
+    margin:
+        22px 0
+        0;
+
+    box-sizing: border-box;
+}
+
+
+.dashboard #content-related .module {
+
+    width: 100%;
+
+    margin: 0;
+
+    box-sizing: border-box;
+}
+
+
+.dashboard #recent-actions-module {
+
+    min-height: auto;
+}
+
+
+/* =========================================================
+   DASHBOARD CARD HEADERS
+   ========================================================= */
+
+.dashboard #content-main .module caption {
+
+    padding:
+        13px
+        16px;
+
+    background:
+        linear-gradient(
+            120deg,
+            #0d789d,
+            #199bbd
+        );
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: .065em;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   MODEL ROWS
+   ========================================================= */
+
+.dashboard #content-main .module table {
+
+    width: 100%;
+
+    table-layout: auto;
+}
+
+
+.dashboard #content-main .module tr {
+
+    height: 45px;
+}
+
+
+.dashboard #content-main .module th {
+
+    width: 100%;
+
+    min-width: 0;
+
+    padding:
+        10px
+        14px;
+
+    vertical-align: middle;
+}
+
+
+.dashboard #content-main .module td {
+
+    width: 1%;
+
+    padding:
+        8px
+        9px;
+
+    vertical-align: middle;
+
+    white-space: nowrap;
+}
+
+
+/* Add + Change always remain on one horizontal row */
+
+.dashboard .module .addlink,
+.dashboard .module .changelink,
+.dashboard .module .viewlink {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   DASHBOARD TITLE
+   ========================================================= */
+
+.dashboard #content > h1 {
+
+    margin:
+        0 0
+        22px;
+
+    font-size: 25px;
+
+    font-weight: 900;
+
+    letter-spacing: -.035em;
+}
+
+
+/* =========================================================
+   BETTER CARD DEPTH
+   ========================================================= */
+
+.dashboard #content-main > .module {
+
+    border:
+        1px solid
+        rgba(
+            18,
+            88,
+            116,
+            .11
+        );
+
+    box-shadow:
+        0 12px 30px
+        rgba(
+            8,
+            43,
+            59,
+            .065
+        );
+
+    transition:
+        transform .16s ease,
+        box-shadow .16s ease;
+}
+
+
+.dashboard #content-main > .module:hover {
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 17px 38px
+        rgba(
+            8,
+            43,
+            59,
+            .09
+        );
+}
+
+
+/* =========================================================
+   WIDE SCREENS
+   ========================================================= */
+
+@media
+(min-width: 1850px) {
+
+    .dashboard #content-main {
+
+        grid-template-columns:
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+/* =========================================================
+   MEDIUM SCREENS
+   ========================================================= */
+
+@media
+(max-width: 1250px) {
+
+    .dashboard #content-main {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media
+(max-width: 767px) {
+
+    #header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 10px;
+
+        padding:
+            12px
+            15px;
+    }
+
+
+    #user-tools {
+
+        width: 100%;
+
+        overflow-x: auto;
+    }
+
+
+    .aeroesp-admin-section {
+        display: none;
+    }
+
+
+    .dashboard #content {
+
+        padding:
+            20px
+            14px
+            45px;
+    }
+
+
+    .dashboard #content-main {
+
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+/* =========================================================
+   AEROESP ADMINISTRATION — اضافات و overrideها
+   ========================================================= */
+
+:root {
+
+    --aero-admin-bg: #f4f8fb;
+    --aero-admin-surface: #ffffff;
+    --aero-admin-surface-soft: #f7fafc;
+
+    --aero-admin-ink: #082233;
+    --aero-admin-text: #314b5c;
+    --aero-admin-muted: #718897;
+
+    --aero-admin-blue: #176f9b;
+    --aero-admin-cyan: #3bb8e8;
+
+    --aero-admin-border:
+        rgba(17, 75, 103, .12);
+
+    --aero-admin-shadow:
+        0 10px 34px
+        rgba(9, 43, 61, .07);
+
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+body {
+
+    background:
+        radial-gradient(
+            circle at 90% 0%,
+            rgba(58, 184, 232, .08),
+            transparent 28%
+        ),
+        var(--aero-admin-bg);
+
+    color: var(--aero-admin-text);
+}
+
+
+#container {
+    background: transparent;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+#header {
+
+    min-height: 76px;
+
+    display: flex;
+    align-items: center;
+
+    padding:
+        0 25px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #061c2a,
+            #0a3044
+        );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 6px 28px
+        rgba(3, 25, 38, .15);
+}
+
+
+#branding {
+
+    display: flex;
+    align-items: center;
+
+    min-width: 310px;
+}
+
+
+.aeroesp-admin-brand-link {
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    text-decoration: none;
+}
+
+
+.aeroesp-admin-logo {
+
+    width: 145px;
+    height: auto;
+
+    display: block;
+}
+
+
+.aeroesp-admin-logo-dark {
+    display: none;
+}
+
+
+.aeroesp-admin-brand-divider {
+
+    width: 1px;
+    height: 34px;
+
+    background:
+        rgba(255,255,255,.20);
+}
+
+
+.aeroesp-admin-brand-copy {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 1px;
+}
+
+
+.aeroesp-admin-brand-copy strong {
+
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    letter-spacing: .06em;
+
+    text-transform: uppercase;
+}
+
+
+.aeroesp-admin-brand-copy small {
+
+    color:
+        rgba(221, 241, 249, .68);
+
+    font-size: 9px;
+
+    letter-spacing: .04em;
+}
+
+
+/* =========================================================
+   USER TOOLS
+   ========================================================= */
+
+#user-tools {
+
+    font-size: 11px;
+
+    letter-spacing: .03em;
+}
+
+
+#user-tools,
+#user-tools a {
+
+    color: #d7e9f1;
+}
+
+
+#user-tools a:hover {
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   BREADCRUMBS
+   ========================================================= */
+
+div.breadcrumbs {
+
+    padding:
+        13px
+        28px;
+
+    background: #0d3d56;
+
+    color: #bbd7e4;
+
+    border: 0;
+}
+
+
+div.breadcrumbs a {
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+   ========================================================= */
+
+.main {
+
+    background: transparent;
+}
+
+
+#content {
+
+    padding:
+        28px
+        30px
+        50px;
+}
+
+
+#content h1 {
+
+    color: var(--aero-admin-ink);
+
+    font-weight: 800;
+
+    letter-spacing: -.025em;
+}
+
+
+/* =========================================================
+   NAV SIDEBAR
+   ========================================================= */
+
+#nav-sidebar {
+
+    width: 270px;
+
+    padding:
+        18px
+        12px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #071d2a,
+            #092738
+        );
+
+    border: 0;
+
+    box-shadow:
+        8px 0 26px
+        rgba(6, 30, 44, .08);
+}
+
+
+#nav-sidebar .module {
+
+    margin-bottom: 16px;
+
+    background: transparent;
+
+    border: 0;
+
+    box-shadow: none;
+}
+
+
+#nav-sidebar .module caption,
+#nav-sidebar .module h2 {
+
+    padding:
+        8px
+        10px;
+
+    background: transparent;
+
+    color: #6fcdf0;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: .09em;
+
+    text-transform: uppercase;
+}
+
+
+#nav-sidebar table {
+    width: 100%;
+}
+
+
+#nav-sidebar tr {
+
+    border: 0;
+
+    background: transparent;
+}
+
+
+#nav-sidebar th,
+#nav-sidebar td {
+
+    padding:
+        7px
+        10px;
+
+    background: transparent;
+
+    border: 0;
+}
+
+
+#nav-sidebar a {
+
+    color: #c5dbe5;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+
+#nav-sidebar a:hover {
+
+    color: #ffffff;
+}
+
+
+#nav-sidebar .current-model {
+
+    background:
+        rgba(69, 183, 228, .13);
+
+    border-radius: 9px;
+}
+
+
+#nav-sidebar .current-model a {
+    color: #7bd8f5;
+}
+
+
+/* Sidebar search */
+
+#nav-filter {
+
+    width:
+        calc(100% - 8px);
+
+    margin:
+        0 4px
+        18px;
+
+    padding:
+        10px
+        11px;
+
+    color: #e8f5fa;
+
+    background:
+        rgba(255,255,255,.06);
+
+    border:
+        1px solid
+        rgba(255,255,255,.10);
+
+    border-radius: 10px;
+
+    outline: none;
+}
+
+
+/* =========================================================
+   MODULE / CARDS
+   ========================================================= */
+
+.dashboard #content-main {
+
+    width: min(1050px, 100%);
+}
+
+
+.module {
+
+    overflow: hidden;
+
+    margin-bottom: 20px;
+
+    background:
+        var(--aero-admin-surface);
+
+    border:
+        1px solid
+        var(--aero-admin-border);
+
+    border-radius: 15px;
+
+    box-shadow:
+        var(--aero-admin-shadow);
+}
+
+
+.module h2,
+.module caption,
+.inline-group h2 {
+
+    padding:
+        12px
+        15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0c617f,
+            #1987aa
+        );
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: .04em;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   DASHBOARD TABLES
+   ========================================================= */
+
+.dashboard .module table {
+
+    width: 100%;
+}
+
+
+.dashboard .module tr {
+
+    border-bottom:
+        1px solid
+        var(--aero-admin-border);
+}
+
+
+.dashboard .module tr:last-child {
+    border-bottom: 0;
+}
+
+
+.dashboard .module th,
+.dashboard .module td {
+
+    padding:
+        11px
+        14px;
+
+    background: transparent;
+}
+
+
+.dashboard .module th a {
+
+    color: var(--aero-admin-ink);
+
+    font-weight: 650;
+}
+
+
+.dashboard .module td a {
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a:link,
+a:visited {
+
+    color: #177ba4;
+}
+
+
+a:hover,
+a:focus {
+
+    color: #0b4e6a;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.button,
+input[type="submit"],
+input[type="button"],
+.submit-row input,
+a.button {
+
+    padding:
+        9px
+        15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #137da6,
+            #24a5d2
+        );
+
+    color: #ffffff;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 5px 14px
+        rgba(19, 125, 166, .15);
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+}
+
+
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+.submit-row input:hover {
+
+    transform:
+        translateY(-1px);
+
+    background:
+        linear-gradient(
+            135deg,
+            #106d92,
+            #1c96c0
+        );
+
+    color: #ffffff;
+}
+
+
+.button.default,
+input[type="submit"].default,
+.submit-row input.default {
+
+    background:
+        linear-gradient(
+            135deg,
+            #095f88,
+            #168fb7
+        );
+}
+
+
+/* =========================================================
+   TABLE LISTS
+   ========================================================= */
+
+#changelist {
+
+    background: transparent;
+}
+
+
+#changelist .changelist-form-container {
+
+    background:
+        var(--aero-admin-surface);
+
+    border:
+        1px solid
+        var(--aero-admin-border);
+
+    border-radius: 15px;
+
+    overflow: hidden;
+
+    box-shadow:
+        var(--aero-admin-shadow);
+}
+
+
+#result_list thead th {
+
+    padding:
+        11px
+        10px;
+
+    background: #e9f3f7;
+
+    color: #416173;
+
+    border-color:
+        var(--aero-admin-border);
+
+    font-size: 10px;
+
+    letter-spacing: .03em;
+
+    text-transform: uppercase;
+}
+
+
+#result_list tbody td,
+#result_list tbody th {
+
+    padding:
+        11px
+        10px;
+
+    color: var(--aero-admin-text);
+
+    border-color:
+        var(--aero-admin-border);
+}
+
+
+#result_list tbody tr:nth-child(even) {
+
+    background: #f8fbfc;
+}
+
+
+#result_list tbody tr:hover {
+
+    background: #edf8fc;
+}
+
+
+/* =========================================================
+   FILTER PANEL
+   ========================================================= */
+
+#changelist-filter {
+
+    background:
+        var(--aero-admin-surface);
+
+    border:
+        1px solid
+        var(--aero-admin-border);
+
+    border-radius: 15px;
+
+    box-shadow:
+        var(--aero-admin-shadow);
+}
+
+
+#changelist-filter h2 {
+
+    border-radius:
+        15px
+        15px
+        0
+        0;
+}
+
+
+#changelist-filter h3 {
+
+    color: var(--aero-admin-ink);
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+.form-row {
+
+    padding:
+        15px
+        18px;
+
+    border-bottom:
+        1px solid
+        var(--aero-admin-border);
+}
+
+
+fieldset.module {
+
+    padding-bottom: 6px;
+}
+
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+textarea,
+select {
+
+    padding:
+        8px
+        10px;
+
+    background: #ffffff;
+
+    color: var(--aero-admin-ink);
+
+    border:
+        1px solid
+        rgba(22, 83, 112, .20);
+
+    border-radius: 8px;
+
+    outline: none;
+}
+
+
+input:focus,
+textarea:focus,
+select:focus {
+
+    border-color: #37aedd;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(55, 174, 221, .10);
+}
+
+
+/* =========================================================
+   SUBMIT ROW
+   ========================================================= */
+
+.submit-row {
+
+    padding: 15px;
+
+    background:
+        var(--aero-admin-surface);
+
+    border:
+        1px solid
+        var(--aero-admin-border);
+
+    border-radius: 13px;
+
+    box-shadow:
+        var(--aero-admin-shadow);
+}
+
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+
+.paginator {
+
+    padding:
+        14px;
+
+    color: var(--aero-admin-muted);
+}
+
+
+/* =========================================================
+   DARK MODE
+   Django Admin uses data-theme="dark"
+   ========================================================= */
+
+html[data-theme="dark"] {
+
+    --aero-admin-bg: #061522;
+    --aero-admin-surface: #0a2130;
+    --aero-admin-surface-soft: #0b2737;
+
+    --aero-admin-ink: #f1f8fb;
+    --aero-admin-text: #c9dde6;
+    --aero-admin-muted: #86a4b3;
+
+    --aero-admin-border:
+        rgba(123, 193, 222, .13);
+
+    --aero-admin-shadow:
+        0 12px 32px
+        rgba(0,0,0,.18);
+}
+
+
+html[data-theme="dark"] body {
+
+    background:
+        radial-gradient(
+            circle at 90% 0%,
+            rgba(37, 151, 201, .11),
+            transparent 30%
+        ),
+        #061522;
+}
+
+
+html[data-theme="dark"]
+.aeroesp-admin-logo-light {
+
+    display: none;
+}
+
+
+html[data-theme="dark"]
+.aeroesp-admin-logo-dark {
+
+    display: block;
+}
+
+
+html[data-theme="dark"]
+.module,
+
+html[data-theme="dark"]
+#changelist-filter,
+
+html[data-theme="dark"]
+#changelist .changelist-form-container,
+
+html[data-theme="dark"]
+.submit-row {
+
+    background:
+        var(--aero-admin-surface);
+}
+
+
+html[data-theme="dark"]
+#result_list thead th {
+
+    background: #102f41;
+
+    color: #a7c7d6;
+}
+
+
+html[data-theme="dark"]
+#result_list tbody td,
+
+html[data-theme="dark"]
+#result_list tbody th {
+
+    color: #d0e2ea;
+}
+
+
+html[data-theme="dark"]
+#result_list tbody tr:nth-child(even) {
+
+    background: #0a2535;
+}
+
+
+html[data-theme="dark"]
+#result_list tbody tr:hover {
+
+    background: #103246;
+}
+
+
+html[data-theme="dark"]
+input[type="text"],
+
+html[data-theme="dark"]
+input[type="password"],
+
+html[data-theme="dark"]
+input[type="email"],
+
+html[data-theme="dark"]
+input[type="url"],
+
+html[data-theme="dark"]
+input[type="number"],
+
+html[data-theme="dark"]
+textarea,
+
+html[data-theme="dark"]
+select {
+
+    background: #071a27;
+
+    color: #e4f1f6;
+
+    border-color:
+        rgba(123, 193, 222, .18);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 767px) {
+
+    #header {
+
+        padding:
+            12px
+            15px;
+
+        min-height: auto;
+    }
+
+
+    .aeroesp-admin-logo {
+        width: 115px;
+    }
+
+
+    .aeroesp-admin-brand-copy {
+        display: none;
+    }
+
+
+    #content {
+
+        padding:
+            20px
+            14px
+            40px;
+    }
+
+}

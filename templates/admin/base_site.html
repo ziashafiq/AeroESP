@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}
+{% if subtitle %}{{ subtitle }} | {% endif %}
+{{ title }} | AeroESP Administration
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+
+<link
+    rel="stylesheet"
+    href="{% static 'aeroesp/css/admin.css' %}?v=2"
+>
+
+{% endblock %}
+
+
+{% block branding %}
+
+<div class="aeroesp-admin-brand">
+
+    <a
+        href="{% url 'admin:index' %}"
+        class="aeroesp-admin-brand-link"
+    >
+
+        <img
+            src="{% static 'aeroesp/brand/final/aeroesp-symbol.png' %}"
+            class="aeroesp-admin-symbol"
+            alt="AeroESP"
+        >
+
+        <div class="aeroesp-admin-brand-text">
+
+            <span class="aeroesp-admin-name">
+                AeroESP
+            </span>
+
+            <span class="aeroesp-admin-section">
+                Administration
+            </span>
+
+            <small>
+                Platform Management
+            </small>
+
+        </div>
+
+    </a>
+
+</div>
+
+{% endblock %}
+
+
+{% block nav-global %}
+{% endblock %}
