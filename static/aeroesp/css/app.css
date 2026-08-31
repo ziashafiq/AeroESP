@@ -15819,3 +15819,36 @@ html[data-theme="dark"]
     }
 
 }
+/* Landing hero image card */
+
+.aero-hero-visual-card {
+    overflow: hidden;
+
+    border-radius: 38px 38px 38px 13px;
+
+    border: 1px solid var(--theme-border);
+
+    background: var(--theme-surface);
+
+    box-shadow: var(--theme-shadow-md);
+
+    min-height: 500px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+.aero-hero-visual-image {
+    width: 100%;
+    height: 100%;
+
+    min-height: 500px;
+
+    object-fit: cover;
+
+    display: block;
+}
