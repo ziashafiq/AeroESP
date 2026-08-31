@@ -1513,3 +1513,45 @@ select {
     }
 
 }
+/* Admin layout fix */
+
+#container {
+    width: 100%;
+    padding: 0 20px;
+}
+
+#content {
+    width: 100%;
+}
+
+.main {
+    width: 100%;
+}
+
+.dashboard #content {
+    width: 100%;
+}
+
+.module {
+    width: auto;
+}
+
+.dashboard .module {
+    width: auto;
+}
+
+#content-main {
+    width: 100%;
+}
+
+.dashboard .module table {
+    width: 100%;
+}
+
+#content-related {
+    width: 100%;
+}
+
+.dashboard .module {
+    display: block;
+}
