@@ -3,6 +3,24 @@
 from django.db import migrations, models
 
 
+def blank_emails_to_null(apps, schema_editor):
+    """
+    Idempotent safety net for databases where the earlier migration
+    had already run: keep "no email" stored as NULL, never as "".
+    """
+
+    CustomUser = apps.get_model(
+        "accounts",
+        "CustomUser",
+    )
+
+    CustomUser.objects.filter(
+        email="",
+    ).update(
+        email=None,
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -18,5 +36,9 @@ class Migration(migrations.Migration):
             model_name='customuser',
             name='email',
             field=models.EmailField(blank=True, max_length=254, null=True, unique=True),
+        ),
+        migrations.RunPython(
+            blank_emails_to_null,
+            migrations.RunPython.noop,
         ),
     ]

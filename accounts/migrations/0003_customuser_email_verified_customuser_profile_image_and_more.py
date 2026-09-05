@@ -3,6 +3,40 @@
 from django.db import migrations, models
 
 
+def blank_emails_to_null(apps, schema_editor):
+    """
+    Existing users created before sign-up required an email have an
+    empty string there. Several empty strings violate the unique
+    index that this migration adds, so they become NULL instead
+    (NULL is exempt from uniqueness).
+    """
+
+    CustomUser = apps.get_model(
+        "accounts",
+        "CustomUser",
+    )
+
+    CustomUser.objects.filter(
+        email="",
+    ).update(
+        email=None,
+    )
+
+
+def null_emails_to_blank(apps, schema_editor):
+
+    CustomUser = apps.get_model(
+        "accounts",
+        "CustomUser",
+    )
+
+    CustomUser.objects.filter(
+        email__isnull=True,
+    ).update(
+        email="",
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -20,9 +54,21 @@ class Migration(migrations.Migration):
             name='profile_image',
             field=models.ImageField(blank=True, null=True, upload_to='profiles/'),
         ),
+        # Make the column nullable first, clear the blanks, then apply
+        # the unique index. Doing it in one step fails on any database
+        # that already holds more than one user without an email.
         migrations.AlterField(
             model_name='customuser',
             name='email',
-            field=models.EmailField(max_length=254, unique=True),
+            field=models.EmailField(blank=True, max_length=254, null=True),
+        ),
+        migrations.RunPython(
+            blank_emails_to_null,
+            null_emails_to_blank,
+        ),
+        migrations.AlterField(
+            model_name='customuser',
+            name='email',
+            field=models.EmailField(blank=True, max_length=254, null=True, unique=True),
         ),
     ]
