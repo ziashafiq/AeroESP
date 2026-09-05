@@ -25,10 +25,21 @@ NON_DELIVERING_BACKENDS = (
 )
 
 
-def _backend_can_deliver():
+def email_delivery_available():
+    """
+    Can the configured backend actually put a message on the wire?
+
+    Read at call time rather than cached, so that overriding
+    EMAIL_BACKEND (in tests, or per environment) takes effect.
+    """
+
     return not settings.EMAIL_BACKEND.endswith(
         NON_DELIVERING_BACKENDS
     )
+
+
+# Kept as the previous private name for internal callers.
+_backend_can_deliver = email_delivery_available
 
 
 def generate_verification_code():

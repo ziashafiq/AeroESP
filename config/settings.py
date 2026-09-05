@@ -559,6 +559,27 @@ EMAIL_TIMEOUT = int(
     )
 )
 
+# Require a mailed six-digit code before an account becomes usable.
+#
+# Turn this off (AEROESP_REQUIRE_EMAIL_VERIFICATION=0) when there is no
+# working mail service: sign-up then completes immediately and the
+# verification code is neither generated nor sent. Every piece of the
+# verification machinery stays in place, so setting it back to 1
+# restores the full flow with no code change.
+#
+# Off means anyone can register with an address they do not own, so it
+# is a stopgap for a pilot, not a setting to leave on indefinitely.
+REQUIRE_EMAIL_VERIFICATION = _env_flag(
+    "AEROESP_REQUIRE_EMAIL_VERIFICATION",
+    "1",
+)
+
+# Shown to users when a feature that needs email is unavailable.
+AEROESP_SUPPORT_EMAIL = _env(
+    "AEROESP_SUPPORT_EMAIL",
+    EMAIL_HOST_USER,
+)
+
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 # Authentication backends

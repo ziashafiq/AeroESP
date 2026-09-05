@@ -4,7 +4,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from .models import (
@@ -582,4 +582,130 @@ class RegistrationEmailTests(TestCase):
         self.assertIn(
             "does not send real mail",
             "\n".join(captured.output),
+        )
+
+
+@override_settings(REQUIRE_EMAIL_VERIFICATION=False)
+class VerificationDisabledTests(TestCase):
+    """
+    AEROESP_REQUIRE_EMAIL_VERIFICATION=0: sign-up completes at once,
+    nothing is mailed, and the code machinery stays dormant.
+    """
+
+    DATA = {
+        "first_name": "Sara",
+        "last_name": "Tester",
+        "email": "sara.disabled@example.com",
+        "role": "STUDENT",
+        "password1": "AeroESP-Strong-2026",
+        "password2": "AeroESP-Strong-2026",
+    }
+
+    def test_registration_logs_the_user_straight_in(self):
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            self.DATA,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:role_redirect"),
+            target_status_code=302,
+        )
+
+        user = get_user_model().objects.get(
+            email="sara.disabled@example.com"
+        )
+
+        self.assertTrue(user.email_verified)
+
+        self.assertTrue(
+            StudentProfile.objects.filter(user=user).exists()
+        )
+
+        self.assertEqual(
+            str(self.client.session["_auth_user_id"]),
+            str(user.pk),
+        )
+
+    def test_no_email_and_no_code_are_produced(self):
+
+        self.client.post(
+            reverse("accounts:register"),
+            self.DATA,
+        )
+
+        self.assertEqual(len(mail.outbox), 0)
+
+        self.assertFalse(
+            EmailVerificationCode.objects.exists()
+        )
+
+    def test_verify_page_is_not_reachable(self):
+
+        response = self.client.get(
+            reverse("accounts:verify_email")
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:login"),
+        )
+
+    def test_teacher_role_still_gets_a_teacher_profile(self):
+
+        data = dict(self.DATA)
+        data["email"] = "teacher.disabled@example.com"
+        data["role"] = "TEACHER"
+
+        self.client.post(
+            reverse("accounts:register"),
+            data,
+        )
+
+        user = get_user_model().objects.get(
+            email="teacher.disabled@example.com"
+        )
+
+        self.assertTrue(
+            TeacherProfile.objects.filter(user=user).exists()
+        )
+
+
+class PasswordResetAvailabilityTests(TestCase):
+
+    @override_settings(
+        EMAIL_BACKEND=(
+            "django.core.mail.backends.console.EmailBackend"
+        )
+    )
+    def test_reset_explains_itself_when_mail_cannot_be_sent(self):
+        """
+        Regression: without a working backend this raised, or claimed
+        an email had been sent that never was.
+        """
+
+        response = self.client.get(
+            reverse("password_reset")
+        )
+
+        self.assertEqual(response.status_code, 503)
+
+        self.assertIn(
+            "temporarily unavailable",
+            response.content.decode(),
+        )
+
+    def test_reset_works_normally_with_a_sending_backend(self):
+
+        response = self.client.get(
+            reverse("password_reset")
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotIn(
+            "temporarily unavailable",
+            response.content.decode(),
         )

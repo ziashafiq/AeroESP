@@ -1,9 +1,13 @@
+import logging
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import (
     get_user_model,
     login,
     logout,
 )
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import (
     get_object_or_404,
@@ -25,8 +29,12 @@ from .models import (
 )
 from .utils import (
     create_verification_code,
+    email_delivery_available,
     send_verification_email,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def error_403(request, exception=None):
@@ -195,16 +203,42 @@ PENDING_USER_SESSION_KEY = "pending_verification_user_id"
 MAX_VERIFICATION_ATTEMPTS = 5
 
 
+def ensure_role_profile(user):
+    """
+    Create the profile matching the role chosen at sign-up.
+    """
+
+    if user.selected_role == "TEACHER":
+        TeacherProfile.objects.get_or_create(user=user)
+
+    else:
+        StudentProfile.objects.get_or_create(user=user)
+
+
+def _log_in(request, user):
+    """
+    An explicit backend is required because django-axes adds a second
+    authentication backend.
+    """
+
+    login(
+        request,
+        user,
+        backend=(
+            "django.contrib.auth.backends.ModelBackend"
+        ),
+    )
+
+
 def register(request):
-    
+
     if request.user.is_authenticated:
-        
+
         return redirect(
             "accounts:role_redirect"
         )
 
     if request.method == "POST":
-        
 
         form = RegistrationForm(
             request.POST
@@ -218,10 +252,37 @@ def register(request):
             user.selected_role = (
                 form.cleaned_data["role"]
             )
+
+            # No mail service: finish sign-up here rather than parking
+            # the account behind a code that can never be delivered.
+            if not settings.REQUIRE_EMAIL_VERIFICATION:
+
+                user.email_verified = True
+                user.save()
+
+                ensure_role_profile(user)
+
+                _log_in(request, user)
+
+                logger.info(
+                    "Registered %s without email verification "
+                    "(AEROESP_REQUIRE_EMAIL_VERIFICATION is off).",
+                    user.email,
+                )
+
+                messages.success(
+                    request,
+                    "Welcome to AeroESP. Your account is ready.",
+                )
+
+                return redirect(
+                    "accounts:role_redirect"
+                )
+
             user.save()
 
             verification = (
-                 create_verification_code(user)
+                create_verification_code(user)
             )
 
             delivered = send_verification_email(
@@ -279,6 +340,16 @@ def register(request):
 
 
 def verify_email(request):
+
+    # The step does not exist while verification is switched off, and
+    # a stale bookmark must not present a code box that can never be
+    # satisfied.
+    if not settings.REQUIRE_EMAIL_VERIFICATION:
+        return redirect(
+            "accounts:role_redirect"
+            if request.user.is_authenticated
+            else "accounts:login"
+        )
 
     if request.user.is_authenticated:
         return redirect(
@@ -356,14 +427,7 @@ def verify_email(request):
                 ]
             )
 
-            if user.selected_role == "TEACHER":
-                TeacherProfile.objects.get_or_create(
-                    user=user
-                )
-            else:
-                StudentProfile.objects.get_or_create(
-                    user=user
-                )
+            ensure_role_profile(user)
 
             verification.is_used = True
             verification.save(
@@ -387,16 +451,7 @@ def verify_email(request):
                 "Email verified successfully.",
             )
 
-            # An explicit backend is required because more than one
-            # authentication backend is configured (django-axes).
-            login(
-                request,
-                user,
-                backend=(
-                    "django.contrib.auth.backends."
-                    "ModelBackend"
-                ),
-            )
+            _log_in(request, user)
 
             return redirect(
                 "accounts:role_redirect"
@@ -415,6 +470,11 @@ def verify_email(request):
 
 @require_POST
 def resend_verification_code(request):
+
+    if not settings.REQUIRE_EMAIL_VERIFICATION:
+        return redirect(
+            "accounts:login"
+        )
 
     user_id = request.session.get(
         PENDING_USER_SESSION_KEY
@@ -460,3 +520,73 @@ def resend_verification_code(request):
     return redirect(
         "accounts:verify_email"
     )
+
+# =========================================================
+# Password reset
+# =========================================================
+
+class PasswordResetOrSupportView(auth_views.PasswordResetView):
+    """
+    Django's PasswordResetView always reports success, so that an
+    attacker cannot learn which addresses are registered. That is the
+    right behaviour, but it means a mail failure surfaces as a 500 -
+    or, worse, as a cheerful "check your inbox" for a message that was
+    never sent.
+
+    When the backend cannot deliver at all, or the send raises, an
+    explanatory page is shown instead.
+    """
+
+    template_name = (
+        "registration/password_reset_form.html"
+    )
+
+    email_template_name = (
+        "registration/password_reset_email.txt"
+    )
+
+    subject_template_name = (
+        "registration/password_reset_subject.txt"
+    )
+
+    def _unavailable(self, request):
+
+        return render(
+            request,
+            "registration/password_reset_unavailable.html",
+            {
+                "support_email": (
+                    settings.AEROESP_SUPPORT_EMAIL
+                ),
+            },
+            status=503,
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+
+        if not email_delivery_available():
+
+            logger.warning(
+                "Password reset requested while EMAIL_BACKEND is %s, "
+                "which cannot deliver; showing the unavailable page.",
+                settings.EMAIL_BACKEND,
+            )
+
+            return self._unavailable(request)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+
+        try:
+            return super().form_valid(form)
+
+        except Exception:
+
+            logger.exception(
+                "Password reset email could not be sent via %s:%s.",
+                settings.EMAIL_HOST,
+                settings.EMAIL_PORT,
+            )
+
+            return self._unavailable(self.request)

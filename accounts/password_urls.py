@@ -1,25 +1,16 @@
 from django.contrib.auth import views
 from django.urls import path
 
+from .views import PasswordResetOrSupportView
+
 
 urlpatterns = [
 
+    # Templates and the graceful "no mail service" fallback live on
+    # the view class; see accounts/views.py.
     path(
         "reset/",
-        views.PasswordResetView.as_view(
-            template_name=(
-                "registration/"
-                "password_reset_form.html"
-            ),
-            email_template_name=(
-                "registration/"
-                "password_reset_email.txt"
-            ),
-            subject_template_name=(
-                "registration/"
-                "password_reset_subject.txt"
-            ),
-        ),
+        PasswordResetOrSupportView.as_view(),
         name="password_reset",
     ),
 
