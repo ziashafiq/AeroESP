@@ -12,6 +12,10 @@ python manage.py migrate --noinput
 
 python manage.py collectstatic --noinput
 
+# User uploads (profile images, learning attachments) live here and
+# are served by nginx; the directory must exist before the first upload.
+mkdir -p media
+
 exec gunicorn \
     config.wsgi:application \
     --bind 127.0.0.1:${PORT:-8000} \

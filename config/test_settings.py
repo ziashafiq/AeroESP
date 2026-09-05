@@ -45,6 +45,11 @@ EMAIL_BACKEND = (
 DEBUG = False
 
 
+# django-axes would lock out the shared test client after a handful
+# of deliberate bad-credential assertions.
+AXES_ENABLED = False
+
+
 SECURE_SSL_REDIRECT = False
 
 SESSION_COOKIE_SECURE = False
