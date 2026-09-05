@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import (
     include,
@@ -112,6 +114,15 @@ urlpatterns = [
         ),
     ),
 ]
+
+
+# In development Django itself serves user uploads.
+# In production these are served by nginx / the platform.
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT,
+    )
 
 
 handler400 = "accounts.views.error_400"

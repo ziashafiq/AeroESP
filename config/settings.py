@@ -99,6 +99,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -220,6 +221,38 @@ STATICFILES_DIRS = [
 ]
 
 
+# Media files (user uploads: profile images, learning attachments)
+# https://docs.djangoproject.com/en/6.1/topics/files/
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = (
+    BASE_DIR
+    / "media"
+)
+
+
+# WhiteNoise serves the collected static files in production.
+# CompressedStaticFilesStorage (no manifest) is used on purpose:
+# a missing file must not turn into a 500 on a live page.
+
+STORAGES = {
+    "default": {
+        "BACKEND": (
+            "django.core.files.storage."
+            "FileSystemStorage"
+        ),
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage."
+            "CompressedStaticFilesStorage"
+        ),
+    },
+}
+
+WHITENOISE_MAX_AGE = 31536000 if IS_PRODUCTION else 0
+
+
 # =========================================================
 # Email
 # =========================================================
@@ -287,7 +320,10 @@ EMAIL_TIMEOUT = int(
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 # Authentication backends
+# AxesStandaloneBackend must come first so that django-axes
+# can block login attempts before they reach the model backend.
 AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
