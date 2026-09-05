@@ -222,7 +222,7 @@ def register(request):
                 create_verification_code(user)
             )
 
-            send_verification_email(
+            delivered = send_verification_email(
                 user,
                 verification.code,
             )
@@ -237,12 +237,27 @@ def register(request):
                 "verification_attempts"
             ] = 0
 
-            messages.success(
-                request,
-                "Your account has been created. "
-                "We sent a verification code to "
-                f"{user.email}.",
-            )
+            if delivered:
+
+                messages.success(
+                    request,
+                    "Your account has been created. "
+                    "We sent a verification code to "
+                    f"{user.email}.",
+                )
+
+            else:
+
+                # Telling the user the mail is on its way when it is
+                # not leaves them waiting for something that will
+                # never arrive.
+                messages.warning(
+                    request,
+                    "Your account has been created, but we could not "
+                    "send the verification email. Please try "
+                    "'Resend code', or contact support if the problem "
+                    "continues.",
+                )
 
             return redirect(
                 "accounts:verify_email"
@@ -416,7 +431,7 @@ def resend_verification_code(request):
 
     verification = create_verification_code(user)
 
-    send_verification_email(
+    delivered = send_verification_email(
         user,
         verification.code,
     )
@@ -425,10 +440,20 @@ def resend_verification_code(request):
         "verification_attempts"
     ] = 0
 
-    messages.success(
-        request,
-        "A new verification code has been sent.",
-    )
+    if delivered:
+
+        messages.success(
+            request,
+            "A new verification code has been sent.",
+        )
+
+    else:
+
+        messages.error(
+            request,
+            "We could not send the verification email. "
+            "Please contact support.",
+        )
 
     return redirect(
         "accounts:verify_email"

@@ -1,4 +1,5 @@
 from io import StringIO
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core import mail
@@ -530,3 +531,55 @@ class RegistrationEmailTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+
+    def test_delivery_failure_is_logged_and_surfaced(self):
+        """
+        Regression: a failing send used to be swallowed silently, so a
+        broken mail setup looked exactly like a successful sign-up.
+        """
+
+        with mock.patch(
+            "accounts.utils.send_mail",
+            side_effect=OSError("Connection timed out"),
+        ):
+
+            with self.assertLogs(
+                "accounts.utils",
+                level="ERROR",
+            ) as captured:
+
+                response = self._register()
+
+        # The failure must reach the log, with the address and cause.
+        logged = "\n".join(captured.output)
+
+        self.assertIn("FAILED to send", logged)
+        self.assertIn("ali.tester@example.com", logged)
+        self.assertIn("Connection timed out", logged)
+
+        # ... and the user must not be told the mail is on its way.
+        page = self.client.get(response["Location"])
+        text = page.content.decode()
+
+        self.assertIn("could not send", text.lower())
+        self.assertNotIn("We sent a verification code", text)
+
+    def test_non_delivering_backend_is_reported(self):
+
+        with self.settings(
+            EMAIL_BACKEND=(
+                "django.core.mail.backends.console.EmailBackend"
+            )
+        ):
+
+            with self.assertLogs(
+                "accounts.utils",
+                level="ERROR",
+            ) as captured:
+
+                self._register()
+
+        self.assertIn(
+            "does not send real mail",
+            "\n".join(captured.output),
+        )

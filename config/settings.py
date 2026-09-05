@@ -605,6 +605,13 @@ LOGGING = {
             "level": LOG_LEVEL,
             "propagate": False,
         },
+        "accounts": {
+            "handlers": [
+                "console",
+            ],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
         "learning": {
             "handlers": [
                 "console",
@@ -636,3 +643,28 @@ AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_PARAMETERS = [
     ["username", "ip_address"],
 ]
+
+
+# =========================================================
+# Startup diagnostics
+# =========================================================
+
+# A production deployment whose mail backend cannot deliver looks
+# perfectly healthy: registration returns 302 and no error is raised,
+# but no user can ever finish signing up. Say so at boot, where the
+# host's log will show it.
+
+if IS_PRODUCTION and EMAIL_BACKEND.endswith(
+    (
+        "console.EmailBackend",
+        "locmem.EmailBackend",
+        "dummy.EmailBackend",
+        "filebased.EmailBackend",
+    )
+):
+    sys.stderr.write(
+        "\n*** EMAIL NOT CONFIGURED: EMAIL_BACKEND is "
+        f"{EMAIL_BACKEND}, which never delivers. Verification codes "
+        "will not reach users. Set DJANGO_EMAIL_BACKEND to "
+        "django.core.mail.backends.smtp.EmailBackend. ***\n\n"
+    )
