@@ -1,11 +1,14 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.shortcuts import redirect
+# Aliased: django.conf.urls.static.static (imported above, for serving
+# MEDIA in development) has the same name and a different job.
+from django.templatetags.static import static as static_url
 from django.urls import (
     include,
     path,
 )
-from django.views.generic import RedirectView
 
 from accounts import views as account_views
 
@@ -35,14 +38,15 @@ urlpatterns = [
         name="health_ready",
     ),
 
+    # Resolved per request rather than hardcoded, so the redirect
+    # points at the content-hashed filename and a replaced icon is
+    # picked up instead of being served from cache for a year.
     path(
         "favicon.ico",
-        RedirectView.as_view(
-            url=(
-                "/static/aeroesp/brand/final/"
-                "aeroesp-app-icon.png?v=ui17"
-            ),
-            permanent=False,
+        lambda request: redirect(
+            static_url(
+                "aeroesp/brand/final/aeroesp-app-icon.png"
+            )
         ),
     ),
 

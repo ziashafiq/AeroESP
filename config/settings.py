@@ -443,9 +443,9 @@ MEDIA_ROOT = (
 )
 
 
-# WhiteNoise serves the collected static files in production.
-# CompressedStaticFilesStorage (no manifest) is used on purpose:
-# a missing file must not turn into a 500 on a live page.
+# WhiteNoise serves the collected static files in production, with
+# content-hashed filenames so that an edited asset gets a new URL.
+# See config/storage.py for why the manifest is non-strict.
 
 STORAGES = {
     "default": {
@@ -455,9 +455,16 @@ STORAGES = {
         ),
     },
     "staticfiles": {
+        # Hashing depends on collectstatic having run, which is not
+        # true while developing, so plain storage is used off
+        # production and the hashed names apply where the long cache
+        # header does.
         "BACKEND": (
-            "whitenoise.storage."
-            "CompressedStaticFilesStorage"
+            "config.storage."
+            "ForgivingManifestStaticFilesStorage"
+            if IS_PRODUCTION
+            else "django.contrib.staticfiles.storage."
+            "StaticFilesStorage"
         ),
     },
 }

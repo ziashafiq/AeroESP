@@ -196,13 +196,15 @@ MAX_VERIFICATION_ATTEMPTS = 5
 
 
 def register(request):
-
+    
     if request.user.is_authenticated:
+        
         return redirect(
             "accounts:role_redirect"
         )
 
     if request.method == "POST":
+        
 
         form = RegistrationForm(
             request.POST
@@ -219,7 +221,7 @@ def register(request):
             user.save()
 
             verification = (
-                create_verification_code(user)
+                 create_verification_code(user)
             )
 
             delivered = send_verification_email(
