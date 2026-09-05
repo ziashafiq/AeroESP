@@ -353,6 +353,9 @@ class RegistrationEmailTests(TestCase):
         "role": "STUDENT",
         "password1": "AeroESP-Strong-2026",
         "password2": "AeroESP-Strong-2026",
+        # CAPTCHA_TEST_MODE accepts this literal response.
+        "captcha_0": "test-hashkey",
+        "captcha_1": "PASSED",
     }
 
     def _register(self, **overrides):
@@ -599,6 +602,9 @@ class VerificationDisabledTests(TestCase):
         "role": "STUDENT",
         "password1": "AeroESP-Strong-2026",
         "password2": "AeroESP-Strong-2026",
+        # CAPTCHA_TEST_MODE accepts this literal response.
+        "captcha_0": "test-hashkey",
+        "captcha_1": "PASSED",
     }
 
     def test_registration_logs_the_user_straight_in(self):
@@ -708,4 +714,95 @@ class PasswordResetAvailabilityTests(TestCase):
         self.assertNotIn(
             "temporarily unavailable",
             response.content.decode(),
+        )
+
+
+class RegistrationCaptchaTests(TestCase):
+    """
+    The captcha is what stands between the sign-up form and automated
+    registration, especially while email verification is switched off.
+    """
+
+    BASE = {
+        "first_name": "Bot",
+        "last_name": "Tester",
+        "email": "bot.tester@example.com",
+        "role": "STUDENT",
+        "password1": "AeroESP-Strong-2026",
+        "password2": "AeroESP-Strong-2026",
+    }
+
+    def test_registration_without_a_captcha_is_rejected(self):
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            self.BASE,
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(
+            get_user_model().objects.filter(
+                email="bot.tester@example.com"
+            ).exists()
+        )
+
+    def test_registration_with_a_wrong_answer_is_rejected(self):
+
+        data = dict(self.BASE)
+        data["captcha_0"] = "some-hashkey"
+        data["captcha_1"] = "wrong-answer"
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            data,
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(
+            get_user_model().objects.filter(
+                email="bot.tester@example.com"
+            ).exists()
+        )
+
+    def test_the_form_actually_renders_a_captcha(self):
+
+        response = self.client.get(
+            reverse("accounts:register")
+        )
+
+        content = response.content.decode()
+
+        self.assertIn('name="captcha_0"', content)
+        self.assertIn('name="captcha_1"', content)
+
+        # The image must come from this server, not a third party.
+        self.assertIn("/captcha/image/", content)
+
+    def test_challenge_image_is_served_locally(self):
+
+        from captcha.models import CaptchaStore
+
+        self.client.get(reverse("accounts:register"))
+
+        store = CaptchaStore.objects.last()
+
+        self.assertIsNotNone(
+            store,
+            "requesting the form should create a challenge",
+        )
+
+        response = self.client.get(
+            reverse(
+                "captcha-image",
+                kwargs={"key": store.hashkey},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response["Content-Type"],
+            "image/png",
         )

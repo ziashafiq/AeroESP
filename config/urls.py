@@ -55,6 +55,14 @@ urlpatterns = [
         admin.site.urls,
     ),
 
+    # Serves the generated challenge images and the refresh endpoint.
+    path(
+        "captcha/",
+        include(
+            "captcha.urls"
+        ),
+    ),
+
     path(
         "accounts/password/",
         include(

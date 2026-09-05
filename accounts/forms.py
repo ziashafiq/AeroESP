@@ -1,3 +1,4 @@
+from captcha.fields import CaptchaField
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.utils.text import slugify
@@ -48,6 +49,17 @@ class RegistrationForm(UserCreationForm):
         ],
         widget=forms.RadioSelect,
         required=True,
+    )
+
+    # Image drawn by this server, no third-party script to load.
+    captcha = CaptchaField(
+        label="Type the characters shown",
+        error_messages={
+            "invalid": (
+                "The characters did not match. "
+                "Please try the new image."
+            ),
+        },
     )
 
     class Meta:

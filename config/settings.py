@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     "research_review",
 
     "axes",
+    "captcha",
 ]
 
 MIDDLEWARE = [
@@ -784,6 +785,37 @@ AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_PARAMETERS = [
     ["username", "ip_address"],
 ]
+
+
+# =========================================================
+# Captcha (registration spam protection)
+# =========================================================
+
+# django-simple-captcha draws the image on this server with Pillow and
+# talks to nothing outside it. That matters here: reCAPTCHA and hCaptcha
+# load scripts from Google/Cloudflare domains, which are unreliable or
+# unreachable from Iran, so the challenge would simply fail to appear
+# and nobody could register.
+
+CAPTCHA_LENGTH = 5
+
+CAPTCHA_IMAGE_SIZE = (160, 60)
+
+CAPTCHA_FONT_SIZE = 34
+
+# Minutes a challenge stays valid.
+CAPTCHA_TIMEOUT = 10
+
+# Ambiguous glyphs removed: 0/O and 1/l/I are guesswork at this size.
+CAPTCHA_LETTER_ROTATION = (-25, 25)
+
+CAPTCHA_BACKGROUND_COLOR = "#ffffff"
+
+CAPTCHA_FOREGROUND_COLOR = "#0b1b3a"
+
+# Audio fallback needs the flite binary, which is not installed;
+# leaving it unset keeps the widget from offering a broken link.
+CAPTCHA_FLITE_PATH = None
 
 
 # =========================================================
