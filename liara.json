@@ -1,5 +1,4 @@
 {
-  "platform": "django",
   "django": {
     "mirror": true,
     "pythonVersion": "3.12",
