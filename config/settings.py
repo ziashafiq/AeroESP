@@ -257,61 +257,84 @@ WHITENOISE_MAX_AGE = 31536000 if IS_PRODUCTION else 0
 # Email
 # =========================================================
 
-EMAIL_BACKEND = os.getenv(
+
+def _env(name, default=""):
+    """
+    Read an environment variable, treating a present-but-empty value
+    the same as an absent one.
+
+    Without this, a bare "DJANGO_EMAIL_BACKEND=" line in .env would
+    override the default with an empty string and break sending.
+    """
+
+    value = os.getenv(name)
+
+    if value is None:
+        return default
+
+    value = value.strip()
+
+    return value if value else default
+
+
+def _env_flag(name, default="0"):
+    return _env(name, default).lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+EMAIL_BACKEND = _env(
     "DJANGO_EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend",
 )
 
-EMAIL_HOST = os.getenv(
-    "DJANGO_EMAIL_HOST",
-    "",
-)
+EMAIL_HOST = _env("DJANGO_EMAIL_HOST")
 
 EMAIL_PORT = int(
-    os.getenv(
+    _env(
         "DJANGO_EMAIL_PORT",
         "587",
     )
 )
 
-EMAIL_USE_TLS = (
-    os.getenv(
-        "DJANGO_EMAIL_USE_TLS",
-        "1",
-    )
-    == "1"
+EMAIL_USE_TLS = _env_flag(
+    "DJANGO_EMAIL_USE_TLS",
+    "1",
 )
 
-EMAIL_USE_SSL = (
-    os.getenv(
-        "DJANGO_EMAIL_USE_SSL",
-        "0",
-    )
-    == "1"
+EMAIL_USE_SSL = _env_flag(
+    "DJANGO_EMAIL_USE_SSL",
+    "0",
 )
 
-EMAIL_HOST_USER = os.getenv(
-    "DJANGO_EMAIL_HOST_USER",
-    "",
+EMAIL_HOST_USER = _env("DJANGO_EMAIL_HOST_USER")
+
+# Gmail shows App Passwords grouped as "abcd efgh ijkl mnop" for
+# readability, and they are routinely pasted with those spaces still
+# in place. The password itself contains no whitespace, so stripping
+# it here turns a confusing authentication failure into a working
+# login. The value in .env is left exactly as the owner typed it.
+EMAIL_HOST_PASSWORD = "".join(
+    _env("DJANGO_EMAIL_HOST_PASSWORD").split()
 )
 
-EMAIL_HOST_PASSWORD = os.getenv(
-    "DJANGO_EMAIL_HOST_PASSWORD",
-    "",
-)
-
-DEFAULT_FROM_EMAIL = os.getenv(
+DEFAULT_FROM_EMAIL = _env(
     "DJANGO_DEFAULT_FROM_EMAIL",
-    "AeroESP <noreply@example.com>",
+    # Fall back to the authenticated mailbox: Gmail rejects any
+    # sender address other than the account that is signed in.
+    EMAIL_HOST_USER or "AeroESP <noreply@example.com>",
 )
 
-SERVER_EMAIL = os.getenv(
+SERVER_EMAIL = _env(
     "DJANGO_SERVER_EMAIL",
     DEFAULT_FROM_EMAIL,
 )
 
 EMAIL_TIMEOUT = int(
-    os.getenv(
+    _env(
         "DJANGO_EMAIL_TIMEOUT",
         "20",
     )
