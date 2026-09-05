@@ -11,13 +11,39 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 import os
+import sys
 
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
+
+# Which .env file to load. Defaults to ".env"; set AEROESP_ENV_FILE to
+# point at another one for a single command, e.g. to run a management
+# command against the production database from a local machine:
+#
+#   AEROESP_ENV_FILE=.env.production.local python manage.py shell
+#
+# Nothing on disk is modified, so the next command without the variable
+# is back on the normal local configuration.
+ENV_FILE = Path(
+    os.environ.get(
+        "AEROESP_ENV_FILE",
+        ".env",
+    )
+)
+
+if not ENV_FILE.is_absolute():
+    ENV_FILE = BASE_DIR / ENV_FILE
+
+if not ENV_FILE.exists() and "AEROESP_ENV_FILE" in os.environ:
+    raise RuntimeError(
+        f"AEROESP_ENV_FILE points at {ENV_FILE}, which does not exist."
+    )
+
+load_dotenv(ENV_FILE)
 
 
 # =========================================================
@@ -139,17 +165,90 @@ DB_BACKEND = os.environ.get(
     "postgresql",
 ).lower()
 
+
+def _database_from_url(url):
+    """
+    Split a postgres://user:password@host:port/name URL into the parts
+    Django wants.
+
+    Render (and most hosts) hand out a single connection URL rather
+    than separate fields, so accepting one avoids transcribing five
+    values by hand and getting one of them subtly wrong.
+    """
+
+    parts = urlparse(url)
+
+    if parts.scheme not in {"postgres", "postgresql"}:
+        raise ValueError(
+            "DATABASE_URL must start with postgres:// or postgresql://"
+        )
+
+    return {
+        "NAME": parts.path.lstrip("/"),
+        "USER": unquote(parts.username or ""),
+        "PASSWORD": unquote(parts.password or ""),
+        "HOST": parts.hostname or "",
+        "PORT": str(parts.port or "5432"),
+    }
+
+
 if DB_BACKEND == "postgresql":
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
+
+    database_url = os.environ.get(
+        "DATABASE_URL",
+        "",
+    ).strip()
+
+    if database_url:
+        _config = _database_from_url(database_url)
+
+    else:
+        _config = {
             "NAME": os.environ.get("AEROESP_DB_NAME", "aeroesp"),
             "USER": os.environ.get("AEROESP_DB_USER", "aeroesp_user"),
             "PASSWORD": os.environ["AEROESP_DB_PASSWORD"],
             "HOST": os.environ.get("AEROESP_DB_HOST", "localhost"),
             "PORT": os.environ.get("AEROESP_DB_PORT", "5432"),
         }
+
+    # Managed Postgres (Render, Neon, Supabase, ...) refuses plain-text
+    # connections from outside its own network. Local sockets do not
+    # offer TLS at all, so only require it for remote hosts.
+    _is_local_db = _config["HOST"] in {
+        "",
+        "localhost",
+        "127.0.0.1",
+        "::1",
     }
+
+    _sslmode = os.environ.get(
+        "AEROESP_DB_SSLMODE",
+        "prefer" if _is_local_db else "require",
+    ).strip()
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "OPTIONS": {
+                "sslmode": _sslmode,
+            },
+            "CONN_MAX_AGE": int(
+                os.environ.get(
+                    "AEROESP_DB_CONN_MAX_AGE",
+                    "0" if _is_local_db else "60",
+                )
+            ),
+            **_config,
+        }
+    }
+
+    # Working against a remote database by accident is the expensive
+    # mistake here, so say out loud which one is in use.
+    if not _is_local_db and len(sys.argv) > 1:
+        sys.stderr.write(
+            f"\n*** REMOTE DATABASE: {_config['HOST']} "
+            f"(db: {_config['NAME']}, env: {ENV_FILE.name}) ***\n\n"
+        )
 
 elif DB_BACKEND == "sqlite":
     DATABASES = {

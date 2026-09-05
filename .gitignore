@@ -20,9 +20,12 @@ ENV/
 env/
 
 # Environment variables
+# Real env files never leave the machine; only the *.example
+# templates, which must contain no real values, are tracked.
 .env
 .env.*
 !.env.example
+!.env.production.local.example
 
 # IDE / Editor
 .vscode/
