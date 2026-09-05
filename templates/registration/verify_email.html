@@ -144,9 +144,18 @@ Email Verification · AeroESP
 
             Didn't receive the code?
 
-            <a href="#">
-                Resend code
-            </a>
+            <form
+                method="post"
+                action="{% url 'accounts:resend_verification_code' %}"
+            >
+
+                {% csrf_token %}
+
+                <button type="submit" class="auth-link-button">
+                    Resend code
+                </button>
+
+            </form>
 
 
         </div>

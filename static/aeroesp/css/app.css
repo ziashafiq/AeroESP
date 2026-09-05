@@ -11426,6 +11426,22 @@ textarea:focus-visible {
     font-size: 9px;
 }
 
+/* Inline "Resend code" action: a POST form styled as a link. */
+.auth-link-button {
+    padding: 0;
+
+    background: none;
+    border: 0;
+
+    color: var(--theme-accent, inherit);
+
+    font-size: inherit;
+    font-family: inherit;
+
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .auth-security-dot {
     width: 7px;
     height: 7px;

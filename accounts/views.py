@@ -1,10 +1,16 @@
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import (
+    get_user_model,
+    login,
+    logout,
+)
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
 from django.views.decorators.http import require_POST
-from django.utils import timezone
-from datetime import timedelta
 
 from .decorators import (
     approved_teacher_required,
@@ -17,7 +23,10 @@ from .models import (
     TeacherProfile,
     EmailVerificationCode,
 )
-from .utils import generate_verification_code
+from .utils import (
+    create_verification_code,
+    send_verification_email,
+)
 
 
 def error_403(request, exception=None):
@@ -177,7 +186,21 @@ def teacher_pending(request):
     )
 
 
+# =========================================================
+# Registration / email verification
+# =========================================================
+
+PENDING_USER_SESSION_KEY = "pending_verification_user_id"
+
+MAX_VERIFICATION_ATTEMPTS = 5
+
+
 def register(request):
+
+    if request.user.is_authenticated:
+        return redirect(
+            "accounts:role_redirect"
+        )
 
     if request.method == "POST":
 
@@ -189,20 +212,36 @@ def register(request):
 
             user = form.save(commit=False)
             user.email_verified = False
-            user.selected_role = form.cleaned_data["role"]
+            user.is_active = True
+            user.selected_role = (
+                form.cleaned_data["role"]
+            )
             user.save()
 
-            code = generate_verification_code()
-
-            EmailVerificationCode.objects.create(
-                user=user,
-                code=code,
-                expires_at=timezone.now() + timedelta(minutes=10),
+            verification = (
+                create_verification_code(user)
             )
+
+            send_verification_email(
+                user,
+                verification.code,
+            )
+
+            # The code is only accepted for the account that is
+            # pending verification in this session.
+            request.session[
+                PENDING_USER_SESSION_KEY
+            ] = user.pk
+
+            request.session[
+                "verification_attempts"
+            ] = 0
 
             messages.success(
                 request,
-                "Your account has been created. Verification code generated."
+                "Your account has been created. "
+                "We sent a verification code to "
+                f"{user.email}.",
             )
 
             return redirect(
@@ -217,61 +256,180 @@ def register(request):
         request,
         "registration/register.html",
         {
-            "form": form
-        }
+            "form": form,
+        },
     )
 
 
 def verify_email(request):
 
-    if request.method == "POST":
+    if request.user.is_authenticated:
+        return redirect(
+            "accounts:role_redirect"
+        )
 
-        code = request.POST.get("code")
+    user_id = request.session.get(
+        PENDING_USER_SESSION_KEY
+    )
 
-        verification = EmailVerificationCode.objects.filter(
-            code=code
-        ).last()
-
-        if verification:
-
-            if verification.expires_at > timezone.now():
-
-                user = verification.user
-
-                user.email_verified = True
-                user.save()
-
-                if user.selected_role == "STUDENT":
-                    StudentProfile.objects.get_or_create(
-                        user=user
-                    )
-                elif user.selected_role == "TEACHER":
-                    TeacherProfile.objects.get_or_create(
-                        user=user
-                    )
-
-                verification.delete()
-
-                messages.success(
-                    request,
-                    "Email verified successfully."
-                )
-
-                login(
-                    request,
-                    user
-                )
-
-                return redirect(
-                    "accounts:role_redirect"
-                )
+    if not user_id:
 
         messages.error(
             request,
-            "Invalid or expired verification code."
+            "Please register or sign in first.",
+        )
+
+        return redirect(
+            "accounts:register"
+        )
+
+    if request.method == "POST":
+
+        attempts = request.session.get(
+            "verification_attempts",
+            0,
+        )
+
+        if attempts >= MAX_VERIFICATION_ATTEMPTS:
+
+            request.session.pop(
+                PENDING_USER_SESSION_KEY,
+                None,
+            )
+
+            messages.error(
+                request,
+                "Too many invalid attempts. "
+                "Please register again.",
+            )
+
+            return redirect(
+                "accounts:register"
+            )
+
+        request.session[
+            "verification_attempts"
+        ] = attempts + 1
+
+        submitted_code = (
+            request.POST.get("code") or ""
+        ).strip()
+
+        verification = (
+            EmailVerificationCode.objects
+            .filter(
+                user_id=user_id,
+                code=submitted_code,
+                is_used=False,
+            )
+            .first()
+        )
+
+        if (
+            verification
+            and verification.is_valid()
+        ):
+
+            user = verification.user
+
+            user.email_verified = True
+            user.save(
+                update_fields=[
+                    "email_verified",
+                ]
+            )
+
+            if user.selected_role == "TEACHER":
+                TeacherProfile.objects.get_or_create(
+                    user=user
+                )
+            else:
+                StudentProfile.objects.get_or_create(
+                    user=user
+                )
+
+            verification.is_used = True
+            verification.save(
+                update_fields=[
+                    "is_used",
+                ]
+            )
+
+            request.session.pop(
+                PENDING_USER_SESSION_KEY,
+                None,
+            )
+
+            request.session.pop(
+                "verification_attempts",
+                None,
+            )
+
+            messages.success(
+                request,
+                "Email verified successfully.",
+            )
+
+            # An explicit backend is required because more than one
+            # authentication backend is configured (django-axes).
+            login(
+                request,
+                user,
+                backend=(
+                    "django.contrib.auth.backends."
+                    "ModelBackend"
+                ),
+            )
+
+            return redirect(
+                "accounts:role_redirect"
+            )
+
+        messages.error(
+            request,
+            "Invalid or expired verification code.",
         )
 
     return render(
         request,
-        "registration/verify_email.html"
+        "registration/verify_email.html",
+    )
+
+
+@require_POST
+def resend_verification_code(request):
+
+    user_id = request.session.get(
+        PENDING_USER_SESSION_KEY
+    )
+
+    if not user_id:
+        return redirect(
+            "accounts:register"
+        )
+
+    user = get_object_or_404(
+        get_user_model(),
+        pk=user_id,
+        email_verified=False,
+    )
+
+    verification = create_verification_code(user)
+
+    send_verification_email(
+        user,
+        verification.code,
+    )
+
+    request.session[
+        "verification_attempts"
+    ] = 0
+
+    messages.success(
+        request,
+        "A new verification code has been sent.",
+    )
+
+    return redirect(
+        "accounts:verify_email"
     )

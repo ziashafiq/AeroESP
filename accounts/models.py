@@ -1,12 +1,18 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 
 class CustomUser(AbstractUser):
 
+    # Unique, but nullable: users created outside the sign-up flow
+    # (fixtures, imports, management commands) may have no email at all,
+    # and several empty strings would collide on the unique index.
     email = models.EmailField(
         unique=True,
+        null=True,
+        blank=True,
     )
 
     email_verified = models.BooleanField(
@@ -29,6 +35,14 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default="STUDENT",
     )
+
+    def save(self, *args, **kwargs):
+
+        # Store "no email" as NULL so the unique index stays satisfiable.
+        if not self.email:
+            self.email = None
+
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.username
@@ -160,6 +174,16 @@ class EmailVerificationCode(models.Model):
     is_used = models.BooleanField(
         default=False,
     )
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    @property
+    def is_expired(self):
+        return self.expires_at <= timezone.now()
+
+    def is_valid(self):
+        return not self.is_used and not self.is_expired
 
     def __str__(self):
         return f"{self.user.username} - {self.code}"

@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.utils.text import slugify
 
 from .models import CustomUser
 
@@ -77,10 +78,14 @@ class RegistrationForm(UserCreationForm):
 
     def clean_email(self):
 
-        email = self.cleaned_data["email"]
+        email = (
+            self.cleaned_data["email"]
+            .strip()
+            .lower()
+        )
 
         if CustomUser.objects.filter(
-            email=email
+            email__iexact=email
         ).exists():
 
             raise forms.ValidationError(
@@ -89,19 +94,47 @@ class RegistrationForm(UserCreationForm):
 
         return email
 
+    @staticmethod
+    def _build_unique_username(email):
+        """
+        Derive a username from the local part of the email.
+
+        Two different addresses can share a local part
+        (ali@a.com / ali@b.com), so a numeric suffix is appended
+        until the username is free.
+        """
+
+        base = (
+            slugify(
+                email.split("@")[0]
+            )
+            or "user"
+        )[:140]
+
+        username = base
+        suffix = 1
+
+        while CustomUser.objects.filter(
+            username=username
+        ).exists():
+
+            suffix += 1
+            username = f"{base}{suffix}"
+
+        return username
+
     def save(self, commit=True):
 
         user = super().save(
             commit=False
         )
 
-        user.username = (
-            self.cleaned_data["email"]
-            .split("@")[0]
-        )
+        email = self.cleaned_data["email"]
 
-        user.email = (
-            self.cleaned_data["email"]
+        user.email = email
+
+        user.username = (
+            self._build_unique_username(email)
         )
 
         user.selected_role = (

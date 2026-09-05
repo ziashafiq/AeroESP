@@ -59,39 +59,20 @@ urlpatterns = [
         name="teacher_pending",
     ),
 
-    path(
-        "password-reset/",
-        auth_views.PasswordResetView.as_view(
-            template_name=
-            "registration/password_reset.html"
-        ),
-        name="password_reset",
-    ),
-
-
-    path(
-        "password-reset/done/",
-        auth_views.PasswordResetDoneView.as_view(
-            template_name=
-            "registration/password_reset_done.html"
-        ),
-        name="password_reset_done",
-    ),
-
-
-    path(
-        "reset/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(
-            template_name=
-            "registration/password_reset_confirm.html"
-        ),
-        name="password_reset_confirm",
-    ),
+    # NOTE: password reset lives in accounts/password_urls.py
+    # (mounted at /accounts/password/). It is the single canonical
+    # flow, with the email/subject templates already wired up.
 
     path(
         "verify-email/",
         views.verify_email,
         name="verify_email",
+    ),
+
+    path(
+        "verify-email/resend/",
+        views.resend_verification_code,
+        name="resend_verification_code",
     ),
 
 ]
