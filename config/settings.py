@@ -203,10 +203,16 @@ if DB_BACKEND == "postgresql":
         _config = _database_from_url(database_url)
 
     else:
+        # .get, not [], on purpose. Importing settings must not require
+        # database credentials: build steps such as collectstatic load
+        # settings but never open a connection, and several hosts
+        # (Liara among them) expose panel environment variables only at
+        # runtime. A missing password now surfaces when a query is
+        # actually attempted, instead of crashing the build.
         _config = {
             "NAME": os.environ.get("AEROESP_DB_NAME", "aeroesp"),
             "USER": os.environ.get("AEROESP_DB_USER", "aeroesp_user"),
-            "PASSWORD": os.environ["AEROESP_DB_PASSWORD"],
+            "PASSWORD": os.environ.get("AEROESP_DB_PASSWORD", ""),
             "HOST": os.environ.get("AEROESP_DB_HOST", "localhost"),
             "PORT": os.environ.get("AEROESP_DB_PORT", "5432"),
         }
@@ -242,6 +248,28 @@ if DB_BACKEND == "postgresql":
         }
     }
 
+    # Which credentials are absent. config/wsgi.py refuses to serve
+    # traffic while this is non-empty, so a build can proceed without
+    # them but a running site can never quietly use blanks.
+    DB_MISSING_CREDENTIALS = [
+        name
+        for name, value in (
+            ("AEROESP_DB_NAME", _config["NAME"]),
+            ("AEROESP_DB_USER", _config["USER"]),
+            ("AEROESP_DB_PASSWORD", _config["PASSWORD"]),
+            ("AEROESP_DB_HOST", _config["HOST"]),
+        )
+        if not value
+    ]
+
+    if IS_PRODUCTION and DB_MISSING_CREDENTIALS:
+        sys.stderr.write(
+            "\n*** DATABASE CREDENTIALS MISSING: "
+            + ", ".join(DB_MISSING_CREDENTIALS)
+            + ". This is expected during a build step such as "
+            "collectstatic; it is fatal when serving traffic. ***\n\n"
+        )
+
     # Working against a remote database by accident is the expensive
     # mistake here, so say out loud which one is in use.
     if not _is_local_db and len(sys.argv) > 1:
@@ -257,6 +285,10 @@ elif DB_BACKEND == "sqlite":
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
+    # SQLite needs no credentials; the attribute must still exist so
+    # that config/wsgi.py can check it unconditionally.
+    DB_MISSING_CREDENTIALS = []
 
 else:
     raise ValueError(
