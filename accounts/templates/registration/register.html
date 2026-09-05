@@ -1,0 +1,140 @@
+{% extends "aeroesp/public_base.html" %}
+
+{% block title %}
+Register · AeroESP
+{% endblock %}
+
+
+{% block content %}
+
+<section class="auth-layout">
+
+
+    <div class="auth-story">
+
+        <div class="page-eyebrow">
+            AeroESP Platform
+        </div>
+
+
+        <h1>
+            Join the aerospace English community.
+        </h1>
+
+
+        <p>
+            Create your account and access
+            technical English learning,
+            adaptive assessment and aerospace
+            focused resources.
+        </p>
+
+
+        <div class="auth-story-grid">
+
+            <div>
+                <strong>
+                    Aerospace ESP
+                </strong>
+
+                <span>
+                    Learn technical language
+                    designed for aerospace fields.
+                </span>
+            </div>
+
+
+            <div>
+                <strong>
+                    Adaptive Learning
+                </strong>
+
+                <span>
+                    Improve through personalized
+                    practice and assessment.
+                </span>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <div class="auth-card">
+
+
+        <div class="auth-card-brand">
+
+            <h2>
+                Create Account
+            </h2>
+
+            <p>
+                Start your AeroESP journey
+            </p>
+
+        </div>
+
+
+
+        <form method="post">
+
+            {% csrf_token %}
+
+
+            {% for field in form %}
+
+                <div class="auth-field">
+
+                    {{ field.label_tag }}
+
+                    {{ field }}
+
+
+                    {% if field.errors %}
+
+                        <div class="auth-error">
+                            {{ field.errors }}
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+            {% endfor %}
+
+
+
+            <button
+                type="submit"
+                class="auth-submit"
+            >
+                Create Account
+            </button>
+
+
+        </form>
+
+
+
+        <div class="auth-security-note">
+
+            Already have an account?
+
+            <a href="{% url 'accounts:login' %}">
+                Sign in
+            </a>
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
+{% endblock %}

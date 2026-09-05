@@ -11123,7 +11123,7 @@ textarea:focus-visible {
 .auth-layout {
     width: min(
         100%,
-        1050px
+        950px
     );
 
     min-height: 590px;
@@ -11291,9 +11291,9 @@ textarea:focus-visible {
 
     padding:
         clamp(
-            30px,
-            5vw,
-            52px
+            28px,
+            4vw,
+            42px
         );
 
     background:
@@ -11343,10 +11343,11 @@ textarea:focus-visible {
 }
 
 .auth-field input {
-    min-height: 49px;
+    min-height:49px;
 
-    border-color:
-        var(--theme-border-strong);
+    border-radius:14px;
+
+    padding-left:15px;
 
     background:
         var(--theme-surface-soft);

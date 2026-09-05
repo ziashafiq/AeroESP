@@ -163,6 +163,23 @@ Sign In · AeroESP
                 Sign In
             </button>
 
+            <a
+                href="{% url 'accounts:password_reset' %}"
+                class="auth-link"
+            >
+                Forgot password?
+            </a>
+
+
+            <p>
+                Don't have an account?
+                <a
+                    href="{% url 'accounts:register' %}"
+                >
+                    Create account
+                </a>
+            </p>
+
         </form>
 
 

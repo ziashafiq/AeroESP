@@ -93,19 +93,15 @@ class TeacherProfileAdmin(admin.ModelAdmin):
         "approved_at",
     )
 
+    list_display_links = (
+        "user",
+    )
+
     search_fields = (
         "user__username",
         "user__first_name",
         "user__last_name",
         "user__email",
-        "academic_email",
-        "university",
-        "department",
-    )
-
-    search_help_text = (
-        "Search by teacher name, username, "
-        "email, department, or university."
     )
 
     list_filter = (
@@ -114,47 +110,31 @@ class TeacherProfileAdmin(admin.ModelAdmin):
         "department",
     )
 
-    list_per_page = 50
-
-    actions = (
-        "approve_teachers",
-        "reject_teachers",
+    autocomplete_fields = (
+        "user",
+        "approved_by",
     )
 
-    @admin.action(
-        description="Approve selected teachers"
+    fieldsets = (
+        (
+            "Teacher information",
+            {
+                "fields": (
+                    "user",
+                    "university",
+                    "department",
+                    "academic_email",
+                )
+            }
+        ),
+        (
+            "Approval",
+            {
+                "fields": (
+                    "approval_status",
+                    "approved_at",
+                    "approved_by",
+                )
+            }
+        ),
     )
-    def approve_teachers(
-        self,
-        request,
-        queryset,
-    ):
-
-        queryset.update(
-            approval_status=(
-                TeacherProfile
-                .ApprovalStatus
-                .APPROVED
-            ),
-            approved_by=request.user,
-            approved_at=timezone.now(),
-        )
-
-    @admin.action(
-        description="Reject selected teachers"
-    )
-    def reject_teachers(
-        self,
-        request,
-        queryset,
-    ):
-
-        queryset.update(
-            approval_status=(
-                TeacherProfile
-                .ApprovalStatus
-                .REJECTED
-            ),
-            approved_by=request.user,
-            approved_at=timezone.now(),
-        )

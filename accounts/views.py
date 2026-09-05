@@ -1,23 +1,40 @@
-from django.contrib.auth import logout
+from django.contrib import messages
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from datetime import timedelta
 
 from .decorators import (
     approved_teacher_required,
     student_required,
 )
 
-from django.shortcuts import render
+from .forms import RegistrationForm
+from .models import (
+    StudentProfile,
+    TeacherProfile,
+    EmailVerificationCode,
+)
+from .utils import generate_verification_code
+
 
 def error_403(request, exception=None):
     return render(request, "403.html", status=403)
 
+
 def error_404(request, exception=None):
     return render(request, "404.html", status=404)
 
+
 def error_500(request):
     return render(request, "500.html", status=500)
+
+
+def error_400(request, exception=None):
+    return render(request, "400.html", status=400)
+
 
 def home(request):
     dashboard_target = None
@@ -160,47 +177,101 @@ def teacher_pending(request):
     )
 
 
-# =========================================================
-# UI-08 Public Error Pages
-# =========================================================
+def register(request):
 
-def error_403(
-    request,
-    exception=None,
-):
+    if request.method == "POST":
+
+        form = RegistrationForm(
+            request.POST
+        )
+
+        if form.is_valid():
+
+            user = form.save(commit=False)
+            user.email_verified = False
+            user.selected_role = form.cleaned_data["role"]
+            user.save()
+
+            code = generate_verification_code()
+
+            EmailVerificationCode.objects.create(
+                user=user,
+                code=code,
+                expires_at=timezone.now() + timedelta(minutes=10),
+            )
+
+            messages.success(
+                request,
+                "Your account has been created. Verification code generated."
+            )
+
+            return redirect(
+                "accounts:verify_email"
+            )
+
+    else:
+
+        form = RegistrationForm()
+
     return render(
         request,
-        "403.html",
-        status=403,
+        "registration/register.html",
+        {
+            "form": form
+        }
     )
 
 
-def error_404(
-    request,
-    exception=None,
-):
+def verify_email(request):
+
+    if request.method == "POST":
+
+        code = request.POST.get("code")
+
+        verification = EmailVerificationCode.objects.filter(
+            code=code
+        ).last()
+
+        if verification:
+
+            if verification.expires_at > timezone.now():
+
+                user = verification.user
+
+                user.email_verified = True
+                user.save()
+
+                if user.selected_role == "STUDENT":
+                    StudentProfile.objects.get_or_create(
+                        user=user
+                    )
+                elif user.selected_role == "TEACHER":
+                    TeacherProfile.objects.get_or_create(
+                        user=user
+                    )
+
+                verification.delete()
+
+                messages.success(
+                    request,
+                    "Email verified successfully."
+                )
+
+                login(
+                    request,
+                    user
+                )
+
+                return redirect(
+                    "accounts:role_redirect"
+                )
+
+        messages.error(
+            request,
+            "Invalid or expired verification code."
+        )
+
     return render(
         request,
-        "404.html",
-        status=404,
-    )
-
-
-def error_500(
-    request,
-):
-    return render(
-        request,
-        "500.html",
-        status=500,
-    )
-def error_400(
-    request,
-    exception=None,
-):
-
-    return render(
-        request,
-        "400.html",
-        status=400,
+        "registration/verify_email.html"
     )
