@@ -1,0 +1,11 @@
+{
+  "platform": "django",
+  "django": {
+    "mirror": true,
+    "pythonVersion": "3.12",
+    "timezone": "Asia/Tehran",
+    "collectStatic": true,
+    "compileMessages": false,
+    "modifySettings": false
+  }
+}

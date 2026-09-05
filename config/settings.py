@@ -263,6 +263,16 @@ else:
         f"Unsupported AEROESP_DB_BACKEND: {DB_BACKEND}"
     )
 
+# Primary key type for models that do not declare one.
+#
+# Stated explicitly rather than inherited: Django 6.0 changed the
+# built-in default from AutoField to BigAutoField, so leaving it
+# implicit makes the same models resolve differently on 5.2 and 6.x.
+# Every existing migration was generated with BigAutoField, which is
+# what the database actually holds.
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 

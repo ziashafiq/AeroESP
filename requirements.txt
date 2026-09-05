@@ -3,7 +3,10 @@
 # =========================================================
 
 # --- Core framework ---
-Django==6.1
+# Django 5.2 is the current LTS (security fixes until April 2028) and
+# runs on Python 3.10-3.14. Django 6.x requires Python 3.12+ and is not
+# carried by every hosting mirror, so the LTS is the portable choice.
+Django==5.2.17
 asgiref==3.12.1
 sqlparse==0.5.5
 tzdata==2026.3
