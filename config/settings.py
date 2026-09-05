@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 from urllib.parse import unquote, urlparse
+import ipaddress
 import os
 import sys
 
@@ -166,6 +167,58 @@ DB_BACKEND = os.environ.get(
 ).lower()
 
 
+def _is_private_db_host(host):
+    """
+    Is this database reachable only over a private network?
+
+    True for loopback, Unix sockets, RFC 1918 / link-local addresses,
+    orchestrator service names (a bare label with no dot, such as
+    Liara's "aeroesp" or Compose's "db"), and the reserved internal
+    suffixes. False for anything that looks like a public hostname,
+    which is where TLS has to be mandatory.
+    """
+
+    host = (host or "").strip().lower().strip("[]")
+
+    if not host:
+        # Empty means a local Unix socket.
+        return True
+
+    if host.startswith("/"):
+        return True
+
+    if host in {"localhost", "localhost.localdomain"}:
+        return True
+
+    try:
+        address = ipaddress.ip_address(host)
+
+    except ValueError:
+        pass
+
+    else:
+        return (
+            address.is_private
+            or address.is_loopback
+            or address.is_link_local
+        )
+
+    # A public hostname is always dotted. A single label is a service
+    # name resolved inside the provider's network.
+    if "." not in host:
+        return True
+
+    return host.endswith(
+        (
+            ".internal",
+            ".local",
+            ".localdomain",
+            ".svc",
+            ".svc.cluster.local",
+        )
+    )
+
+
 def _database_from_url(url):
     """
     Split a postgres://user:password@host:port/name URL into the parts
@@ -217,19 +270,34 @@ if DB_BACKEND == "postgresql":
             "PORT": os.environ.get("AEROESP_DB_PORT", "5432"),
         }
 
-    # Managed Postgres (Render, Neon, Supabase, ...) refuses plain-text
-    # connections from outside its own network. Local sockets do not
-    # offer TLS at all, so only require it for remote hosts.
-    _is_local_db = _config["HOST"] in {
+    _db_host = _config["HOST"].strip()
+
+    _is_loopback_db = _db_host in {
         "",
         "localhost",
         "127.0.0.1",
         "::1",
     }
 
+    # The question that decides TLS is not "local or remote" but
+    # "private network or public internet".
+    #
+    # A managed database reached across the internet (Render, Neon,
+    # Supabase) refuses plain-text connections, so TLS must be
+    # required. A database reached over a provider's private network -
+    # Liara, Docker Compose, Kubernetes - is addressed by a bare
+    # service name or a private IP and typically has TLS switched off
+    # entirely, so requiring it fails with "server does not support
+    # SSL, but SSL was required".
+    #
+    # "prefer" is the right default for the private case: it still uses
+    # TLS when the server offers it, and falls back when it does not.
+
+    _is_private_db = _is_private_db_host(_db_host)
+
     _sslmode = os.environ.get(
         "AEROESP_DB_SSLMODE",
-        "prefer" if _is_local_db else "require",
+        "prefer" if _is_private_db else "require",
     ).strip()
 
     DATABASES = {
@@ -241,7 +309,7 @@ if DB_BACKEND == "postgresql":
             "CONN_MAX_AGE": int(
                 os.environ.get(
                     "AEROESP_DB_CONN_MAX_AGE",
-                    "0" if _is_local_db else "60",
+                    "0" if _is_loopback_db else "60",
                 )
             ),
             **_config,
@@ -271,8 +339,11 @@ if DB_BACKEND == "postgresql":
         )
 
     # Working against a remote database by accident is the expensive
-    # mistake here, so say out loud which one is in use.
-    if not _is_local_db and len(sys.argv) > 1:
+    # mistake here, so say out loud which one is in use. Keyed on
+    # "reached over the internet", not merely "not loopback": the app
+    # talking to its own database across the provider's private
+    # network is the normal case and must stay quiet.
+    if not _is_private_db and len(sys.argv) > 1:
         sys.stderr.write(
             f"\n*** REMOTE DATABASE: {_config['HOST']} "
             f"(db: {_config['NAME']}, env: {ENV_FILE.name}) ***\n\n"
