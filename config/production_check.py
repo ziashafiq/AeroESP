@@ -97,27 +97,56 @@ def main():
                 )
             )
 
+    # Account verification codes are delivered by email, so a
+    # non-sending backend means nobody can finish signing up.
+
     email_backend = os.getenv(
         "DJANGO_EMAIL_BACKEND",
         "",
-    )
+    ).strip()
 
-    if (
-        email_backend.endswith(
-            "smtp.EmailBackend"
-        )
-        and not os.getenv(
-            "DJANGO_EMAIL_HOST",
-            "",
-        ).strip()
+    if not email_backend.endswith(
+        "smtp.EmailBackend"
     ):
 
         errors.append(
             (
-                "DJANGO_EMAIL_HOST is required "
-                "for SMTP email."
+                "DJANGO_EMAIL_BACKEND must be "
+                "django.core.mail.backends.smtp.EmailBackend "
+                "in production; verification codes cannot be "
+                "delivered otherwise."
             )
         )
+
+    else:
+
+        for name in [
+            "DJANGO_EMAIL_HOST",
+            "DJANGO_EMAIL_HOST_USER",
+            "DJANGO_EMAIL_HOST_PASSWORD",
+            "DJANGO_DEFAULT_FROM_EMAIL",
+        ]:
+
+            if not os.getenv(
+                name,
+                "",
+            ).strip():
+
+                errors.append(
+                    f"MISSING: {name} (required for SMTP email)"
+                )
+
+        if (
+            os.getenv("DJANGO_EMAIL_USE_TLS", "") == "1"
+            and os.getenv("DJANGO_EMAIL_USE_SSL", "") == "1"
+        ):
+
+            errors.append(
+                (
+                    "DJANGO_EMAIL_USE_TLS and "
+                    "DJANGO_EMAIL_USE_SSL cannot both be 1."
+                )
+            )
 
     if errors:
 

@@ -1,11 +1,13 @@
 from io import StringIO
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from .models import (
+    EmailVerificationCode,
     StudentProfile,
     TeacherProfile,
 )
@@ -335,3 +337,196 @@ class AccountsFoundationTests(TestCase):
             response.status_code,
             302,
         )
+
+class RegistrationEmailTests(TestCase):
+    """
+    Covers the sign-up path end to end: a code must be emailed, and it
+    must only work for the account pending verification in this
+    session.
+    """
+
+    REGISTRATION_DATA = {
+        "first_name": "Ali",
+        "last_name": "Tester",
+        "email": "ali.tester@example.com",
+        "role": "STUDENT",
+        "password1": "AeroESP-Strong-2026",
+        "password2": "AeroESP-Strong-2026",
+    }
+
+    def _register(self, **overrides):
+
+        data = dict(self.REGISTRATION_DATA)
+        data.update(overrides)
+
+        return self.client.post(
+            reverse("accounts:register"),
+            data,
+        )
+
+    def test_registration_emails_a_verification_code(self):
+
+        response = self._register()
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:verify_email"),
+        )
+
+        self.assertEqual(
+            len(mail.outbox),
+            1,
+        )
+
+        message = mail.outbox[0]
+
+        self.assertEqual(
+            message.to,
+            ["ali.tester@example.com"],
+        )
+
+        code = (
+            EmailVerificationCode.objects
+            .get(user__email="ali.tester@example.com")
+            .code
+        )
+
+        # The code the user receives must be the stored one.
+        self.assertIn(
+            code,
+            message.body,
+        )
+
+    def test_correct_code_verifies_and_creates_profile(self):
+
+        self._register()
+
+        code = (
+            EmailVerificationCode.objects
+            .get(user__email="ali.tester@example.com")
+            .code
+        )
+
+        response = self.client.post(
+            reverse("accounts:verify_email"),
+            {"code": code},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:role_redirect"),
+            target_status_code=302,
+        )
+
+        user = get_user_model().objects.get(
+            email="ali.tester@example.com"
+        )
+
+        self.assertTrue(user.email_verified)
+
+        self.assertTrue(
+            StudentProfile.objects.filter(
+                user=user
+            ).exists()
+        )
+
+        self.assertTrue(
+            EmailVerificationCode.objects.get(
+                user=user
+            ).is_used
+        )
+
+    def test_code_is_rejected_without_a_pending_session(self):
+        """
+        Regression: verify_email used to accept any unused code from
+        any user, which logged the visitor in as that code's owner.
+        """
+
+        self._register()
+
+        code = (
+            EmailVerificationCode.objects
+            .get(user__email="ali.tester@example.com")
+            .code
+        )
+
+        attacker = Client()
+
+        response = attacker.post(
+            reverse("accounts:verify_email"),
+            {"code": code},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:register"),
+        )
+
+        self.assertNotIn(
+            "_auth_user_id",
+            attacker.session,
+        )
+
+        self.assertFalse(
+            get_user_model().objects.get(
+                email="ali.tester@example.com"
+            ).email_verified
+        )
+
+    def test_duplicate_email_local_part_gets_a_unique_username(self):
+
+        self._register(email="ali@first.example.com")
+
+        self.client = Client()
+
+        self._register(email="ali@second.example.com")
+
+        usernames = set(
+            get_user_model().objects
+            .filter(email__startswith="ali@")
+            .values_list("username", flat=True)
+        )
+
+        self.assertEqual(
+            len(usernames),
+            2,
+        )
+
+    def test_resend_issues_a_new_code_and_retires_the_old_one(self):
+
+        self._register()
+
+        first_code = (
+            EmailVerificationCode.objects
+            .get(user__email="ali.tester@example.com")
+            .code
+        )
+
+        self.client.post(
+            reverse("accounts:resend_verification_code")
+        )
+
+        self.assertEqual(
+            len(mail.outbox),
+            2,
+        )
+
+        codes = (
+            EmailVerificationCode.objects
+            .filter(user__email="ali.tester@example.com")
+            .order_by("created_at")
+        )
+
+        self.assertEqual(codes.count(), 2)
+
+        self.assertTrue(codes[0].is_used)
+
+        self.assertFalse(codes[1].is_used)
+
+        # The retired code must no longer work.
+        response = self.client.post(
+            reverse("accounts:verify_email"),
+            {"code": first_code},
+        )
+
+        self.assertEqual(response.status_code, 200)
