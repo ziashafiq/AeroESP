@@ -9,6 +9,9 @@ from django.contrib.auth import (
 )
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordResetForm
+from django.core.mail import EmailMultiAlternatives
+from django.template import loader
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -525,6 +528,58 @@ def resend_verification_code(request):
 # Password reset
 # =========================================================
 
+class LoudPasswordResetForm(PasswordResetForm):
+    """
+    Let a failed send be noticed.
+
+    Django's PasswordResetForm.send_mail swallows every exception and
+    only logs it, so a broken mail service still redirects the visitor
+    to "check your email" for a message that was never sent. This
+    rebuilds the message exactly as Django does and lets the error
+    propagate, so the view can say something true instead.
+    """
+
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
+
+        subject = "".join(
+            loader.render_to_string(
+                subject_template_name,
+                context,
+            ).splitlines()
+        )
+
+        body = loader.render_to_string(
+            email_template_name,
+            context,
+        )
+
+        message = EmailMultiAlternatives(
+            subject,
+            body,
+            from_email,
+            [to_email],
+        )
+
+        if html_email_template_name is not None:
+            message.attach_alternative(
+                loader.render_to_string(
+                    html_email_template_name,
+                    context,
+                ),
+                "text/html",
+            )
+
+        message.send(fail_silently=False)
+
+
 class PasswordResetOrSupportView(auth_views.PasswordResetView):
     """
     Django's PasswordResetView always reports success, so that an
@@ -536,6 +591,8 @@ class PasswordResetOrSupportView(auth_views.PasswordResetView):
     When the backend cannot deliver at all, or the send raises, an
     explanatory page is shown instead.
     """
+
+    form_class = LoudPasswordResetForm
 
     template_name = (
         "registration/password_reset_form.html"

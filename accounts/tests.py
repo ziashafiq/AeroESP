@@ -924,3 +924,68 @@ class CaptchaVerificationTests(TestCase):
                 pk=stale.pk
             ).exists()
         )
+
+
+class PasswordResetDeliveryTests(TestCase):
+    """
+    Django's PasswordResetForm swallows send failures and only logs
+    them, so a broken mail service used to redirect the visitor to
+    "check your email" for a message that was never sent.
+    """
+
+    def setUp(self):
+
+        self.user = get_user_model().objects.create_user(
+            username="resetuser",
+            email="reset.user@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+    def _post(self, email):
+        return self.client.post(
+            reverse("password_reset"),
+            {"email": email},
+        )
+
+    def test_a_failed_send_shows_the_support_page(self):
+
+        with mock.patch(
+            "django.core.mail.EmailMultiAlternatives.send",
+            side_effect=OSError("Connection timed out"),
+        ):
+
+            with self.assertLogs("accounts.views", level="ERROR"):
+                response = self._post("reset.user@example.com")
+
+        self.assertEqual(response.status_code, 503)
+
+        self.assertIn(
+            "temporarily unavailable",
+            response.content.decode(),
+        )
+
+    def test_a_working_send_reaches_the_done_page(self):
+
+        response = self._post("reset.user@example.com")
+
+        self.assertRedirects(
+            response,
+            reverse("password_reset_done"),
+        )
+
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_an_unknown_address_is_not_disclosed(self):
+        """
+        Reporting success for an unregistered address is deliberate:
+        the page must not reveal which emails have accounts.
+        """
+
+        response = self._post("nobody@example.com")
+
+        self.assertRedirects(
+            response,
+            reverse("password_reset_done"),
+        )
+
+        self.assertEqual(len(mail.outbox), 0)
