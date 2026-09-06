@@ -1,13 +1,31 @@
+from datetime import timedelta
 from io import StringIO
 from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
-from django.test import Client, TestCase, override_settings
+from django.test import (
+    Client,
+    SimpleTestCase,
+    TestCase,
+    override_settings,
+)
+from django.utils import timezone
 from django.urls import reverse
 
+from .captcha import (
+    ALPHABET,
+    create_challenge,
+    hash_answer,
+    render_image,
+    verify,
+)
+PNG_MAGIC = bytes.fromhex("89504E47")
+
+
 from .models import (
+    CaptchaChallenge,
     EmailVerificationCode,
     StudentProfile,
     TeacherProfile,
@@ -732,6 +750,11 @@ class RegistrationCaptchaTests(TestCase):
         "password2": "AeroESP-Strong-2026",
     }
 
+    def _registered(self):
+        return get_user_model().objects.filter(
+            email="bot.tester@example.com"
+        ).exists()
+
     def test_registration_without_a_captcha_is_rejected(self):
 
         response = self.client.post(
@@ -740,18 +763,15 @@ class RegistrationCaptchaTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-
-        self.assertFalse(
-            get_user_model().objects.filter(
-                email="bot.tester@example.com"
-            ).exists()
-        )
+        self.assertFalse(self._registered())
 
     def test_registration_with_a_wrong_answer_is_rejected(self):
 
+        challenge = create_challenge()
+
         data = dict(self.BASE)
-        data["captcha_0"] = "some-hashkey"
-        data["captcha_1"] = "wrong-answer"
+        data["captcha_0"] = challenge.key
+        data["captcha_1"] = "WRONG"
 
         response = self.client.post(
             reverse("accounts:register"),
@@ -759,14 +779,9 @@ class RegistrationCaptchaTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(self._registered())
 
-        self.assertFalse(
-            get_user_model().objects.filter(
-                email="bot.tester@example.com"
-            ).exists()
-        )
-
-    def test_the_form_actually_renders_a_captcha(self):
+    def test_the_form_renders_a_locally_served_image(self):
 
         response = self.client.get(
             reverse("accounts:register")
@@ -776,33 +791,136 @@ class RegistrationCaptchaTests(TestCase):
 
         self.assertIn('name="captcha_0"', content)
         self.assertIn('name="captcha_1"', content)
-
-        # The image must come from this server, not a third party.
         self.assertIn("/captcha/image/", content)
 
-    def test_challenge_image_is_served_locally(self):
+        # Nothing may be pulled from another host.
+        self.assertNotIn("https://www.google.com", content)
+        self.assertNotIn("hcaptcha", content)
 
-        from captcha.models import CaptchaStore
+    def test_image_endpoint_returns_a_png(self):
 
-        self.client.get(reverse("accounts:register"))
-
-        store = CaptchaStore.objects.last()
-
-        self.assertIsNotNone(
-            store,
-            "requesting the form should create a challenge",
-        )
+        challenge = create_challenge()
 
         response = self.client.get(
             reverse(
-                "captcha-image",
-                kwargs={"key": store.hashkey},
+                "captcha_image",
+                kwargs={"key": challenge.key},
             )
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/png")
+        self.assertTrue(
+            response.content.startswith(PNG_MAGIC)
+        )
+
+    def test_image_endpoint_404s_on_an_unknown_key(self):
+
+        response = self.client.get(
+            reverse(
+                "captcha_image",
+                kwargs={"key": "0" * 40},
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_refresh_endpoint_issues_a_new_challenge(self):
+
+        response = self.client.get(
+            reverse("captcha_refresh")
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.json()
+
+        self.assertIn("key", payload)
+        self.assertIn("/captcha/image/", payload["image_url"])
+
+        self.assertTrue(
+            CaptchaChallenge.objects.filter(
+                key=payload["key"]
+            ).exists()
+        )
+
+
+class CaptchaMechanicsTests(SimpleTestCase):
+
+    def test_answers_are_not_stored_in_plain_text(self):
+
+        answer = "ABCDE"
+
+        self.assertNotIn(
+            answer,
+            hash_answer(answer),
+        )
 
         self.assertEqual(
-            response["Content-Type"],
-            "image/png",
+            hash_answer("abcde"),
+            hash_answer("  ABCDE "),
+            "comparison should ignore case and stray spaces",
+        )
+
+    def test_the_alphabet_omits_ambiguous_glyphs(self):
+
+        for character in "O0I1L":
+            self.assertNotIn(character, ALPHABET)
+
+    def test_rendered_image_is_a_png(self):
+
+        data = render_image("ABCDE")
+
+        self.assertTrue(data.startswith(PNG_MAGIC))
+        self.assertGreater(len(data), 500)
+
+
+class CaptchaVerificationTests(TestCase):
+
+    def test_a_correct_answer_passes_exactly_once(self):
+
+        # create_challenge does not hand back the answer, so drive the
+        # stored hash directly - this is what verify() compares against.
+        challenge = create_challenge()
+        challenge.answer_hash = hash_answer("ZZZZZ")
+        challenge.save(update_fields=["answer_hash"])
+
+        self.assertTrue(verify(challenge.key, "zzzzz"))
+
+        # Consumed: the same key cannot be replayed.
+        self.assertFalse(verify(challenge.key, "ZZZZZ"))
+
+    def test_a_wrong_answer_also_consumes_the_challenge(self):
+        """
+        Otherwise one image could be guessed against repeatedly.
+        """
+
+        challenge = create_challenge()
+        challenge.answer_hash = hash_answer("ZZZZZ")
+        challenge.save(update_fields=["answer_hash"])
+
+        self.assertFalse(verify(challenge.key, "WRONG"))
+        self.assertFalse(verify(challenge.key, "ZZZZZ"))
+
+    def test_an_expired_challenge_is_refused(self):
+
+        challenge = create_challenge()
+        challenge.answer_hash = hash_answer("ZZZZZ")
+        challenge.expires_at = timezone.now() - timedelta(seconds=1)
+        challenge.save()
+
+        self.assertFalse(verify(challenge.key, "ZZZZZ"))
+
+    def test_expired_rows_are_swept_when_issuing(self):
+
+        stale = create_challenge()
+        stale.expires_at = timezone.now() - timedelta(hours=1)
+        stale.save(update_fields=["expires_at"])
+
+        create_challenge()
+
+        self.assertFalse(
+            CaptchaChallenge.objects.filter(
+                pk=stale.pk
+            ).exists()
         )

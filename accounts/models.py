@@ -187,3 +187,40 @@ class EmailVerificationCode(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.code}"
+
+
+class CaptchaChallenge(models.Model):
+    """
+    One pending registration captcha.
+
+    The answer is kept only as a keyed hash; the rendered PNG is stored
+    so the image view can serve it without holding the plain answer
+    anywhere. Rows are consumed on the first attempt and expired rows
+    are swept whenever a new challenge is issued.
+    """
+
+    key = models.CharField(
+        max_length=40,
+        unique=True,
+        db_index=True,
+    )
+
+    answer_hash = models.CharField(
+        max_length=64,
+    )
+
+    image = models.BinaryField()
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    expires_at = models.DateTimeField(
+        db_index=True,
+    )
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"captcha {self.key[:8]}"

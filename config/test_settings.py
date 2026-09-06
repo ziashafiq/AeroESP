@@ -52,17 +52,7 @@ AXES_ENABLED = False
 
 # Accept the literal response "PASSED" instead of solving an image.
 # Any other value is still rejected, so the field is still exercised.
-CAPTCHA_TEST_MODE = True
-
-# The package logs an ERROR because test mode is on with DEBUG off,
-# which is the correct combination for a test run. Silenced so that a
-# genuine error in the output is not lost among expected ones; the
-# setting lives only in this file and never reaches production.
-LOGGING["loggers"]["captcha.conf.settings"] = {
-    "handlers": ["console"],
-    "level": "CRITICAL",
-    "propagate": False,
-}
+AEROESP_CAPTCHA_TEST_MODE = True
 
 
 SECURE_SSL_REDIRECT = False

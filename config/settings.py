@@ -122,7 +122,6 @@ INSTALLED_APPS = [
     "research_review",
 
     "axes",
-    "captcha",
 ]
 
 MIDDLEWARE = [
@@ -791,31 +790,18 @@ AXES_LOCKOUT_PARAMETERS = [
 # Captcha (registration spam protection)
 # =========================================================
 
-# django-simple-captcha draws the image on this server with Pillow and
-# talks to nothing outside it. That matters here: reCAPTCHA and hCaptcha
-# load scripts from Google/Cloudflare domains, which are unreliable or
-# unreachable from Iran, so the challenge would simply fail to appear
-# and nobody could register.
+# Implemented in accounts/captcha.py against Pillow alone. It replaced
+# django-simple-captcha, which is missing from the deployment host's
+# package mirror, and it is not reCAPTCHA/hCaptcha because those load
+# scripts from domains that are not reliably reachable from Iran - a
+# challenge that fails to appear locks everyone out of registering.
 
-CAPTCHA_LENGTH = 5
+AEROESP_CAPTCHA_LENGTH = 5
 
-CAPTCHA_IMAGE_SIZE = (160, 60)
+AEROESP_CAPTCHA_TTL_MINUTES = 10
 
-CAPTCHA_FONT_SIZE = 34
-
-# Minutes a challenge stays valid.
-CAPTCHA_TIMEOUT = 10
-
-# Ambiguous glyphs removed: 0/O and 1/l/I are guesswork at this size.
-CAPTCHA_LETTER_ROTATION = (-25, 25)
-
-CAPTCHA_BACKGROUND_COLOR = "#ffffff"
-
-CAPTCHA_FOREGROUND_COLOR = "#0b1b3a"
-
-# Audio fallback needs the flite binary, which is not installed;
-# leaving it unset keeps the widget from offering a broken link.
-CAPTCHA_FLITE_PATH = None
+# Only ever true in config/test_settings.py.
+AEROESP_CAPTCHA_TEST_MODE = False
 
 
 # =========================================================

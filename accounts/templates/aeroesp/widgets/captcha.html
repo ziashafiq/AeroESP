@@ -1,0 +1,61 @@
+{% spaceless %}
+
+<div class="captcha-widget" data-captcha>
+
+    <img
+        src="{{ widget.image_url }}"
+        alt="Characters to type, shown as an image"
+        class="captcha-image"
+        width="170"
+        height="60"
+        data-captcha-image
+    >
+
+    <button
+        type="button"
+        class="captcha-refresh"
+        data-captcha-refresh
+        data-refresh-url="{{ widget.refresh_url }}"
+        title="Show a different image"
+    >
+        New image
+    </button>
+
+    {% for subwidget in widget.subwidgets %}
+        {% include subwidget.template_name with widget=subwidget %}
+    {% endfor %}
+
+</div>
+
+{% endspaceless %}
+
+<script>
+(function () {
+    var box = document.currentScript.previousElementSibling;
+    if (!box || !box.hasAttribute("data-captcha")) { return; }
+
+    var button = box.querySelector("[data-captcha-refresh]");
+    var image = box.querySelector("[data-captcha-image]");
+    var key = box.querySelector("input[type=hidden]");
+    var answer = box.querySelector("input[type=text]");
+
+    if (!button || !image || !key) { return; }
+
+    button.addEventListener("click", function () {
+        fetch(button.dataset.refreshUrl, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                image.src = data.image_url;
+                key.value = data.key;
+                if (answer) { answer.value = ""; answer.focus(); }
+            })
+            .catch(function () {
+                // Without a working request the page reload below is
+                // the fallback; a fresh challenge comes with it.
+                window.location.reload();
+            });
+    });
+})();
+</script>

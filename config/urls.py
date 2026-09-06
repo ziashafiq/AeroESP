@@ -59,7 +59,7 @@ urlpatterns = [
     path(
         "captcha/",
         include(
-            "captcha.urls"
+            "accounts.captcha_urls"
         ),
     ),
 
