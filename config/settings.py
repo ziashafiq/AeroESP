@@ -455,16 +455,17 @@ STORAGES = {
         ),
     },
     "staticfiles": {
-        # Hashing depends on collectstatic having run, which is not
-        # true while developing, so plain storage is used off
-        # production and the hashed names apply where the long cache
-        # header does.
+        # Deliberately not conditional on the environment. Liara (and
+        # most build/run split hosts) expose panel variables only at
+        # runtime, so DJANGO_ENV is unset while collectstatic runs.
+        # Choosing the backend from it made the build write unhashed
+        # files while the running app asked for hashed ones, and every
+        # stylesheet 404'd. The storage class falls back to the
+        # unhashed name when a hashed file is missing, which is what
+        # keeps this safe in development too.
         "BACKEND": (
             "config.storage."
             "ForgivingManifestStaticFilesStorage"
-            if IS_PRODUCTION
-            else "django.contrib.staticfiles.storage."
-            "StaticFilesStorage"
         ),
     },
 }
