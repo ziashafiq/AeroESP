@@ -2,24 +2,33 @@
 
 <div class="captcha-widget" data-captcha>
 
-    <img
-        src="{{ widget.image_url }}"
-        alt="Characters to type, shown as an image"
-        class="captcha-image"
-        width="170"
-        height="60"
-        data-captcha-image
-    >
+    <div class="captcha-plate">
 
-    <button
-        type="button"
-        class="captcha-refresh"
-        data-captcha-refresh
-        data-refresh-url="{{ widget.refresh_url }}"
-        title="Show a different image"
-    >
-        New image
-    </button>
+        <img
+            src="{{ widget.image_url }}"
+            alt="Characters to type, shown as an image"
+            class="captcha-image"
+            width="170"
+            height="60"
+            data-captcha-image
+            data-base-url="{{ widget.image_url }}"
+        >
+
+        <button
+            type="button"
+            class="captcha-refresh"
+            data-captcha-refresh
+            data-refresh-url="{{ widget.refresh_url }}"
+            title="Show a different image"
+            aria-label="Show a different image"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+                <path d="M21 3v6h-6"></path>
+            </svg>
+        </button>
+
+    </div>
 
     {% for subwidget in widget.subwidgets %}
         {% include subwidget.template_name with widget=subwidget %}
@@ -39,7 +48,32 @@
     var key = box.querySelector("input[type=hidden]");
     var answer = box.querySelector("input[type=text]");
 
-    if (!button || !image || !key) { return; }
+    if (!image) { return; }
+
+    function currentTheme() {
+        return document.documentElement.getAttribute("data-theme") === "dark"
+            ? "dark"
+            : "light";
+    }
+
+    function paint(baseUrl) {
+        image.dataset.baseUrl = baseUrl;
+        // Cache-busted so a swapped theme always refetches.
+        image.src = baseUrl + "?theme=" + currentTheme() +
+            "&t=" + Date.now();
+    }
+
+    paint(image.dataset.baseUrl);
+
+    // The appearance switcher rewrites data-theme in place, so follow it.
+    new MutationObserver(function () {
+        paint(image.dataset.baseUrl);
+    }).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"]
+    });
+
+    if (!button || !key) { return; }
 
     button.addEventListener("click", function () {
         fetch(button.dataset.refreshUrl, {
@@ -47,13 +81,11 @@
         })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                image.src = data.image_url;
                 key.value = data.key;
+                paint(data.image_url);
                 if (answer) { answer.value = ""; answer.focus(); }
             })
             .catch(function () {
-                // Without a working request the page reload below is
-                // the fallback; a fresh challenge comes with it.
                 window.location.reload();
             });
     });

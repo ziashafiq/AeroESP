@@ -25,8 +25,18 @@ def captcha_image(request, key):
     if challenge is None:
         raise Http404("This captcha has expired.")
 
+    wants_dark = (
+        request.GET.get("theme", "").lower() == "dark"
+    )
+
+    data = (
+        challenge.image_dark
+        if wants_dark and challenge.image_dark
+        else challenge.image
+    )
+
     response = HttpResponse(
-        bytes(challenge.image),
+        bytes(data),
         content_type="image/png",
     )
 

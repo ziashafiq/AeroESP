@@ -11426,6 +11426,98 @@ textarea:focus-visible {
     font-size: 9px;
 }
 
+/* =========================================================
+   Registration captcha
+   =========================================================
+   The challenge is a PNG, so it cannot follow the theme on its own -
+   the widget requests a light or dark rendering and the plate below
+   gives it the same rounded, recessed surface as the form inputs.
+*/
+
+.captcha-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.captcha-plate {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 14px;
+
+    background: var(--theme-surface-soft);
+}
+
+.captcha-image {
+    display: block;
+
+    max-width: 100%;
+    height: auto;
+
+    border-radius: 8px;
+
+    /* The glyphs are the point; stop the browser smoothing them away
+       on high-density screens. */
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.captcha-refresh {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+    padding: 0;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 9px;
+
+    color: var(--theme-text-soft);
+    background: var(--theme-surface);
+
+    cursor: pointer;
+}
+
+.captcha-refresh svg {
+    width: 15px;
+    height: 15px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.captcha-refresh:hover {
+    color: var(--theme-accent-strong);
+    border-color: var(--theme-border-strong);
+}
+
+.captcha-refresh:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* The answer box is a normal auth input; the hidden key must not
+   inherit the input sizing and leave a gap. */
+.captcha-widget input[type="hidden"] {
+    display: none;
+}
+
+
 /* Inline "Resend code" action: a POST form styled as a link. */
 .auth-link-button {
     padding: 0;

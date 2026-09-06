@@ -209,7 +209,15 @@ class CaptchaChallenge(models.Model):
         max_length=64,
     )
 
+    # One rendering per theme: a PNG cannot follow the viewer's
+    # appearance setting, and the light one is a white slab inside a
+    # dark card.
     image = models.BinaryField()
+
+    image_dark = models.BinaryField(
+        null=True,
+        blank=True,
+    )
 
     created_at = models.DateTimeField(
         auto_now_add=True,

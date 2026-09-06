@@ -40,9 +40,24 @@ IMAGE_SIZE = (170, 60)
 
 FONT_SIZE = 36
 
-BACKGROUND = (255, 255, 255)
-
-INK = (11, 27, 58)
+# A PNG cannot follow the viewer's theme, and one drawn for light mode
+# is a glaring white rectangle inside a dark card. Both variants are
+# rendered when the challenge is issued and the page asks for the one
+# matching its current theme.
+PALETTES = {
+    "light": {
+        "background": (238, 244, 248),
+        "ink": (11, 27, 58),
+        "clutter": (176, 192, 210),
+        "speckle": (198, 210, 224),
+    },
+    "dark": {
+        "background": (16, 37, 59),
+        "ink": (238, 246, 252),
+        "clutter": (58, 86, 116),
+        "speckle": (44, 68, 95),
+    },
+}
 
 # Accepted in tests instead of solving an image.
 TEST_RESPONSE = "PASSED"
@@ -86,7 +101,7 @@ def random_answer(length=None):
     )
 
 
-def render_image(text):
+def render_image(text, theme="light"):
     """
     Draw the challenge: rotated glyphs on a noisy background.
 
@@ -95,9 +110,15 @@ def render_image(text):
     needs to stop bulk automated sign-ups.
     """
 
+    palette = PALETTES.get(theme, PALETTES["light"])
+
     width, height = IMAGE_SIZE
 
-    image = Image.new("RGB", (width, height), BACKGROUND)
+    image = Image.new(
+        "RGB",
+        (width, height),
+        palette["background"],
+    )
     draw = ImageDraw.Draw(image)
 
     font = ImageFont.load_default(size=FONT_SIZE)
@@ -110,7 +131,7 @@ def render_image(text):
             [x1 - 40, y1 - 40, x1 + 40, y1 + 40],
             start=random.randint(0, 360),
             end=random.randint(0, 360),
-            fill=(190, 200, 215),
+            fill=palette["clutter"],
             width=2,
         )
 
@@ -120,7 +141,7 @@ def render_image(text):
                 random.randint(0, width),
                 random.randint(0, height),
             ),
-            fill=(205, 212, 225),
+            fill=palette["speckle"],
         )
 
     # Each glyph is drawn on its own transparent tile, rotated, then
@@ -137,7 +158,7 @@ def render_image(text):
             (4, 6),
             character,
             font=font,
-            fill=INK + (255,),
+            fill=palette["ink"] + (255,),
         )
 
         tile = tile.rotate(
@@ -203,7 +224,8 @@ def create_challenge():
     return CaptchaChallenge.objects.create(
         key=secrets.token_hex(20),
         answer_hash=hash_answer(answer),
-        image=render_image(answer),
+        image=render_image(answer, "light"),
+        image_dark=render_image(answer, "dark"),
         expires_at=(
             timezone.now() + timedelta(minutes=ttl)
         ),
