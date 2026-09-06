@@ -15869,3 +15869,67 @@ html[data-theme="dark"]
 
     display: block;
 }
+
+/* =========================================================
+   Dark mode contrast safety net
+   =========================================================
+
+   Headings are painted with the fixed brand ink
+   (h1..h4 { color: var(--aero-ink) }), and the dark-mode correction
+   for that only ever covered .app-content - the signed-in shell.
+   Public pages (sign in, register, password reset, landing) sit
+   outside it, so in dark mode their headings kept a near-black ink on
+   a near-black surface and became unreadable.
+
+   Everything below re-points text at theme tokens wherever the
+   .app-content rules do not reach. Light mode is unchanged: the tokens
+   already resolve to the same inks there.
+*/
+
+html[data-theme="dark"] :where(
+    .public-main,
+    .public-shell,
+    .auth-layout,
+    .auth-card,
+    .public-section,
+    .public-card
+) :where(h1, h2, h3, h4, h5, h6) {
+    color: var(--theme-text);
+}
+
+/* The story panel keeps its own light-on-navy palette in both themes,
+   so it must not be pulled back to the body text colour. */
+html[data-theme="dark"] .auth-story :where(h1, h2, h3, h4, h5, h6) {
+    color: #ffffff;
+}
+
+html[data-theme="dark"] .auth-story > p {
+    color: rgba(255, 255, 255, .65);
+}
+
+/* Body copy placed directly in a card, without one of the labelled
+   wrappers, used to inherit whatever the surrounding context gave it. */
+.auth-card > p,
+.auth-card li {
+    color: var(--theme-text-soft);
+    line-height: 1.7;
+}
+
+.auth-help {
+    margin-top: 6px;
+    color: var(--theme-text-faint);
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.auth-help ul {
+    margin: 4px 0 0;
+    padding-left: 16px;
+}
+
+/* An <a> styled as the primary action needs the button's centring. */
+a.auth-submit {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+}
