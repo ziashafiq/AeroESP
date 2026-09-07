@@ -32,6 +32,17 @@ env/
 # value has been copied where it belongs.
 NEW_SECRETS.txt
 
+# Study-unblinding material. These map each blinded question back to
+# the model that produced it (SERVICE / CONDITION), so committing one
+# would destroy the blinding the whole expert review rests on. The
+# patterns are deliberately broad - they cover the "(1)", "__1_" and
+# other suffixes a re-download leaves behind.
+*GOLD80*
+*INTERNAL_SELECTION*
+*INTERNAL_ID_MAP*
+*ID_MAP*
+question_pool_manifest*.csv
+
 # IDE / Editor
 .vscode/
 .idea/

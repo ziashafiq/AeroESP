@@ -129,6 +129,18 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
+            "--exclude-assigned-gold",
+            action="store_true",
+            help=(
+                "Also drop already-assigned questions from the GOLD "
+                "selection, and grow the top-up to keep --target. Use "
+                "it to get a pool untouched by earlier review activity "
+                "- e.g. items a test reviewer account was once "
+                "assigned."
+            ),
+        )
+
+        parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Report the selection without writing either file.",
@@ -284,14 +296,28 @@ class Command(BaseCommand):
         seed,
     ):
         """
-        Fill the remaining slots so the pool stays as even as the
-        inputs allow across service and experiment.
+        Fill the remaining slots, balancing service first and
+        experiment second.
 
-        Rather than a flat random sample - which would drift the
-        careful GOLD80 balance - this repeatedly picks from whichever
-        (service, experiment) cell is currently least represented in
-        the pool so far, breaking ties with a seeded shuffle. The
-        result is deterministic for a given seed and set of inputs.
+        An earlier version balanced the (service, experiment) cell
+        directly. That looked right and was not: GOLD80 is so evenly
+        built that all 40 cells were tied, and the tie-break ran on
+        the cell key, so it filled cells in alphabetical order and
+        handed every top-up slot to the first four services. Cell
+        counts stayed even while services went 15/15/15/15/10/10/10/10.
+
+        So the allocation is now explicitly two-stage, and every tie is
+        broken by a seeded order rather than by name:
+
+          1. Hand out the slots one at a time to whichever service has
+             the fewest questions in the pool so far. With equal gold
+             counts that spreads them as evenly as the number divides;
+             a service that lost a gold question gets an extra slot
+             back, because it is behind at the moment of the draw.
+          2. Inside each service, hand its slots to whichever
+             experiment is least represented *within that service*.
+
+        Deterministic for a given seed and set of inputs.
         """
 
         if needed <= 0:
@@ -299,50 +325,124 @@ class Command(BaseCommand):
 
         rng = random.Random(seed)
 
-        def cell(blind_id):
-            service = id_map.get(blind_id, {}).get("service", "")
+        def service_of(blind_id):
+            return id_map.get(blind_id, {}).get("service", "")
+
+        def experiment_of(blind_id):
             question = questions.get(blind_id)
-            experiment = (
+            return (
                 question.run.experiment.source_id
                 if question
                 else ""
             )
-            return (service, experiment)
 
-        # Where the already-chosen GOLD80 sits.
-        counts = Counter(cell(blind_id) for blind_id in gold_ids)
-
-        by_cell = defaultdict(list)
+        # candidates, bucketed service -> experiment -> [blind_id]
+        pools = defaultdict(lambda: defaultdict(list))
 
         for blind_id in candidates:
-            by_cell[cell(blind_id)].append(blind_id)
+            pools[service_of(blind_id)][
+                experiment_of(blind_id)
+            ].append(blind_id)
 
-        # Shuffle inside each cell once, then draw from the front, so
-        # the choice within a cell is seeded rather than alphabetical.
-        for bucket in by_cell.values():
-            bucket.sort()
-            rng.shuffle(bucket)
+        # Sort then seeded-shuffle each bucket, so which item comes out
+        # of a cell is decided by the seed and is reproducible.
+        for service in pools:
+            for experiment in pools[service]:
+                bucket = pools[service][experiment]
+                bucket.sort()
+                rng.shuffle(bucket)
 
-        chosen = []
+        # A seeded service order. Every tie below resolves by position
+        # in this list, which is what replaces the alphabetical bias.
+        services = sorted(pools)
+        rng.shuffle(services)
+        service_rank = {
+            service: index
+            for index, service in enumerate(services)
+        }
 
-        while len(chosen) < needed:
+        capacity = {
+            service: sum(
+                len(bucket) for bucket in pools[service].values()
+            )
+            for service in services
+        }
 
-            available = [
-                key for key, bucket in by_cell.items() if bucket
+        # ---- stage 1: how many slots each service gets
+        gold_by_service = Counter(
+            service_of(blind_id) for blind_id in gold_ids
+        )
+
+        allocation = Counter()
+
+        for _ in range(needed):
+
+            eligible = [
+                service
+                for service in services
+                if allocation[service] < capacity[service]
             ]
 
-            if not available:
+            if not eligible:
                 break
 
-            # Least represented first; ties broken deterministically
-            # by the cell key so a given seed always resolves the same
-            # way.
-            available.sort(key=lambda key: (counts[key], key))
+            eligible.sort(
+                key=lambda service: (
+                    gold_by_service[service] + allocation[service],
+                    service_rank[service],
+                )
+            )
 
-            key = available[0]
+            allocation[eligible[0]] += 1
 
-            chosen.append(by_cell[key].pop())
-            counts[key] += 1
+        # ---- stage 2: spread each service's slots over experiments
+        chosen = []
+
+        for service in services:
+
+            quota = allocation[service]
+
+            if not quota:
+                continue
+
+            within_service = Counter(
+                experiment_of(blind_id)
+                for blind_id in gold_ids
+                if service_of(blind_id) == service
+            )
+
+            experiments = sorted(pools[service])
+            rng.shuffle(experiments)
+            experiment_rank = {
+                experiment: index
+                for index, experiment in enumerate(experiments)
+            }
+
+            taken = 0
+
+            while taken < quota:
+
+                eligible = [
+                    experiment
+                    for experiment in experiments
+                    if pools[service][experiment]
+                ]
+
+                if not eligible:
+                    break
+
+                eligible.sort(
+                    key=lambda experiment: (
+                        within_service[experiment],
+                        experiment_rank[experiment],
+                    )
+                )
+
+                experiment = eligible[0]
+
+                chosen.append(pools[service][experiment].pop())
+                within_service[experiment] += 1
+                taken += 1
 
         return chosen
 
@@ -406,13 +506,34 @@ class Command(BaseCommand):
             if not questions[blind_id].raw_preserved
         ]
 
+        # Dropping these shrinks the gold half and widens the top-up by
+        # the same amount, so --target still lands exactly.
+        dropped_from_gold = []
+
+        if options["exclude_assigned_gold"] and gold_already_assigned:
+
+            dropped_from_gold = list(gold_already_assigned)
+
+            gold_ids = [
+                blind_id
+                for blind_id in gold_ids
+                if blind_id not in set(dropped_from_gold)
+            ]
+
         # --- top-up
         gold_set = set(gold_ids)
+
+        # A question dropped from gold must not walk back in through
+        # the top-up - which it otherwise could, since dropping it took
+        # it out of gold_set, and --allow-assigned would stop the
+        # assignment check from catching it.
+        dropped_set = set(dropped_from_gold)
 
         candidates = [
             blind_id
             for blind_id in id_map
             if blind_id not in gold_set
+            and blind_id not in dropped_set
             and (
                 options["allow_assigned"]
                 or blind_id not in assigned_ids
@@ -444,6 +565,7 @@ class Command(BaseCommand):
             gold_already_assigned=gold_already_assigned,
             gold_not_raw=gold_not_raw,
             gold_not_in_map=gold_not_in_map,
+            dropped_from_gold=dropped_from_gold,
             options=options,
         )
 
@@ -576,6 +698,7 @@ class Command(BaseCommand):
         gold_already_assigned,
         gold_not_raw,
         gold_not_in_map,
+        dropped_from_gold,
         options,
     ):
 
@@ -585,10 +708,19 @@ class Command(BaseCommand):
         w("=" * 62)
         w("GOLD selection")
         w("=" * 62)
-        w(f"  questions read        : {len(gold_ids)}")
+        w(f"  questions kept        : {len(gold_ids)}")
         w(f"  all present in the DB : yes")
         w(f"  raw_preserved=True    : "
           f"{len(gold_ids) - len(gold_not_raw)} / {len(gold_ids)}")
+
+        if dropped_from_gold:
+            w(self.style.WARNING(
+                f"  DROPPED (already assigned): "
+                f"{len(dropped_from_gold)} -> "
+                + ", ".join(dropped_from_gold)
+            ))
+            w("    (--exclude-assigned-gold; the top-up grows to "
+              "compensate)")
 
         if gold_not_raw:
             w(self.style.ERROR(
@@ -603,16 +735,25 @@ class Command(BaseCommand):
                 + ", ".join(gold_not_in_map[:10])
             ))
 
-        if gold_already_assigned:
+        # Recomputed against the kept gold, so this reflects what is
+        # actually still in the pool rather than what the file listed.
+        still_assigned = [
+            blind_id
+            for blind_id in gold_ids
+            if blind_id in assigned_ids
+        ]
+
+        if still_assigned:
             w(self.style.WARNING(
                 f"  already assigned      : "
-                f"{len(gold_already_assigned)} -> "
-                + ", ".join(gold_already_assigned)
+                f"{len(still_assigned)} -> "
+                + ", ".join(still_assigned)
             ))
             w("    (kept in the pool; create_review_assignments "
-              "skips pairs that already exist)")
+              "skips pairs that already exist. Pass "
+              "--exclude-assigned-gold to drop them instead)")
         else:
-            w("  already assigned      : none")
+            w("  already assigned      : none remaining")
 
         w("")
         w("=" * 62)
