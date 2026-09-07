@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import (
     CourseModule,
@@ -16,7 +17,7 @@ from .models import (
 
 @admin.register(LearningProgram)
 class LearningProgramAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "title",
@@ -39,7 +40,7 @@ class LearningProgramAdmin(
 
 @admin.register(LearningCourse)
 class LearningCourseAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "title",
@@ -65,7 +66,7 @@ class LearningCourseAdmin(
 
 @admin.register(CourseModule)
 class CourseModuleAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "title",
@@ -84,7 +85,7 @@ class CourseModuleAdmin(
 
 @admin.register(LearningItem)
 class LearningItemAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "title",
@@ -116,7 +117,7 @@ class LearningItemAdmin(
     LearningItemQuestion
 )
 class LearningItemQuestionAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "learning_item",
@@ -127,7 +128,7 @@ class LearningItemQuestionAdmin(
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "student",
@@ -144,7 +145,7 @@ class EnrollmentAdmin(
 
 @admin.register(LearningProgress)
 class LearningProgressAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "student",
@@ -161,7 +162,7 @@ class LearningProgressAdmin(
 
 @admin.register(LearnerError)
 class LearnerErrorAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "student",
@@ -189,7 +190,7 @@ class LearnerErrorAdmin(
 
 @admin.register(Resource)
 class ResourceAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "title",
@@ -219,7 +220,7 @@ class ResourceAdmin(
 
 @admin.register(GuideResource)
 class GuideResourceAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "title",

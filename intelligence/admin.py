@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import (
     AIInteractionEvent,
@@ -13,7 +14,7 @@ from .models import (
     QuestionAISuggestion
 )
 class QuestionAISuggestionAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
 
     list_display = (
@@ -43,7 +44,7 @@ class QuestionAISuggestionAdmin(
     LearnerInsightSnapshot
 )
 class LearnerInsightSnapshotAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
 
     list_display = (
@@ -71,7 +72,7 @@ class LearnerInsightSnapshotAdmin(
     GeneratedQuestionDraft
 )
 class GeneratedQuestionDraftAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
 
     list_display = (
@@ -104,7 +105,7 @@ class GeneratedQuestionDraftAdmin(
     AIInteractionEvent
 )
 class AIInteractionEventAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
 
     list_display = (
@@ -143,7 +144,7 @@ class AIInteractionEventAdmin(
 
 @admin.register(AIProviderConfiguration)
 class AIProviderConfigurationAdmin(
-    admin.ModelAdmin
+    ModelAdmin
 ):
     list_display = (
         "user",

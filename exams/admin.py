@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 
 from .models import (
     Exam,
@@ -9,7 +10,7 @@ from .models import (
 )
 
 
-class ExamQuestionInline(admin.TabularInline):
+class ExamQuestionInline(TabularInline):
     model = ExamQuestion
     extra = 0
     autocomplete_fields = [
@@ -28,7 +29,7 @@ class ExamQuestionInline(admin.TabularInline):
 
 
 @admin.register(Exam)
-class ExamAdmin(admin.ModelAdmin):
+class ExamAdmin(ModelAdmin):
     list_display = [
         "id",
         "title",
@@ -73,7 +74,7 @@ class ExamAdmin(admin.ModelAdmin):
 
 
 @admin.register(ExamQuestion)
-class ExamQuestionAdmin(admin.ModelAdmin):
+class ExamQuestionAdmin(ModelAdmin):
     list_display = [
         "id",
         "exam",
@@ -105,7 +106,7 @@ class ExamQuestionAdmin(admin.ModelAdmin):
 
 
 @admin.register(ExamAttempt)
-class ExamAttemptAdmin(admin.ModelAdmin):
+class ExamAttemptAdmin(ModelAdmin):
     list_display = [
         "id",
         "exam",
@@ -142,7 +143,7 @@ class ExamAttemptAdmin(admin.ModelAdmin):
 
 
 @admin.register(StudentAnswer)
-class StudentAnswerAdmin(admin.ModelAdmin):
+class StudentAnswerAdmin(ModelAdmin):
     list_display = [
         "id",
         "attempt",
@@ -176,7 +177,7 @@ class StudentAnswerAdmin(admin.ModelAdmin):
 
 
 @admin.register(ExamEvent)
-class ExamEventAdmin(admin.ModelAdmin):
+class ExamEventAdmin(ModelAdmin):
     list_display = [
         "id",
         "attempt",

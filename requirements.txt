@@ -12,6 +12,18 @@ sqlparse==0.5.5
 tzdata==2026.3
 python-dotenv==1.2.2
 
+# --- Admin theme ---
+# Reskins django.contrib.admin. Pure presentation: it ships templates,
+# CSS and self-hosted Inter/Material Symbols fonts, and pulls in no
+# dependency beyond Django itself. Must stay ahead of
+# django.contrib.admin in INSTALLED_APPS - see config/settings.py.
+#
+# CAVEAT: this is the one dependency that narrows the Python range the
+# note above advertises - it requires >=3.12, so a host stuck on 3.10
+# or 3.11 can run AeroESP only with this line removed (and the UNFOLD
+# block plus the unfold imports in the six apps' admin.py reverted).
+django-unfold==0.105.0
+
 # --- Database ---
 psycopg==3.3.4
 psycopg-binary==3.3.4

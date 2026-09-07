@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.db.models import Q
 from django.utils import timezone
 
+from unfold.admin import ModelAdmin
+
 from accounts.models import (
     CustomUser,
     TeacherProfile,
@@ -58,7 +60,7 @@ class AerospaceTopicAdminForm(forms.ModelForm):
 # =========================================================
 
 @admin.register(AerospaceDomain)
-class AerospaceDomainAdmin(admin.ModelAdmin):
+class AerospaceDomainAdmin(ModelAdmin):
 
     list_display = (
         "code",
@@ -91,7 +93,7 @@ class AerospaceDomainAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(AerospaceTopic)
-class AerospaceTopicAdmin(admin.ModelAdmin):
+class AerospaceTopicAdmin(ModelAdmin):
 
     form = AerospaceTopicAdminForm
 
@@ -294,7 +296,7 @@ class AerospaceTopicAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(Question)
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(ModelAdmin):
 
     list_display = (
         "id",

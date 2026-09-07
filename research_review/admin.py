@@ -1,6 +1,8 @@
 from django.contrib import admin, messages
 from django.db import transaction
 
+from unfold.admin import ModelAdmin
+
 from .models import (
     ExpertReviewerProfile,
     ExpertReview,
@@ -17,7 +19,7 @@ from .models import (
 # =========================================================
 
 @admin.register(ResearchExperiment)
-class ResearchExperimentAdmin(admin.ModelAdmin):
+class ResearchExperimentAdmin(ModelAdmin):
 
     list_display = (
         "source_id",
@@ -68,7 +70,7 @@ class ResearchExperimentAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(ResearchRun)
-class ResearchRunAdmin(admin.ModelAdmin):
+class ResearchRunAdmin(ModelAdmin):
 
     list_display = (
         "run_id",
@@ -124,7 +126,7 @@ class ResearchRunAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(ResearchQuestion)
-class ResearchQuestionAdmin(admin.ModelAdmin):
+class ResearchQuestionAdmin(ModelAdmin):
 
     list_display = (
         "blind_id",
@@ -203,7 +205,7 @@ class ResearchQuestionAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(ExpertReviewerProfile)
-class ExpertReviewerProfileAdmin(admin.ModelAdmin):
+class ExpertReviewerProfileAdmin(ModelAdmin):
 
     list_display = (
         "reviewer_code",
@@ -259,7 +261,7 @@ class ExpertReviewerProfileAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(ReviewAssignment)
-class ReviewAssignmentAdmin(admin.ModelAdmin):
+class ReviewAssignmentAdmin(ModelAdmin):
 
     list_display = (
         "id",
@@ -350,7 +352,7 @@ class ReviewAssignmentAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(ExpertReview)
-class ExpertReviewAdmin(admin.ModelAdmin):
+class ExpertReviewAdmin(ModelAdmin):
 
     list_display = (
         "id",
@@ -513,7 +515,7 @@ class ExpertReviewAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(ReviewAuditLog)
-class ReviewAuditLogAdmin(admin.ModelAdmin):
+class ReviewAuditLogAdmin(ModelAdmin):
 
     list_display = (
         "id",

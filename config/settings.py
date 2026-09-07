@@ -16,6 +16,8 @@ import ipaddress
 import os
 import sys
 
+from django.templatetags.static import static
+from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -137,6 +139,13 @@ AEROESP_LEGACY_HOSTS = [
 
 # Application definition
 INSTALLED_APPS = [
+    # Unfold and its contrib apps must precede django.contrib.admin:
+    # they win the template-loader race for admin/*.html, which is how
+    # the admin gets reskinned without touching any view logic.
+    "unfold",
+    "unfold.contrib.filters",
+    "unfold.contrib.forms",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -857,6 +866,369 @@ AEROESP_CAPTCHA_TTL_MINUTES = 10
 
 # Only ever true in config/test_settings.py.
 AEROESP_CAPTCHA_TEST_MODE = False
+
+
+# =========================================================
+# Admin theme (django-unfold)
+# =========================================================
+
+# Presentation only. Unfold overrides the admin's templates and static
+# files; it does not touch ModelAdmin behaviour, so every list_filter,
+# search_fields, fieldset, inline and custom action in the six apps'
+# admin.py keeps working exactly as before.
+#
+# Colours are emitted verbatim into CSS custom properties
+# (--color-primary-600 and friends) by unfold/layouts/skeleton.html, so
+# these are ordinary CSS colours rather than a bespoke format. They are
+# expressed in OKLCh because the ramp was generated perceptually: a
+# fixed hue and a chroma curve over an even lightness ladder, which is
+# what keeps the light tints from going grey and the dark shades from
+# going muddy.
+
+UNFOLD = {
+
+    # SITE_TITLE is the browser-tab suffix, appended after the page's
+    # own title ("{{ title }} | {{ site_title }}"). It has to differ
+    # from admin.site.index_title, or the tab on the dashboard reads
+    # "AeroESP Administration | AeroESP Administration".
+    "SITE_TITLE": "AeroESP Admin",
+    "SITE_HEADER": "AeroESP Administration",
+    "SITE_SUBHEADER": "Platform Management",
+
+    # No "THEME" key on purpose. Setting it to "light" or "dark" pins
+    # the admin to that mode and hides the switcher; leaving it unset
+    # is what gives the light/dark/System control, defaulting to
+    # System - i.e. the OS preference.
+
+    # Matches the pre-Unfold admin.site.site_url set in accounts/admin.py:
+    # "View site" opens the Account Center, not the marketing homepage.
+    "SITE_URL": "/accounts/account/",
+
+    "SITE_ICON": lambda request: static(
+        "aeroesp/brand/aeroesp-symbol.svg"
+    ),
+
+    # The horizontal lockup, per colour scheme. The "-dark" file is the
+    # artwork drawn FOR dark backgrounds, so it belongs to the dark key.
+    "SITE_LOGO": {
+        "light": lambda request: static(
+            "aeroesp/brand/aeroesp-logo-horizontal.svg"
+        ),
+        "dark": lambda request: static(
+            "aeroesp/brand/aeroesp-logo-horizontal-dark.svg"
+        ),
+    },
+
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "type": "image/svg+xml",
+            "href": lambda request: static(
+                "aeroesp/brand/favicon.svg"
+            ),
+        },
+    ],
+
+    # Follow the operating system's light/dark preference. Setting this
+    # to None (rather than forcing a mode) is what leaves the toggle in
+    # the user's hands.
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "BORDER_RADIUS": "8px",
+
+    "COLORS": {
+
+        # Neutral chrome, pulled off the brand's blue-grey axis
+        # (hue 242) instead of Unfold's stock cool grey - base-900
+        # lands on #071926, which is literally --aero-ink.
+        "base": {
+            "50": "oklch(98.5% 0.003 242)",
+            "100": "oklch(96.7% 0.006 242)",
+            "200": "oklch(92.8% 0.011 242)",
+            "300": "oklch(87.2% 0.017 242)",
+            "400": "oklch(70.7% 0.026 242)",
+            "500": "oklch(55.1% 0.032 242)",
+            "600": "oklch(44.6% 0.036 242)",
+            "700": "oklch(37.3% 0.041 242)",
+            "800": "oklch(27.8% 0.043 242)",
+            "900": "oklch(21.0% 0.038 242)",
+            "950": "oklch(14.0% 0.030 242)",
+        },
+
+        # Anchored so primary-600 - the weight Unfold uses for buttons
+        # and links in light mode - is exactly --aero-blue #1878f2.
+        "primary": {
+            "50": "oklch(97.8% 0.018 257.6)",
+            "100": "oklch(95.0% 0.040 257.6)",
+            "200": "oklch(90.7% 0.077 257.6)",
+            "300": "oklch(83.8% 0.125 257.6)",
+            "400": "oklch(74.0% 0.178 257.6)",
+            "500": "oklch(66.3% 0.196 257.6)",
+            "600": "oklch(59.1% 0.202 257.6)",
+            "700": "oklch(52.0% 0.186 257.6)",
+            "800": "oklch(45.2% 0.162 257.6)",
+            "900": "oklch(39.2% 0.137 257.6)",
+            "950": "oklch(29.8% 0.109 257.6)",
+        },
+
+        "font": {
+            "subtle-light": "var(--color-base-500)",
+            "subtle-dark": "var(--color-base-400)",
+            "default-light": "var(--color-base-600)",
+            "default-dark": "var(--color-base-300)",
+            "important-light": "var(--color-base-900)",
+            "important-dark": "var(--color-base-100)",
+        },
+    },
+
+    # No "STYLES" entry is needed for typography: Unfold self-hosts
+    # Inter (unfold/static/unfold/fonts/inter), which is the same
+    # typeface static/aeroesp/css/app.css asks for on the public site.
+    # It ships the font files rather than pulling them from Google
+    # Fonts, which also suits a deployment that cannot rely on
+    # third-party CDNs being reachable.
+
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Accounts",
+                "separator": False,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": reverse_lazy(
+                            "admin:accounts_customuser_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Students",
+                        "icon": "school",
+                        "link": reverse_lazy(
+                            "admin:accounts_studentprofile_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Teachers",
+                        "icon": "cast_for_education",
+                        "link": reverse_lazy(
+                            "admin:accounts_teacherprofile_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Help Guides",
+                        "icon": "help",
+                        "link": reverse_lazy(
+                            "admin:accounts_helpguide_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": "Assessment",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Domains",
+                        "icon": "rocket_launch",
+                        "link": reverse_lazy(
+                            "admin:assessment_aerospacedomain_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Topics",
+                        "icon": "topic",
+                        "link": reverse_lazy(
+                            "admin:assessment_aerospacetopic_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Question Bank",
+                        "icon": "quiz",
+                        "link": reverse_lazy(
+                            "admin:assessment_question_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": "Exams",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Exams",
+                        "icon": "assignment",
+                        "link": reverse_lazy(
+                            "admin:exams_exam_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Attempts",
+                        "icon": "history_edu",
+                        "link": reverse_lazy(
+                            "admin:exams_examattempt_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Answers",
+                        "icon": "fact_check",
+                        "link": reverse_lazy(
+                            "admin:exams_studentanswer_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Events",
+                        "icon": "monitoring",
+                        "link": reverse_lazy(
+                            "admin:exams_examevent_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": "Learning",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Programs",
+                        "icon": "workspace_premium",
+                        "link": reverse_lazy(
+                            "admin:learning_learningprogram_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Courses",
+                        "icon": "menu_book",
+                        "link": reverse_lazy(
+                            "admin:learning_learningcourse_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Enrollments",
+                        "icon": "how_to_reg",
+                        "link": reverse_lazy(
+                            "admin:learning_enrollment_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Progress",
+                        "icon": "trending_up",
+                        "link": reverse_lazy(
+                            "admin:learning_learningprogress_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Resources",
+                        "icon": "folder_open",
+                        "link": reverse_lazy(
+                            "admin:learning_resource_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": "Intelligence",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "AI Providers",
+                        "icon": "settings_input_component",
+                        "link": reverse_lazy(
+                            "admin:intelligence_aiproviderconfiguration"
+                            "_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Question Suggestions",
+                        "icon": "lightbulb",
+                        "link": reverse_lazy(
+                            "admin:intelligence_questionaisuggestion"
+                            "_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Generated Drafts",
+                        "icon": "auto_awesome",
+                        "link": reverse_lazy(
+                            "admin:intelligence_generatedquestiondraft"
+                            "_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Interaction Events",
+                        "icon": "insights",
+                        "link": reverse_lazy(
+                            "admin:intelligence_aiinteractionevent"
+                            "_changelist"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": "Research Review",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Experiments",
+                        "icon": "science",
+                        "link": reverse_lazy(
+                            "admin:research_review_researchexperiment"
+                            "_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Runs",
+                        "icon": "play_circle",
+                        "link": reverse_lazy(
+                            "admin:research_review_researchrun_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Research Questions",
+                        "icon": "help_center",
+                        "link": reverse_lazy(
+                            "admin:research_review_researchquestion"
+                            "_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Reviewers",
+                        "icon": "groups",
+                        "link": reverse_lazy(
+                            "admin:research_review_expertreviewerprofile"
+                            "_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Assignments",
+                        "icon": "assignment_ind",
+                        "link": reverse_lazy(
+                            "admin:research_review_reviewassignment"
+                            "_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Expert Reviews",
+                        "icon": "rate_review",
+                        "link": reverse_lazy(
+                            "admin:research_review_expertreview_changelist"
+                        ),
+                    },
+                    {
+                        "title": "Audit Log",
+                        "icon": "receipt_long",
+                        "link": reverse_lazy(
+                            "admin:research_review_reviewauditlog"
+                            "_changelist"
+                        ),
+                    },
+                ],
+            },
+        ],
+    },
+}
 
 
 # =========================================================

@@ -2,6 +2,13 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 
+from unfold.admin import ModelAdmin
+from unfold.forms import (
+    AdminPasswordChangeForm,
+    UserChangeForm,
+    UserCreationForm,
+)
+
 from .models import (
     CustomUser,
     HelpGuide,
@@ -28,7 +35,17 @@ admin.site.site_url = "/accounts/account/"
 # =========================================================
 
 @admin.register(CustomUser)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin, ModelAdmin):
+
+    # UserAdmin first so its fieldsets/add_fieldsets and password
+    # handling still win; ModelAdmin second purely for Unfold's
+    # rendering. The three form overrides are Unfold's restyled
+    # versions of the stock auth forms - same validation, same
+    # password hashing, only the widgets differ. Without them the
+    # password field renders as unstyled markup inside the new theme.
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
 
     search_fields = (
         "username",
@@ -47,7 +64,7 @@ class CustomUserAdmin(UserAdmin):
 # =========================================================
 
 @admin.register(StudentProfile)
-class StudentProfileAdmin(admin.ModelAdmin):
+class StudentProfileAdmin(ModelAdmin):
 
     list_display = (
         "user",
@@ -83,7 +100,7 @@ class StudentProfileAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(TeacherProfile)
-class TeacherProfileAdmin(admin.ModelAdmin):
+class TeacherProfileAdmin(ModelAdmin):
 
     list_display = (
         "user",
@@ -146,7 +163,7 @@ class TeacherProfileAdmin(admin.ModelAdmin):
 # =========================================================
 
 @admin.register(HelpGuide)
-class HelpGuideAdmin(admin.ModelAdmin):
+class HelpGuideAdmin(ModelAdmin):
 
     list_display = (
         "title",
