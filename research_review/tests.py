@@ -1,5 +1,12 @@
+import csv
+import os
+import tempfile
+from io import StringIO
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 from django.urls import reverse
 
@@ -462,3 +469,285 @@ class QuestionProvenanceBlindingTests(ReviewFixtureMixin, TestCase):
         )
 
         self.assertContains(response, "AI Generated")
+
+
+class CreateReviewAssignmentsCommandTests(TestCase):
+    """
+    Part (D): random, balanced, reproducible reviewer assignment.
+    """
+
+    def setUp(self):
+
+        self.experiment = ResearchExperiment.objects.create(
+            experiment_id="R901",
+            source_id="R901",
+            domain="Structures",
+            topic="Fatigue",
+            protocol="P1",
+        )
+
+        self.run = ResearchRun.objects.create(
+            experiment=self.experiment,
+            run_id="R901-run-1",
+            provider="OpenAI",
+        )
+
+        self.blind_ids = []
+
+        for i in range(1, 8):
+
+            question = ResearchQuestion.objects.create(
+                run=self.run,
+                blind_id=f"R901-Q{i:03d}",
+                item_number=i,
+                skill="main_idea",
+                stem=f"Stem {i}",
+                option_a="a",
+                option_b="b",
+                option_c="c",
+                option_d="d",
+                correct_answer="A",
+            )
+
+            self.blind_ids.append(question.blind_id)
+
+        self.reviewers = []
+
+        for i in range(1, 5):
+
+            user = get_user_model().objects.create_user(
+                username=f"balreviewer{i}",
+                email=f"balreviewer{i}@example.com",
+                password="AeroESP-Strong-2026",
+            )
+
+            self.reviewers.append(
+                ExpertReviewerProfile.objects.create(
+                    user=user,
+                    discipline="AEROSPACE",
+                    is_active_reviewer=True,
+                )
+            )
+
+        # An inactive reviewer must never be selected.
+        inactive_user = get_user_model().objects.create_user(
+            username="inactive_reviewer",
+            email="inactive_reviewer@example.com",
+        )
+
+        self.inactive_reviewer = ExpertReviewerProfile.objects.create(
+            user=inactive_user,
+            discipline="AEROSPACE",
+            is_active_reviewer=False,
+        )
+
+    def _run(self, **kwargs):
+
+        out = StringIO()
+
+        kwargs.setdefault(
+            "blind_ids",
+            ",".join(self.blind_ids),
+        )
+
+        call_command(
+            "create_review_assignments",
+            stdout=out,
+            **kwargs,
+        )
+
+        return out.getvalue()
+
+    def test_dry_run_writes_nothing_to_the_database(self):
+
+        self._run(k=2, seed=42, dry_run=True)
+
+        self.assertEqual(
+            ReviewAssignment.objects.count(),
+            0,
+        )
+
+    def test_real_run_creates_len_questions_times_k_assignments(self):
+
+        self._run(k=2, seed=42)
+
+        self.assertEqual(
+            ReviewAssignment.objects.count(),
+            len(self.blind_ids) * 2,
+        )
+
+    def test_inactive_reviewers_are_never_selected(self):
+
+        self._run(k=2, seed=42)
+
+        self.assertFalse(
+            ReviewAssignment.objects.filter(
+                reviewer=self.inactive_reviewer
+            ).exists()
+        )
+
+    def test_load_is_balanced_within_one(self):
+
+        self._run(k=2, seed=1)
+
+        counts = [
+            ReviewAssignment.objects.filter(
+                reviewer=reviewer
+            ).count()
+            for reviewer in self.reviewers
+        ]
+
+        self.assertLessEqual(
+            max(counts) - min(counts),
+            1,
+        )
+
+    def test_each_reviewer_sees_a_different_display_order(self):
+        """
+        The spec explicitly requires two reviewers to see their
+        shared questions in a different order from one another.
+        """
+
+        self._run(k=4, seed=7)
+
+        orders = [
+            tuple(
+                ReviewAssignment.objects
+                .filter(reviewer=reviewer)
+                .order_by("display_order")
+                .values_list("question__blind_id", flat=True)
+            )
+            for reviewer in self.reviewers
+        ]
+
+        # With 4 reviewers all seeing all 7 questions (k == reviewer
+        # count), every reviewer has the same *set* - identical order
+        # for all of them would mean no per-reviewer randomisation
+        # happened at all.
+        self.assertGreater(
+            len(set(orders)),
+            1,
+        )
+
+    def test_same_seed_reproduces_the_identical_plan(self):
+
+        self._run(k=2, seed=99)
+
+        first_plan = set(
+            ReviewAssignment.objects.values_list(
+                "reviewer_id", "question_id", "display_order"
+            )
+        )
+
+        ReviewAssignment.objects.all().delete()
+
+        self._run(k=2, seed=99)
+
+        second_plan = set(
+            ReviewAssignment.objects.values_list(
+                "reviewer_id", "question_id", "display_order"
+            )
+        )
+
+        self.assertEqual(first_plan, second_plan)
+
+    def test_different_seeds_produce_different_plans(self):
+
+        self._run(k=2, seed=1)
+
+        plan_a = set(
+            ReviewAssignment.objects.values_list(
+                "reviewer_id", "question_id"
+            )
+        )
+
+        ReviewAssignment.objects.all().delete()
+
+        self._run(k=2, seed=2)
+
+        plan_b = set(
+            ReviewAssignment.objects.values_list(
+                "reviewer_id", "question_id"
+            )
+        )
+
+        self.assertNotEqual(plan_a, plan_b)
+
+    def test_omitting_seed_still_prints_one_for_reproducibility(self):
+
+        output = self._run(k=2)
+
+        self.assertIn("Seed used:", output)
+
+    def test_rerun_is_idempotent(self):
+
+        self._run(k=2, seed=42)
+        self._run(k=2, seed=42)
+
+        self.assertEqual(
+            ReviewAssignment.objects.count(),
+            len(self.blind_ids) * 2,
+        )
+
+    def test_unknown_blind_id_raises_before_writing_anything(self):
+
+        with self.assertRaises(CommandError):
+            self._run(
+                k=2,
+                seed=1,
+                blind_ids="R901-Q001,NOT-A-REAL-ID",
+            )
+
+        self.assertEqual(
+            ReviewAssignment.objects.count(),
+            0,
+        )
+
+    def test_k_greater_than_active_reviewers_raises(self):
+
+        with self.assertRaises(CommandError):
+            self._run(k=99, seed=1)
+
+    def test_inline_blind_ids_and_csv_are_mutually_exclusive(self):
+
+        with self.assertRaises(CommandError):
+            self._run(
+                k=2,
+                seed=1,
+                csv_path="/dev/null",
+            )
+
+    def test_reads_blind_ids_from_a_csv_file(self):
+
+        csv_path = os.path.join(
+            tempfile.gettempdir(),
+            "aeroesp_test_assignments.csv",
+        )
+
+        with open(csv_path, "w", newline="") as handle:
+            writer = csv.writer(handle)
+            writer.writerow(["blind_id"])
+            for blind_id in self.blind_ids[:3]:
+                writer.writerow([blind_id])
+
+        try:
+            self._run(
+                k=2,
+                seed=1,
+                blind_ids=None,
+                csv_path=csv_path,
+            )
+        finally:
+            os.remove(csv_path)
+
+        self.assertEqual(
+            ReviewAssignment.objects.count(),
+            6,
+        )
+
+    def test_seed_is_printed_in_dry_run_output_too(self):
+
+        output = self._run(k=2, seed=123, dry_run=True)
+
+        self.assertIn("123", output)
+        self.assertIn("DRY RUN", output)
