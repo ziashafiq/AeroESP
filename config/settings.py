@@ -86,13 +86,16 @@ _default_hosts = (
     else ""
 )
 
-# A custom domain and its www variant are added here purely by setting
-# DJANGO_ALLOWED_HOSTS on the host - never hardcoded, so the same code
-# runs unmodified behind any domain. The platform's own default host
-# (e.g. a *.liara.run subdomain) must stay listed here too even after a
-# custom domain is live: Django rejects a disallowed Host header with
-# DisallowedHost before CanonicalDomainMiddleware (below) ever runs, so
-# dropping the old host would turn its 301-to-canonical into a 400.
+# A custom domain is added here purely by setting DJANGO_ALLOWED_HOSTS
+# on the host - never hardcoded, so the same code runs unmodified
+# behind any domain. Only the canonical host (no www, no legacy
+# platform subdomain) strictly needs to be listed: CanonicalDomainMiddleware
+# reads the raw Host header, ahead of Django's own ALLOWED_HOSTS check,
+# specifically so www and the platform's default host still 301 to the
+# canonical domain even if left out here. Keeping them listed too is
+# harmless and is what CSRF_TRUSTED_ORIGINS below needs regardless,
+# since a same-site POST can arrive with an Origin header naming
+# whichever host the browser was actually on.
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
@@ -102,9 +105,6 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
-# Every origin a same-site POST can legitimately arrive from - both
-# the canonical domain and its www variant need to be listed, since
-# the browser sends the Origin header the visitor is actually on.
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
@@ -112,6 +112,26 @@ CSRF_TRUSTED_ORIGINS = [
         "",
     ).split(",")
     if origin.strip()
+]
+
+# The apex domain every other host redirects to. Empty (the default)
+# makes CanonicalDomainMiddleware a no-op - unset in local development
+# and on any deploy that has no custom domain yet.
+AEROESP_CANONICAL_HOST = os.getenv(
+    "AEROESP_CANONICAL_HOST",
+    "",
+).strip().lower()
+
+# Extra hosts (comma-separated) that should 301 to the canonical
+# domain besides its own www subdomain - typically the platform's
+# default *.liara.run address once the custom domain is live.
+AEROESP_LEGACY_HOSTS = [
+    host.strip().lower()
+    for host in os.getenv(
+        "AEROESP_LEGACY_HOSTS",
+        "",
+    ).split(",")
+    if host.strip()
 ]
 
 
@@ -135,6 +155,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First, so the www/legacy-host redirect happens in a single hop
+    # rather than after SecurityMiddleware's separate HTTP->HTTPS one.
+    'config.middleware.CanonicalDomainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
