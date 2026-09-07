@@ -553,6 +553,15 @@
                     Terms of Use
                 </a>
 
+                {% if AEROESP_SUPPORT_EMAIL %}
+                    <a
+                        href="mailto:{{ AEROESP_SUPPORT_EMAIL }}"
+                        class="sidebar-account-link"
+                    >
+                        Report a problem
+                    </a>
+                {% endif %}
+
 
                 <form
                     method="post"

@@ -1603,3 +1603,52 @@ class ReviewerGettingStartedPageTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+
+
+class SupportContactLinkTests(TestCase):
+    """
+    A support address configured anywhere reaches every page through
+    accounts.context_processors.support_email, so reviewers always
+    have a way to report a problem.
+    """
+
+    def test_public_footer_shows_a_report_link_when_configured(self):
+
+        with self.settings(AEROESP_SUPPORT_EMAIL="help@example.com"):
+
+            response = self.client.get(reverse("home"))
+
+            self.assertContains(
+                response,
+                "mailto:help@example.com",
+            )
+
+    def test_signed_in_sidebar_shows_a_report_link_when_configured(self):
+
+        user = get_user_model().objects.create_user(
+            username="supportcheck",
+            email="supportcheck@example.com",
+            password="AeroESP-Strong-2026",
+        )
+        StudentProfile.objects.create(user=user)
+
+        self.client.force_login(user)
+
+        with self.settings(AEROESP_SUPPORT_EMAIL="help@example.com"):
+
+            response = self.client.get(
+                reverse("accounts:account_center")
+            )
+
+            self.assertContains(
+                response,
+                "mailto:help@example.com",
+            )
+
+    def test_no_broken_mailto_when_support_email_is_unset(self):
+
+        with self.settings(AEROESP_SUPPORT_EMAIL=""):
+
+            response = self.client.get(reverse("home"))
+
+            self.assertNotContains(response, "mailto:")

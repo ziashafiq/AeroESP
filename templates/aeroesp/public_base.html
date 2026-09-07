@@ -288,6 +288,12 @@
         <a href="{% url 'terms' %}">
             Terms of Use
         </a>
+
+        {% if AEROESP_SUPPORT_EMAIL %}
+            <a href="mailto:{{ AEROESP_SUPPORT_EMAIL }}">
+                Report a problem
+            </a>
+        {% endif %}
     </div>
 
 
