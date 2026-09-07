@@ -1,0 +1,32 @@
+{% extends "aeroesp/public_base.html" %}
+
+
+{% block title %}
+Guides & Getting Started · AeroESP
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="legal-page help-list-page">
+
+    <div class="page-eyebrow">
+        AeroESP
+    </div>
+
+    <h1>
+        Guides &amp; getting started
+    </h1>
+
+    <p class="legal-updated">
+        Pick the guide that matches what you are doing on AeroESP.
+    </p>
+
+
+    {% include "accounts/_help_guide_groups.html" %}
+
+</section>
+
+
+{% endblock %}

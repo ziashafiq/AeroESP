@@ -9,6 +9,12 @@ app_name = "research_review"
 urlpatterns = [
 
     path(
+        "getting-started/",
+        views.getting_started,
+        name="getting_started",
+    ),
+
+    path(
         "",
         views.reviewer_dashboard,
         name="dashboard",

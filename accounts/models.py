@@ -243,3 +243,89 @@ class CaptchaChallenge(models.Model):
 
     def __str__(self):
         return f"captcha {self.key[:8]}"
+
+
+class HelpGuide(models.Model):
+    """
+    An admin-editable piece of onboarding/help content.
+
+    Exists so that "how do I use this" documentation can be written and
+    corrected by the site owner from the Django admin - text, an
+    uploaded file (PDF, slides), or both - without touching code or
+    asking a developer to redeploy for a wording fix.
+    """
+
+    class Audience(models.TextChoices):
+        EVERYONE = "EVERYONE", "Everyone"
+        STUDENT = "STUDENT", "Student"
+        TEACHER = "TEACHER", "Teacher"
+        EXPERT_REVIEWER = "EXPERT_REVIEWER", "Expert Reviewer"
+
+    audience = models.CharField(
+        max_length=20,
+        choices=Audience.choices,
+        default=Audience.EVERYONE,
+        help_text=(
+            "Who this guide is for. It appears on the public list for "
+            "everyone, and is what the in-app Help icon matches "
+            "against the signed-in user's role."
+        ),
+    )
+
+    slug = models.SlugField(
+        max_length=140,
+        unique=True,
+        help_text=(
+            "Used in the guide's URL. "
+            "'expert-reviewer-getting-started' is used automatically "
+            "by the /expert-review/getting-started/ link if present."
+        ),
+    )
+
+    title = models.CharField(
+        max_length=200,
+    )
+
+    summary = models.CharField(
+        max_length=300,
+        blank=True,
+        help_text="Short teaser shown next to the link on the list.",
+    )
+
+    body = models.TextField(
+        blank=True,
+        help_text=(
+            "Plain text is fine - line breaks are preserved. Leave "
+            "empty for a file-only guide."
+        ),
+    )
+
+    attachment = models.FileField(
+        upload_to="guides/",
+        blank=True,
+        null=True,
+        help_text="Optional: a PDF or document to offer for download.",
+    )
+
+    is_published = models.BooleanField(
+        default=True,
+    )
+
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Lower numbers appear first within the same audience.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("audience", "order", "title")
+
+    def __str__(self):
+        return f"{self.get_audience_display()} - {self.title}"
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+
+        return reverse("help_detail", args=[self.slug])

@@ -16184,3 +16184,111 @@ a.auth-submit {
 .auth-checkbox-label span a {
     color: var(--theme-accent-strong);
 }
+
+
+/* Topbar Help icon */
+
+.topbar-help {
+    display: grid;
+    place-items: center;
+
+    width: 32px;
+    height: 32px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 12px;
+
+    color: var(--theme-text-soft);
+    background: var(--theme-surface);
+
+    text-decoration: none;
+
+    transition:
+        color 150ms ease,
+        background 150ms ease,
+        transform 150ms ease;
+}
+
+.topbar-help:hover {
+    color: var(--theme-accent-strong);
+    background: var(--theme-surface-soft);
+}
+
+.topbar-help:active {
+    transform: scale(0.94);
+}
+
+.topbar-help svg {
+    width: 17px;
+    height: 17px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* Guide list (public /help/ page) */
+
+.help-group {
+    margin-top: 32px;
+}
+
+.help-group:first-of-type {
+    margin-top: 8px;
+}
+
+.help-group h2 {
+    margin-bottom: 12px;
+
+    font-size: 16px;
+
+    color: var(--theme-text);
+}
+
+.help-group-highlighted h2 {
+    color: var(--theme-accent-strong);
+}
+
+.help-guide-list {
+    list-style: none;
+
+    margin: 0;
+    padding: 0;
+
+    display: grid;
+    gap: 10px;
+}
+
+.help-guide-list li {
+    padding: 14px 16px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 12px;
+
+    background: var(--theme-surface);
+}
+
+.help-guide-list a {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: var(--theme-text);
+
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+.help-guide-list a:hover {
+    color: var(--theme-accent-strong);
+}
+
+.help-guide-list span {
+    color: var(--theme-text-soft);
+
+    font-size: 12px;
+}

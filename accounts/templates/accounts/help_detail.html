@@ -1,0 +1,59 @@
+{% extends "aeroesp/public_base.html" %}
+
+
+{% block title %}
+{{ guide.title }} · AeroESP
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="legal-page">
+
+    <div class="page-eyebrow">
+        {{ guide.get_audience_display }}
+    </div>
+
+    <h1>
+        {{ guide.title }}
+    </h1>
+
+    {% if guide.summary %}
+        <p class="legal-updated">
+            {{ guide.summary }}
+        </p>
+    {% endif %}
+
+
+    {% if guide.body %}
+        <div class="legal-body">
+            <p>{{ guide.body|linebreaksbr }}</p>
+        </div>
+    {% endif %}
+
+
+    {% if guide.attachment %}
+        <p>
+            <a
+                href="{{ guide.attachment.url }}"
+                class="public-button public-button-secondary"
+                target="_blank"
+                rel="noopener"
+            >
+                Download attachment
+            </a>
+        </p>
+    {% endif %}
+
+
+    <div class="legal-back-link">
+        <a href="{% url 'help_list' %}">
+            ← All guides
+        </a>
+    </div>
+
+</section>
+
+
+{% endblock %}

@@ -27,6 +27,7 @@ PNG_MAGIC = bytes.fromhex("89504E47")
 from .models import (
     CaptchaChallenge,
     EmailVerificationCode,
+    HelpGuide,
     StudentProfile,
     TeacherProfile,
 )
@@ -1405,3 +1406,200 @@ class TermsOfUseTests(TestCase):
             response,
             reverse("terms"),
         )
+
+
+class HelpGuideTests(TestCase):
+    """
+    Guides must be editable purely through the admin (no code touched
+    to publish or correct one) and must reach the right audience.
+    """
+
+    def setUp(self):
+
+        self.student_guide = HelpGuide.objects.create(
+            audience=HelpGuide.Audience.STUDENT,
+            slug="student-getting-started",
+            title="Getting started as a Student",
+            summary="How to begin learning on AeroESP.",
+            body="Line one.\nLine two.",
+        )
+
+        self.reviewer_guide = HelpGuide.objects.create(
+            audience=HelpGuide.Audience.EXPERT_REVIEWER,
+            slug="expert-reviewer-getting-started",
+            title="Reviewing AI-generated questions",
+        )
+
+        self.draft_guide = HelpGuide.objects.create(
+            audience=HelpGuide.Audience.TEACHER,
+            slug="unpublished-teacher-guide",
+            title="Not ready yet",
+            is_published=False,
+        )
+
+    def test_public_list_shows_only_published_guides(self):
+
+        response = self.client.get(
+            reverse("help_list")
+        )
+
+        self.assertContains(
+            response,
+            "Getting started as a Student",
+        )
+        self.assertNotContains(
+            response,
+            "Not ready yet",
+        )
+
+    def test_unpublished_guide_detail_is_not_reachable(self):
+
+        response = self.client.get(
+            reverse(
+                "help_detail",
+                args=["unpublished-teacher-guide"],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_published_guide_detail_renders_the_body(self):
+
+        response = self.client.get(
+            self.student_guide.get_absolute_url()
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Line one.")
+
+    def test_landing_page_lists_published_guides(self):
+
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(
+            response,
+            "Getting started as a Student",
+        )
+
+    def test_help_for_me_routes_a_student_to_the_student_audience(self):
+
+        user = get_user_model().objects.create_user(
+            username="helpstudent",
+            email="helpstudent@example.com",
+            password="AeroESP-Strong-2026",
+        )
+        StudentProfile.objects.create(user=user)
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("help_for_me")
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('help_list')}?audience=STUDENT",
+        )
+
+    def test_help_for_me_prefers_reviewer_over_teacher(self):
+
+        from research_review.models import ExpertReviewerProfile
+
+        user = get_user_model().objects.create_user(
+            username="helpreviewer",
+            email="helpreviewer@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+        TeacherProfile.objects.create(
+            user=user,
+            approval_status=TeacherProfile.ApprovalStatus.APPROVED,
+        )
+
+        ExpertReviewerProfile.objects.filter(
+            user=user
+        ).update(discipline="AEROSPACE")
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("help_for_me")
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('help_list')}?audience=EXPERT_REVIEWER",
+        )
+
+    def test_help_for_me_sends_a_logged_out_visitor_to_the_full_list(self):
+
+        response = self.client.get(
+            reverse("help_for_me")
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("help_list"),
+        )
+
+    def test_topbar_help_icon_appears_for_signed_in_users(self):
+
+        user = get_user_model().objects.create_user(
+            username="helpicon",
+            email="helpicon@example.com",
+            password="AeroESP-Strong-2026",
+        )
+        StudentProfile.objects.create(user=user)
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("accounts:account_center")
+        )
+
+        self.assertContains(
+            response,
+            reverse("help_for_me"),
+        )
+
+
+class ReviewerGettingStartedPageTests(TestCase):
+
+    def test_falls_back_to_the_built_in_page_when_no_guide_exists(self):
+
+        response = self.client.get(
+            reverse("research_review:getting_started")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Create an account as a Teacher")
+
+    def test_redirects_to_an_admin_written_guide_when_one_exists(self):
+
+        HelpGuide.objects.create(
+            audience=HelpGuide.Audience.EXPERT_REVIEWER,
+            slug="expert-reviewer-getting-started",
+            title="Custom Reviewer Guide",
+            body="Written by the admin.",
+        )
+
+        response = self.client.get(
+            reverse("research_review:getting_started")
+        )
+
+        self.assertRedirects(
+            response,
+            "/help/expert-reviewer-getting-started/",
+        )
+
+    def test_page_requires_no_login(self):
+        """
+        The whole point is to walk a prospective reviewer through
+        registering, so it cannot be gated behind an account.
+        """
+
+        response = self.client.get(
+            reverse("research_review:getting_started")
+        )
+
+        self.assertEqual(response.status_code, 200)

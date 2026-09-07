@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from .models import (
     CustomUser,
+    HelpGuide,
     StudentProfile,
     TeacherProfile,
 )
@@ -136,5 +137,76 @@ class TeacherProfileAdmin(admin.ModelAdmin):
                     "approved_by",
                 )
             }
+        ),
+    )
+
+
+# =========================================================
+# Help Guides
+# =========================================================
+
+@admin.register(HelpGuide)
+class HelpGuideAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "title",
+        "audience",
+        "is_published",
+        "order",
+        "updated_at",
+    )
+
+    list_display_links = (
+        "title",
+    )
+
+    list_filter = (
+        "audience",
+        "is_published",
+    )
+
+    list_editable = (
+        "is_published",
+        "order",
+    )
+
+    search_fields = (
+        "title",
+        "summary",
+        "body",
+    )
+
+    prepopulated_fields = {
+        "slug": ("title",),
+    }
+
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "audience",
+                    "title",
+                    "slug",
+                    "summary",
+                    "is_published",
+                    "order",
+                )
+            },
+        ),
+        (
+            "Content",
+            {
+                "fields": (
+                    "body",
+                    "attachment",
+                ),
+                "description": (
+                    "Fill in either the text, the file, or both. "
+                    "Use slug 'expert-reviewer-getting-started' for "
+                    "the guide that /expert-review/getting-started/ "
+                    "opens automatically."
+                ),
+            },
         ),
     )

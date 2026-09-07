@@ -1,0 +1,114 @@
+{% extends "aeroesp/public_base.html" %}
+
+
+{% block title %}
+Expert Reviewer · Getting Started · AeroESP
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="legal-page">
+
+    <div class="page-eyebrow">
+        AeroESP Expert Review
+    </div>
+
+    <h1>
+        Reviewing AI-generated questions on AeroESP.
+    </h1>
+
+    <p class="legal-updated">
+        Thank you for agreeing to help review AeroESP's AI-generated
+        aerospace English questions. Here is exactly what to do.
+    </p>
+
+
+    <div class="legal-body">
+
+        <h2>1. Create an account as a Teacher</h2>
+
+        <p>
+            Go to
+            <a href="{% url 'accounts:register' %}">
+                the registration page
+            </a>
+            and sign up. When asked for your role, choose
+            <strong>Teacher</strong>. If you were given an invite code,
+            enter it on this form.
+        </p>
+
+
+        <h2>2. Wait for approval</h2>
+
+        <p>
+            New teacher accounts are reviewed by an administrator
+            before they become active - this usually takes a short
+            time. You will see a "pending approval" message when you
+            sign in until this happens; there is nothing further for
+            you to do.
+        </p>
+
+
+        <h2>3. Sign in and open Expert Review</h2>
+
+        <p>
+            Once approved, sign in and look for
+            <strong>Expert Review</strong> in the sidebar. This takes
+            you to your review workspace, where AI-generated questions
+            waiting for your feedback are listed.
+        </p>
+
+
+        <h2>4. What reviewing involves</h2>
+
+        <p>
+            For each assigned question, you will be asked to judge its
+            technical accuracy (does the aerospace content hold up?),
+            its English level and clarity, and whether the answer key
+            is correct. Your judgment is what determines whether a
+            question is trustworthy enough to use.
+        </p>
+
+
+        <h2>Confidentiality</h2>
+
+        <p>
+            The questions you review are unpublished and confidential.
+            Please read the
+            <a href="{% url 'terms' %}" target="_blank" rel="noopener">
+                Terms of Use
+            </a>
+            before you begin - it covers what is and is not permitted
+            with this material.
+        </p>
+
+
+        <h2>Need help?</h2>
+
+        <p>
+            {% if support_email %}
+                Contact
+                <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+                if anything above does not match what you see, or if
+                approval is taking longer than expected.
+            {% else %}
+                Contact the AeroESP administrator if anything above
+                does not match what you see.
+            {% endif %}
+        </p>
+
+    </div>
+
+
+    <div class="legal-back-link">
+        <a href="{% url 'accounts:register' %}">
+            Go to registration →
+        </a>
+    </div>
+
+</section>
+
+
+{% endblock %}

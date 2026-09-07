@@ -26,6 +26,7 @@ from .decorators import (
 
 from .forms import RegistrationForm
 from .models import (
+    HelpGuide,
     StudentProfile,
     TeacherProfile,
     EmailVerificationCode,
@@ -93,6 +94,9 @@ def home(request):
         {
             "dashboard_target": dashboard_target,
             "role": role,
+            "guides": HelpGuide.objects.filter(
+                is_published=True,
+            ),
         },
     )
 

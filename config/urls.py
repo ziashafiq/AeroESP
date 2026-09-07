@@ -39,6 +39,13 @@ urlpatterns = [
     ),
 
     path(
+        "help/",
+        include(
+            "accounts.help_urls"
+        ),
+    ),
+
+    path(
         "readyz/",
         health_ready,
         name="health_ready",

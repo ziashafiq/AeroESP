@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -8,6 +9,8 @@ from django.shortcuts import (
 )
 from django.utils import timezone
 
+from accounts.models import HelpGuide
+
 from .decorators import expert_reviewer_required
 from .forms import ExpertReviewForm
 from .models import (
@@ -15,6 +18,38 @@ from .models import (
     ReviewAssignment,
     ReviewAuditLog,
 )
+
+
+GETTING_STARTED_SLUG = "expert-reviewer-getting-started"
+
+
+def getting_started(request):
+    """
+    A stable, shareable link for inviting professors to review AI-
+    generated questions.
+
+    Public and requires no account, since the whole point is to walk
+    someone through registering. If the admin has written a guide for
+    this under Help Guides (slug 'expert-reviewer-getting-started'),
+    it is used instead of the built-in explanation below - so wording
+    can be corrected without a code change once real guidance exists.
+    """
+
+    guide = HelpGuide.objects.filter(
+        slug=GETTING_STARTED_SLUG,
+        is_published=True,
+    ).first()
+
+    if guide:
+        return redirect(guide.get_absolute_url())
+
+    return render(
+        request,
+        "research_review/getting_started.html",
+        {
+            "support_email": settings.AEROESP_SUPPORT_EMAIL,
+        },
+    )
 
 
 @expert_reviewer_required

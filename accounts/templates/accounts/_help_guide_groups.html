@@ -1,0 +1,46 @@
+{% regroup guides by get_audience_display as audience_groups %}
+
+{% if audience_groups %}
+
+    {% for group in audience_groups %}
+
+        <div class="help-group{% if group.list.0.audience == highlighted_audience %} help-group-highlighted{% endif %}">
+
+            <h2>
+                {{ group.grouper }}
+            </h2>
+
+            <ul class="help-guide-list">
+
+                {% for guide in group.list %}
+
+                    <li>
+
+                        <a href="{{ guide.get_absolute_url }}">
+                            {{ guide.title }}
+                        </a>
+
+                        {% if guide.summary %}
+                            <span>{{ guide.summary }}</span>
+                        {% endif %}
+
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    {% endfor %}
+
+{% else %}
+
+    <p>
+        No guides have been published yet.
+        {% if support_email %}
+            Contact {{ support_email }} if you need help.
+        {% endif %}
+    </p>
+
+{% endif %}
