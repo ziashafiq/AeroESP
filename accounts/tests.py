@@ -3,6 +3,7 @@ from io import StringIO
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.core.management import call_command
 from django.test import (
@@ -1652,3 +1653,73 @@ class SupportContactLinkTests(TestCase):
             response = self.client.get(reverse("home"))
 
             self.assertNotContains(response, "mailto:")
+
+
+class RolePermissionAutoSyncTests(TestCase):
+    """
+    Regression: a fresh deployment where nobody has ever run
+    `manage.py setup_roles` by hand left the "Teachers" Django group
+    with zero permissions, so an admin-approved teacher got 403 on
+    /teacher/questions/ despite passing every application-level
+    approval check.
+
+    Deliberately does NOT call setup_roles anywhere in this test - the
+    whole point is to prove the sync happens on its own, driven by
+    accounts.apps._sync_role_permissions on post_migrate (which the
+    test runner triggers when it builds the test database, exactly as
+    a real `manage.py migrate` does on a fresh deploy).
+    """
+
+    def test_teachers_group_has_question_permissions_without_setup_roles(
+        self,
+    ):
+
+        group = Group.objects.get(name="Teachers")
+
+        codenames = set(
+            group.permissions.values_list(
+                "codename",
+                flat=True,
+            )
+        )
+
+        self.assertEqual(
+            codenames,
+            {"view_question", "add_question", "change_question"},
+        )
+
+    def test_students_group_has_no_question_permissions(self):
+
+        group = Group.objects.get(name="Students")
+
+        self.assertFalse(
+            group.permissions.filter(
+                content_type__app_label="assessment",
+                content_type__model="question",
+            ).exists()
+        )
+
+    def test_a_newly_approved_teacher_can_open_the_question_bank(self):
+
+        user = get_user_model().objects.create_user(
+            username="permsync_teacher",
+            email="permsync_teacher@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+        TeacherProfile.objects.create(
+            user=user,
+            approval_status=TeacherProfile.ApprovalStatus.APPROVED,
+        )
+
+        self.assertTrue(
+            user.has_perm("assessment.view_question")
+        )
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("teacher_questions:list")
+        )
+
+        self.assertEqual(response.status_code, 200)
