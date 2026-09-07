@@ -83,6 +83,8 @@ class ExpertReviewForm(forms.ModelForm):
 
             "error_codes",
             "comments",
+
+            "reviewer_confidence",
         ]
 
         labels = {
@@ -134,6 +136,9 @@ class ExpertReviewForm(forms.ModelForm):
 
             "comments":
                 "Expert comments",
+
+            "reviewer_confidence":
+                "Your confidence in this assessment",
         }
 
         widgets = {
@@ -203,6 +208,11 @@ class ExpertReviewForm(forms.ModelForm):
                             "or recommendations..."
                         ),
                     }
+                ),
+
+            "reviewer_confidence":
+                forms.RadioSelect(
+                    choices=SCORE_CHOICES
                 ),
         }
 

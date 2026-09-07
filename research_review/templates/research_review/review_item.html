@@ -169,9 +169,16 @@ Expert Review
     {% endif %}
 
 
-    <form method="post">
+    <form method="post" id="review-form">
 
         {% csrf_token %}
+
+        {# Filled in by the script below, from page-load to submit. #}
+        <input
+            type="hidden"
+            name="time_spent_seconds"
+            id="id_time_spent_seconds"
+        >
 
 
         <div class="evaluation-grid">
@@ -241,5 +248,33 @@ Expert Review
 
 </section>
 
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+{% if not locked %}
+<script>
+(function () {
+    var loadedAt = Date.now();
+
+    var form = document.getElementById("review-form");
+    var field = document.getElementById("id_time_spent_seconds");
+
+    if (!form || !field) {
+        return;
+    }
+
+    form.addEventListener("submit", function () {
+        var elapsedSeconds = Math.round(
+            (Date.now() - loadedAt) / 1000
+        );
+
+        field.value = elapsedSeconds;
+    });
+})();
+</script>
+{% endif %}
 
 {% endblock %}

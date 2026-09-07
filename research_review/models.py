@@ -516,6 +516,32 @@ class ExpertReview(models.Model):
         blank=True,
     )
 
+    # =====================================================
+    # Review process metadata (not part of EVAL_V1 itself)
+    # =====================================================
+
+    reviewer_confidence = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ],
+        help_text=(
+            "Optional: how confident are you in this assessment? "
+            "1=Not confident, 5=Very confident."
+        ),
+    )
+
+    # Populated from a hidden form field the page fills in with
+    # JavaScript (load timestamp -> elapsed seconds at submit); see
+    # review_item() and review_item.html. Never asked of the reviewer
+    # directly, so it is not a ModelForm field.
+    time_spent_seconds = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
     is_finalized = models.BooleanField(
         default=False,
     )

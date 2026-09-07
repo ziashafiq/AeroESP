@@ -211,3 +211,132 @@ class ConstructRelevanceFieldTests(ReviewFixtureMixin, TestCase):
             body.index("construct_relevance"),
             body.index("technical_correctness"),
         )
+
+
+class ReviewerConfidenceAndTimeSpentTests(ReviewFixtureMixin, TestCase):
+    """
+    Part (B): an optional self-reported confidence score, and an
+    automatically-captured time-on-task in seconds.
+    """
+
+    def _post(self, **overrides):
+
+        data = dict(
+            self.VALID_EVAL_V1_SCORES,
+            construct_relevance=3,
+            action="draft",
+        )
+        data.update(overrides)
+
+        return self.client.post(
+            reverse(
+                "research_review:review_item",
+                args=[self.assignment.pk],
+            ),
+            data,
+        )
+
+    def setUp(self):
+
+        super().setUp()
+
+        self.client.force_login(self.reviewer_user)
+
+    def test_confidence_is_optional_on_a_draft(self):
+
+        response = self._post(reviewer_confidence="")
+
+        self.assertEqual(response.status_code, 302)
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertIsNone(review.reviewer_confidence)
+
+    def test_confidence_is_optional_even_when_finalizing(self):
+        """
+        Only construct_relevance and the EVAL_V1 fields are mandatory
+        at finalize time - confidence stays optional per spec.
+        """
+
+        response = self._post(
+            action="finalize",
+            reviewer_confidence="",
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertTrue(review.is_finalized)
+        self.assertIsNone(review.reviewer_confidence)
+
+    def test_confidence_is_saved_when_given(self):
+
+        self._post(reviewer_confidence="5")
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertEqual(review.reviewer_confidence, 5)
+
+    def test_time_spent_is_read_from_the_hidden_field(self):
+
+        self._post(time_spent_seconds="137")
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertEqual(review.time_spent_seconds, 137)
+
+    def test_missing_time_spent_does_not_error(self):
+        """
+        A visitor with JavaScript disabled, or a tampered request,
+        must degrade to "not recorded" rather than break the save.
+        """
+
+        response = self._post(time_spent_seconds="")
+
+        self.assertEqual(response.status_code, 302)
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertIsNone(review.time_spent_seconds)
+
+    def test_non_numeric_time_spent_is_ignored_not_crashed(self):
+
+        response = self._post(
+            time_spent_seconds="'; DROP TABLE--"
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertIsNone(review.time_spent_seconds)
+
+    def test_hidden_field_and_timer_script_are_present_on_the_page(
+        self,
+    ):
+
+        response = self.client.get(
+            reverse(
+                "research_review:review_item",
+                args=[self.assignment.pk],
+            )
+        )
+
+        body = response.content.decode()
+
+        self.assertIn('id="id_time_spent_seconds"', body)
+        self.assertIn('id="review-form"', body)
+        self.assertIn("loadedAt", body)

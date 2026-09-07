@@ -180,6 +180,21 @@ def review_item(
                 commit=False
             )
 
+            # Not a ModelForm field - filled in by JavaScript from
+            # page-load to submit (see review_item.html) rather than
+            # asked of the reviewer, so it is read from POST directly.
+            # An absent, blank, or tampered-with value degrades to
+            # "not recorded" rather than a 500.
+            submitted_time_spent = request.POST.get(
+                "time_spent_seconds",
+                "",
+            ).strip()
+
+            if submitted_time_spent.isdigit():
+                review_object.time_spent_seconds = int(
+                    submitted_time_spent
+                )
+
             if action == "finalize":
 
                 review_object.is_finalized = True
