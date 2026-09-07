@@ -998,9 +998,10 @@ class PasswordResetDeliveryTests(TestCase):
 
 class ReviewerAccessSyncTests(TestCase):
     """
-    Regression: approving a teacher never granted expert-reviewer
-    access, so the "Expert Review" sidebar link never appeared and
-    /expert-review/ stayed a 403 for everyone.
+    Teacher approval and expert-reviewer status are two independent
+    decisions. Approving a teacher must never, on its own, hand out
+    reviewer access; that takes the deliberate
+    "Promote to expert reviewer" admin action.
     """
 
     def setUp(self):
@@ -1016,9 +1017,45 @@ class ReviewerAccessSyncTests(TestCase):
             university="Sharif University",
         )
 
-    def test_approval_creates_an_active_reviewer_profile(self):
+    def _promote(self):
+        """Run the admin action the way the admin screen does."""
+
+        from django.contrib.admin.sites import AdminSite
+        from django.test import RequestFactory
+        from django.contrib.messages.storage.fallback import (
+            FallbackStorage,
+        )
+
+        from accounts.admin import TeacherProfileAdmin
+
+        request = RequestFactory().post("/admin/")
+        request.user = self.teacher
+        request.session = {}
+        request._messages = FallbackStorage(request)
+
+        model_admin = TeacherProfileAdmin(
+            TeacherProfile,
+            AdminSite(),
+        )
+        model_admin.promote_to_expert_reviewer(
+            request,
+            TeacherProfile.objects.filter(pk=self.profile.pk),
+        )
+
+        return request
+
+    def test_approval_alone_creates_no_reviewer_profile(self):
+        """
+        The whole point of the split: approving a teacher is not also
+        a decision to let them grade research items.
+        """
 
         from research_review.models import ExpertReviewerProfile
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
 
         self.assertFalse(
             ExpertReviewerProfile.objects.filter(
@@ -1026,25 +1063,71 @@ class ReviewerAccessSyncTests(TestCase):
             ).exists()
         )
 
+    def test_repeated_saves_of_an_approved_teacher_create_nothing(self):
+
+        from research_review.models import ExpertReviewerProfile
+
         self.profile.approval_status = (
             TeacherProfile.ApprovalStatus.APPROVED
         )
         self.profile.save()
+
+        self.profile.department = "Updated Department"
+        self.profile.save()
+
+        self.profile.university = "Another University"
+        self.profile.save()
+
+        self.assertEqual(
+            ExpertReviewerProfile.objects.filter(
+                user=self.teacher
+            ).count(),
+            0,
+        )
+
+    def test_promote_action_grants_reviewer_access(self):
+
+        from research_review.models import ExpertReviewerProfile
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        self._promote()
 
         reviewer = ExpertReviewerProfile.objects.get(
             user=self.teacher
         )
 
         self.assertTrue(reviewer.is_active_reviewer)
+        self.assertEqual(reviewer.institution, "Sharif University")
+
+    def test_promote_action_refuses_an_unapproved_teacher(self):
+        """
+        Independent decisions, but not contradictory ones: reviewing
+        still presumes the teacher account itself stands.
+        """
+
+        from research_review.models import ExpertReviewerProfile
+
         self.assertEqual(
-            reviewer.institution,
-            "Sharif University",
+            self.profile.approval_status,
+            TeacherProfile.ApprovalStatus.PENDING,
         )
 
-    def test_approval_does_not_overwrite_an_edited_profile(self):
+        self._promote()
+
+        self.assertFalse(
+            ExpertReviewerProfile.objects.filter(
+                user=self.teacher
+            ).exists()
+        )
+
+    def test_promote_action_does_not_overwrite_an_edited_profile(self):
         """
         An admin who changes discipline/institution by hand must not
-        have that reset the next time the teacher record is saved.
+        have that reset by promoting again.
         """
 
         from research_review.models import ExpertReviewerProfile
@@ -1053,6 +1136,8 @@ class ReviewerAccessSyncTests(TestCase):
             TeacherProfile.ApprovalStatus.APPROVED
         )
         self.profile.save()
+
+        self._promote()
 
         reviewer = ExpertReviewerProfile.objects.get(
             user=self.teacher
@@ -1061,17 +1146,14 @@ class ReviewerAccessSyncTests(TestCase):
         reviewer.institution = "Custom Institution"
         reviewer.save()
 
-        # Re-saving the (still approved) teacher profile must not
-        # clobber the admin's edits.
-        self.profile.department = "Updated Department"
-        self.profile.save()
+        self._promote()
 
         reviewer.refresh_from_db()
 
         self.assertEqual(reviewer.discipline, "ESP")
         self.assertEqual(reviewer.institution, "Custom Institution")
 
-    def test_rejection_deactivates_an_existing_reviewer_profile(self):
+    def test_promote_action_reactivates_a_revoked_reviewer(self):
 
         from research_review.models import ExpertReviewerProfile
 
@@ -1079,6 +1161,35 @@ class ReviewerAccessSyncTests(TestCase):
             TeacherProfile.ApprovalStatus.APPROVED
         )
         self.profile.save()
+
+        self._promote()
+
+        ExpertReviewerProfile.objects.filter(
+            user=self.teacher
+        ).update(is_active_reviewer=False)
+
+        self._promote()
+
+        self.assertTrue(
+            ExpertReviewerProfile.objects.get(
+                user=self.teacher
+            ).is_active_reviewer
+        )
+
+    def test_rejection_deactivates_an_existing_reviewer_profile(self):
+        """
+        The one direction still automatic. It can only remove access,
+        never grant it, so it cannot hand out a privilege unasked.
+        """
+
+        from research_review.models import ExpertReviewerProfile
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        self._promote()
 
         self.profile.approval_status = (
             TeacherProfile.ApprovalStatus.REJECTED
@@ -1091,6 +1202,36 @@ class ReviewerAccessSyncTests(TestCase):
 
         self.assertFalse(reviewer.is_active_reviewer)
 
+    def test_re_approval_does_not_restore_reviewer_access(self):
+        """
+        Revocation is not undone by fixing the teacher record; getting
+        the role back takes the explicit action again.
+        """
+
+        from research_review.models import ExpertReviewerProfile
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+        self._promote()
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.REJECTED
+        )
+        self.profile.save()
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        self.assertFalse(
+            ExpertReviewerProfile.objects.get(
+                user=self.teacher
+            ).is_active_reviewer
+        )
+
     def test_pending_status_creates_no_reviewer_profile(self):
 
         from research_review.models import ExpertReviewerProfile
@@ -1101,7 +1242,25 @@ class ReviewerAccessSyncTests(TestCase):
             ).exists()
         )
 
-    def test_approved_teacher_can_reach_the_review_dashboard(self):
+    def test_approved_teacher_cannot_reach_the_review_dashboard(self):
+        """
+        Approval alone no longer opens /expert-review/.
+        """
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        self.client.force_login(self.teacher)
+
+        response = self.client.get(
+            reverse("research_review:dashboard")
+        )
+
+        self.assertNotEqual(response.status_code, 200)
+
+    def test_promoted_teacher_can_reach_the_review_dashboard(self):
         """
         End-to-end: the sidebar link and the view itself both gate on
         expert_reviewer_profile.is_active_reviewer.
@@ -1111,6 +1270,8 @@ class ReviewerAccessSyncTests(TestCase):
             TeacherProfile.ApprovalStatus.APPROVED
         )
         self.profile.save()
+
+        self._promote()
 
         self.client.force_login(self.teacher)
 
@@ -1517,9 +1678,13 @@ class HelpGuideTests(TestCase):
             approval_status=TeacherProfile.ApprovalStatus.APPROVED,
         )
 
-        ExpertReviewerProfile.objects.filter(
-            user=user
-        ).update(discipline="AEROSPACE")
+        # Created explicitly: teacher approval no longer implies
+        # reviewer access.
+        ExpertReviewerProfile.objects.create(
+            user=user,
+            discipline="AEROSPACE",
+            is_active_reviewer=True,
+        )
 
         self.client.force_login(user)
 

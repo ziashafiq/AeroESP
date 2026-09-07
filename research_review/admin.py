@@ -246,6 +246,57 @@ class ExpertReviewerProfileAdmin(ModelAdmin):
 
     list_per_page = 50
 
+    # Reviewer status is granted and withdrawn by hand - nothing sets
+    # it automatically. These are the counterpart to the
+    # "Promote to expert reviewer" action on TeacherProfile, so the
+    # role can be taken away from the same screen that lists who holds
+    # it. is_active_reviewer is also in list_editable above, for
+    # flipping one row without leaving the changelist.
+    actions = (
+        "activate_reviewers",
+        "deactivate_reviewers",
+    )
+
+    @admin.action(
+        description="Activate expert reviewer access",
+    )
+    def activate_reviewers(self, request, queryset):
+
+        updated = queryset.filter(
+            is_active_reviewer=False,
+        ).update(
+            is_active_reviewer=True,
+        )
+
+        self.message_user(
+            request,
+            f"Activated {updated} reviewer(s).",
+            messages.SUCCESS if updated else messages.INFO,
+        )
+
+    @admin.action(
+        description="Deactivate expert reviewer access",
+    )
+    def deactivate_reviewers(self, request, queryset):
+        """
+        Deactivating keeps the row, and with it the reviewer_code and
+        every review already submitted. Deleting would orphan those,
+        which is why has_delete_permission stays False.
+        """
+
+        updated = queryset.filter(
+            is_active_reviewer=True,
+        ).update(
+            is_active_reviewer=False,
+        )
+
+        self.message_user(
+            request,
+            f"Deactivated {updated} reviewer(s). Their profiles and "
+            f"past reviews are kept.",
+            messages.SUCCESS if updated else messages.INFO,
+        )
+
     @admin.display(description="Assignments")
     def assignment_count(self, obj):
         return obj.assignments.count()

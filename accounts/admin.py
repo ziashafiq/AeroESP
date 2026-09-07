@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
 
@@ -28,6 +28,12 @@ admin.site.index_title = "AeroESP Administration"
 # The "View site" button in Django Admin will now open
 # the universal AeroESP Account Center.
 admin.site.site_url = "/accounts/account/"
+
+
+# Starting point for a hand-promoted reviewer's profile. It is only a
+# default: discipline and institution stay editable on the
+# ExpertReviewerProfile page afterwards.
+REVIEWER_DEFAULT_DISCIPLINE = "AEROSPACE"
 
 
 # =========================================================
@@ -107,11 +113,19 @@ class TeacherProfileAdmin(ModelAdmin):
         "university",
         "department",
         "approval_status",
+        # Shown next to approval_status precisely because the two are
+        # now independent: the column makes it obvious that approving
+        # someone did not also make them a reviewer.
+        "is_expert_reviewer",
         "approved_by",
         "approved_at",
     )
 
     list_display_links = (
+        "user",
+    )
+
+    list_select_related = (
         "user",
     )
 
@@ -156,6 +170,129 @@ class TeacherProfileAdmin(ModelAdmin):
             }
         ),
     )
+
+    # Reviewer status is a separate decision from teacher approval, so
+    # it is a separate deliberate gesture. Approving a teacher used to
+    # create an active ExpertReviewerProfile as a side effect; see
+    # revoke_reviewer_access_on_rejection in accounts/signals.py.
+    actions = (
+        "promote_to_expert_reviewer",
+        "revoke_expert_reviewer",
+    )
+
+    @admin.display(
+        description="Expert reviewer",
+        boolean=True,
+    )
+    def is_expert_reviewer(self, obj):
+        profile = getattr(
+            obj.user,
+            "expert_reviewer_profile",
+            None,
+        )
+        return bool(profile and profile.is_active_reviewer)
+
+    @admin.action(
+        description="Promote to expert reviewer",
+    )
+    def promote_to_expert_reviewer(self, request, queryset):
+        """
+        Create (or re-activate) an ExpertReviewerProfile for each
+        selected teacher.
+
+        Imported lazily for the same reason the signal does it:
+        accounts must not depend on research_review at import time.
+        """
+
+        from research_review.models import ExpertReviewerProfile
+
+        created = 0
+        reactivated = 0
+        already = 0
+        skipped = []
+
+        for profile in queryset.select_related("user"):
+
+            # Reviewing implies the teacher account itself is in good
+            # standing. Refusing here keeps the two decisions
+            # independent without letting the second contradict the
+            # first.
+            if (
+                profile.approval_status
+                != TeacherProfile.ApprovalStatus.APPROVED
+            ):
+                skipped.append(profile.user.username)
+                continue
+
+            reviewer, was_created = (
+                ExpertReviewerProfile.objects.get_or_create(
+                    user=profile.user,
+                    defaults={
+                        "discipline": REVIEWER_DEFAULT_DISCIPLINE,
+                        "institution": profile.university,
+                        "is_active_reviewer": True,
+                    },
+                )
+            )
+
+            if was_created:
+                created += 1
+                continue
+
+            if not reviewer.is_active_reviewer:
+                reviewer.is_active_reviewer = True
+                reviewer.save(update_fields=["is_active_reviewer"])
+                reactivated += 1
+            else:
+                already += 1
+
+        if created or reactivated:
+            self.message_user(
+                request,
+                f"Expert reviewer access granted: {created} created, "
+                f"{reactivated} re-activated.",
+                messages.SUCCESS,
+            )
+
+        if already:
+            self.message_user(
+                request,
+                f"{already} already had active reviewer access.",
+                messages.INFO,
+            )
+
+        if skipped:
+            self.message_user(
+                request,
+                "Not promoted - the teacher account is not approved: "
+                + ", ".join(skipped),
+                messages.WARNING,
+            )
+
+    @admin.action(
+        description="Revoke expert reviewer access",
+    )
+    def revoke_expert_reviewer(self, request, queryset):
+        """
+        Deactivate reviewer access without deleting the profile, so
+        the reviewer_code and any completed reviews stay intact.
+        """
+
+        from research_review.models import ExpertReviewerProfile
+
+        updated = ExpertReviewerProfile.objects.filter(
+            user__in=queryset.values("user"),
+            is_active_reviewer=True,
+        ).update(
+            is_active_reviewer=False,
+        )
+
+        self.message_user(
+            request,
+            f"Expert reviewer access revoked for {updated} "
+            f"reviewer(s). Their profiles and past reviews are kept.",
+            messages.SUCCESS if updated else messages.INFO,
+        )
 
 
 # =========================================================

@@ -5,9 +5,6 @@ from django.dispatch import receiver
 from .models import StudentProfile, TeacherProfile
 
 
-REVIEWER_DEFAULT_DISCIPLINE = "AEROSPACE"
-
-
 @receiver(post_save, sender=StudentProfile)
 def sync_student_group(sender, instance, **kwargs):
     students_group, _ = Group.objects.get_or_create(
@@ -37,47 +34,41 @@ def sync_teacher_group(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=TeacherProfile)
-def sync_reviewer_access_with_approval(sender, instance, **kwargs):
+def revoke_reviewer_access_on_rejection(sender, instance, **kwargs):
     """
-    Keep expert-reviewer access in step with teacher approval.
+    Withdraw expert-reviewer access when a teacher is rejected.
 
-    research_review.ExpertReviewerProfile is a separate model with its
-    own reviewer-specific fields (discipline, institution), and nothing
-    ever created it: approving a teacher in the admin left them with no
-    way to reach /expert-review/ at all, and the "Expert Review" sidebar
-    link (gated on expert_reviewer_profile.is_active_reviewer) never
-    appeared. An admin had to know to create the row by hand in a
-    second, undocumented admin screen.
+    This handler used to do the opposite as well: approving a teacher
+    auto-created an ExpertReviewerProfile with is_active_reviewer=True.
+    That conflated two decisions that are not the same question -
+    "is this person a legitimate teacher?" and "do I want this person
+    grading research items?" - and it granted the second silently as a
+    side effect of answering the first. Granting reviewer status is now
+    an explicit admin action; see the "Promote to expert reviewer"
+    action on TeacherProfile in accounts/admin.py.
+
+    The revocation half is deliberately kept, and the asymmetry is the
+    point: this direction can only ever remove access, never hand it
+    out, so it cannot grant a privilege behind the admin's back. A
+    teacher whose approval has been withdrawn should not keep reviewing
+    on the strength of an approval that no longer stands. Re-approving
+    them does NOT restore reviewer access - that takes the explicit
+    action again.
 
     Imported lazily so accounts does not import research_review at
     module load time - the dependency only exists inside this handler.
     """
 
-    from research_review.models import ExpertReviewerProfile
-
     if (
         instance.approval_status
-        == TeacherProfile.ApprovalStatus.APPROVED
+        != TeacherProfile.ApprovalStatus.REJECTED
     ):
+        return
 
-        ExpertReviewerProfile.objects.get_or_create(
-            user=instance.user,
-            defaults={
-                "discipline": REVIEWER_DEFAULT_DISCIPLINE,
-                "institution": instance.university,
-                "is_active_reviewer": True,
-            },
-        )
+    from research_review.models import ExpertReviewerProfile
 
-    elif (
-        instance.approval_status
-        == TeacherProfile.ApprovalStatus.REJECTED
-    ):
-
-        # A rejected teacher must not retain reviewer access from an
-        # earlier approval.
-        ExpertReviewerProfile.objects.filter(
-            user=instance.user,
-        ).update(
-            is_active_reviewer=False,
-        )
+    ExpertReviewerProfile.objects.filter(
+        user=instance.user,
+    ).update(
+        is_active_reviewer=False,
+    )
