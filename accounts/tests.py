@@ -989,3 +989,128 @@ class PasswordResetDeliveryTests(TestCase):
         )
 
         self.assertEqual(len(mail.outbox), 0)
+
+
+class ReviewerAccessSyncTests(TestCase):
+    """
+    Regression: approving a teacher never granted expert-reviewer
+    access, so the "Expert Review" sidebar link never appeared and
+    /expert-review/ stayed a 403 for everyone.
+    """
+
+    def setUp(self):
+
+        self.teacher = get_user_model().objects.create_user(
+            username="prof_reviewer",
+            email="prof@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+        self.profile = TeacherProfile.objects.create(
+            user=self.teacher,
+            university="Sharif University",
+        )
+
+    def test_approval_creates_an_active_reviewer_profile(self):
+
+        from research_review.models import ExpertReviewerProfile
+
+        self.assertFalse(
+            ExpertReviewerProfile.objects.filter(
+                user=self.teacher
+            ).exists()
+        )
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        reviewer = ExpertReviewerProfile.objects.get(
+            user=self.teacher
+        )
+
+        self.assertTrue(reviewer.is_active_reviewer)
+        self.assertEqual(
+            reviewer.institution,
+            "Sharif University",
+        )
+
+    def test_approval_does_not_overwrite_an_edited_profile(self):
+        """
+        An admin who changes discipline/institution by hand must not
+        have that reset the next time the teacher record is saved.
+        """
+
+        from research_review.models import ExpertReviewerProfile
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        reviewer = ExpertReviewerProfile.objects.get(
+            user=self.teacher
+        )
+        reviewer.discipline = "ESP"
+        reviewer.institution = "Custom Institution"
+        reviewer.save()
+
+        # Re-saving the (still approved) teacher profile must not
+        # clobber the admin's edits.
+        self.profile.department = "Updated Department"
+        self.profile.save()
+
+        reviewer.refresh_from_db()
+
+        self.assertEqual(reviewer.discipline, "ESP")
+        self.assertEqual(reviewer.institution, "Custom Institution")
+
+    def test_rejection_deactivates_an_existing_reviewer_profile(self):
+
+        from research_review.models import ExpertReviewerProfile
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.REJECTED
+        )
+        self.profile.save()
+
+        reviewer = ExpertReviewerProfile.objects.get(
+            user=self.teacher
+        )
+
+        self.assertFalse(reviewer.is_active_reviewer)
+
+    def test_pending_status_creates_no_reviewer_profile(self):
+
+        from research_review.models import ExpertReviewerProfile
+
+        self.assertFalse(
+            ExpertReviewerProfile.objects.filter(
+                user=self.teacher
+            ).exists()
+        )
+
+    def test_approved_teacher_can_reach_the_review_dashboard(self):
+        """
+        End-to-end: the sidebar link and the view itself both gate on
+        expert_reviewer_profile.is_active_reviewer.
+        """
+
+        self.profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.profile.save()
+
+        self.client.force_login(self.teacher)
+
+        response = self.client.get(
+            reverse("research_review:dashboard")
+        )
+
+        self.assertEqual(response.status_code, 200)
