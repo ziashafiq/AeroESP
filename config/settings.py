@@ -143,6 +143,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
 
     "accounts.apps.AccountsConfig",
     "assessment",
@@ -184,6 +185,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.support_email',
+                'accounts.context_processors.canonical_url',
             ],
         },
     },

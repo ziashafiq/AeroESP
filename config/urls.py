@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.shortcuts import redirect
 # Aliased: django.conf.urls.static.static (imported above, for serving
 # MEDIA in development) has the same name and a different job.
@@ -16,6 +17,8 @@ from .health import (
     health_live,
     health_ready,
 )
+from .seo_views import robots_txt
+from .sitemaps import sitemaps
 
 
 urlpatterns = [
@@ -49,6 +52,19 @@ urlpatterns = [
         "readyz/",
         health_ready,
         name="health_ready",
+    ),
+
+    path(
+        "robots.txt",
+        robots_txt,
+        name="robots_txt",
+    ),
+
+    path(
+        "sitemap.xml",
+        sitemap,
+        {"sitemaps": sitemaps},
+        name="sitemap",
     ),
 
     # Resolved per request rather than hardcoded, so the redirect
