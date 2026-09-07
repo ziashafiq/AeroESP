@@ -86,6 +86,13 @@ _default_hosts = (
     else ""
 )
 
+# A custom domain and its www variant are added here purely by setting
+# DJANGO_ALLOWED_HOSTS on the host - never hardcoded, so the same code
+# runs unmodified behind any domain. The platform's own default host
+# (e.g. a *.liara.run subdomain) must stay listed here too even after a
+# custom domain is live: Django rejects a disallowed Host header with
+# DisallowedHost before CanonicalDomainMiddleware (below) ever runs, so
+# dropping the old host would turn its 301-to-canonical into a 400.
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
@@ -95,6 +102,9 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Every origin a same-site POST can legitimately arrive from - both
+# the canonical domain and its www variant need to be listed, since
+# the browser sends the Origin header the visitor is actually on.
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
@@ -655,6 +665,11 @@ if IS_PRODUCTION:
             "in production."
         )
 
+    # Every plain-HTTP request - regardless of which allowed host it
+    # names - is redirected to HTTPS on that same host. This runs
+    # after CanonicalDomainMiddleware, so a request already redirected
+    # to the canonical domain gets its scheme fixed in the same pass
+    # rather than a second round trip.
     SECURE_SSL_REDIRECT = True
 
     SESSION_COOKIE_SECURE = True
