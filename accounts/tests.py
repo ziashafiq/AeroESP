@@ -371,6 +371,7 @@ class RegistrationEmailTests(TestCase):
         "role": "STUDENT",
         "password1": "AeroESP-Strong-2026",
         "password2": "AeroESP-Strong-2026",
+        "agree_terms": "on",
         # CAPTCHA_TEST_MODE accepts this literal response.
         "captcha_0": "test-hashkey",
         "captcha_1": "PASSED",
@@ -620,6 +621,7 @@ class VerificationDisabledTests(TestCase):
         "role": "STUDENT",
         "password1": "AeroESP-Strong-2026",
         "password2": "AeroESP-Strong-2026",
+        "agree_terms": "on",
         # CAPTCHA_TEST_MODE accepts this literal response.
         "captcha_0": "test-hashkey",
         "captcha_1": "PASSED",
@@ -748,6 +750,7 @@ class RegistrationCaptchaTests(TestCase):
         "role": "STUDENT",
         "password1": "AeroESP-Strong-2026",
         "password2": "AeroESP-Strong-2026",
+        "agree_terms": "on",
     }
 
     def _registered(self):
@@ -1142,6 +1145,7 @@ class UsernameDisclosureTests(TestCase):
                     "role": "STUDENT",
                     "password1": "AeroESP-Strong-2026",
                     "password2": "AeroESP-Strong-2026",
+                    "agree_terms": "on",
                     "captcha_0": "x",
                     "captcha_1": "PASSED",
                 },
@@ -1167,6 +1171,7 @@ class UsernameDisclosureTests(TestCase):
                 "role": "STUDENT",
                 "password1": "AeroESP-Strong-2026",
                 "password2": "AeroESP-Strong-2026",
+                "agree_terms": "on",
                 "captcha_0": "x",
                 "captcha_1": "PASSED",
             },
@@ -1224,6 +1229,7 @@ class InviteCodeTests(TestCase):
         "role": "STUDENT",
         "password1": "AeroESP-Strong-2026",
         "password2": "AeroESP-Strong-2026",
+        "agree_terms": "on",
         "captcha_0": "x",
         "captcha_1": "PASSED",
     }
@@ -1304,6 +1310,7 @@ class InviteCodeDisabledByDefaultTests(TestCase):
                 "role": "STUDENT",
                 "password1": "AeroESP-Strong-2026",
                 "password2": "AeroESP-Strong-2026",
+                "agree_terms": "on",
                 "captcha_0": "x",
                 "captcha_1": "PASSED",
             },
@@ -1314,4 +1321,87 @@ class InviteCodeDisabledByDefaultTests(TestCase):
             get_user_model().objects.filter(
                 email="dara.tester@example.com"
             ).exists()
+        )
+
+
+class TermsOfUseTests(TestCase):
+    """
+    Confidentiality of assessment content is a legal position the
+    project needs to be able to point to, so acceptance must be
+    required and timestamped, and the page itself must exist.
+    """
+
+    # Deliberately missing agree_terms: several tests below check what
+    # happens without it.
+    DATA = {
+        "first_name": "Tara",
+        "last_name": "Tester",
+        "email": "tara.tester@example.com",
+        "role": "STUDENT",
+        "password1": "AeroESP-Strong-2026",
+        "password2": "AeroESP-Strong-2026",
+        "captcha_0": "x",
+        "captcha_1": "PASSED",
+    }
+
+    def test_registration_without_accepting_terms_is_rejected(self):
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            self.DATA,
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(
+            get_user_model().objects.filter(
+                email="tara.tester@example.com"
+            ).exists()
+        )
+
+    def test_accepting_terms_records_a_timestamp(self):
+
+        before = timezone.now()
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            dict(self.DATA, agree_terms="on"),
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+        user = get_user_model().objects.get(
+            email="tara.tester@example.com"
+        )
+
+        self.assertIsNotNone(user.terms_accepted_at)
+        self.assertGreaterEqual(
+            user.terms_accepted_at,
+            before,
+        )
+
+    def test_terms_page_is_reachable(self):
+
+        response = self.client.get(
+            reverse("terms")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Confidentiality")
+
+    def test_terms_link_appears_on_the_registration_form(self):
+
+        response = self.client.get(
+            reverse("accounts:register")
+        )
+
+        self.assertContains(response, 'href="/terms/"')
+
+    def test_terms_link_appears_in_the_public_footer(self):
+
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(
+            response,
+            reverse("terms"),
         )

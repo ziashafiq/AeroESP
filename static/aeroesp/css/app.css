@@ -16042,3 +16042,145 @@ a.auth-submit {
     text-align: center;
     text-decoration: none;
 }
+
+
+/* =========================================================
+   Legal pages (Terms of Use)
+   ========================================================= */
+
+.legal-page {
+    width: min(calc(100% - 48px), 820px);
+
+    margin: 48px auto 80px;
+}
+
+.legal-page h1 {
+    margin: 10px 0 14px;
+
+    font-size: clamp(28px, 4vw, 40px);
+
+    letter-spacing: -.03em;
+}
+
+.legal-updated {
+    max-width: 640px;
+
+    margin-bottom: 32px;
+
+    color: var(--theme-text-soft);
+
+    line-height: 1.7;
+}
+
+.legal-body h2 {
+    margin: 34px 0 10px;
+
+    font-size: 18px;
+
+    color: var(--theme-text);
+}
+
+.legal-body h2:first-child {
+    margin-top: 0;
+}
+
+.legal-body p {
+    margin: 0 0 12px;
+
+    color: var(--theme-text-soft);
+
+    line-height: 1.75;
+}
+
+.legal-body ul {
+    margin: 0 0 14px;
+    padding-left: 20px;
+
+    color: var(--theme-text-soft);
+
+    line-height: 1.75;
+}
+
+.legal-body li {
+    margin-bottom: 6px;
+}
+
+.legal-body a {
+    color: var(--theme-accent-strong);
+}
+
+.legal-back-link {
+    margin-top: 36px;
+}
+
+.legal-back-link a {
+    color: var(--theme-text-soft);
+
+    font-size: 13px;
+
+    text-decoration: none;
+}
+
+.legal-back-link a:hover {
+    color: var(--theme-accent-strong);
+}
+
+
+/* Footer links (public shell) */
+
+.public-footer-links {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+}
+
+.public-footer-links a {
+    color: var(--theme-text-faint);
+
+    text-decoration: none;
+
+    font-size: 10px;
+}
+
+.public-footer-links a:hover {
+    color: var(--theme-text-soft);
+}
+
+
+/* Terms-of-use checkbox on the registration form */
+
+.auth-field-checkbox {
+    margin-top: 4px;
+}
+
+.auth-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 9px;
+
+    cursor: pointer;
+}
+
+.auth-checkbox-label input[type="checkbox"] {
+    flex: 0 0 auto;
+
+    margin-top: 3px;
+
+    width: 15px;
+    height: 15px;
+
+    accent-color: var(--theme-accent-strong);
+}
+
+.auth-checkbox-label span {
+    color: var(--theme-text-soft);
+
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.auth-checkbox-label span a {
+    color: var(--theme-accent-strong);
+}

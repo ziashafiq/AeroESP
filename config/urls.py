@@ -33,6 +33,12 @@ urlpatterns = [
     ),
 
     path(
+        "terms/",
+        account_views.terms,
+        name="terms",
+    ),
+
+    path(
         "readyz/",
         health_ready,
         name="health_ready",

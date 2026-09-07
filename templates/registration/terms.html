@@ -1,0 +1,144 @@
+{% extends "aeroesp/public_base.html" %}
+
+
+{% block title %}
+Terms of Use · AeroESP
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="legal-page">
+
+    <div class="page-eyebrow">
+        AeroESP
+    </div>
+
+    <h1>
+        Terms of Use
+    </h1>
+
+    <p class="legal-updated">
+        These terms apply to every AeroESP account, including
+        accounts created for the expert review of AI-generated
+        assessment content.
+    </p>
+
+
+    <div class="legal-body">
+
+        <h2>1. Confidentiality of assessment content</h2>
+
+        <p>
+            Exam questions, answer keys, AI-generated question drafts,
+            expert review material, and any other assessment content
+            you can view through your AeroESP account are confidential
+            and proprietary to the AeroESP project. This applies
+            whether the content is marked "draft," "pending review,"
+            or already published.
+        </p>
+
+        <p>
+            By using AeroESP, you agree that you will <strong>not</strong>:
+        </p>
+
+        <ul>
+            <li>
+                Copy, photograph, screenshot, print, or otherwise
+                reproduce assessment content for any purpose outside
+                your assigned review or learning activity.
+            </li>
+            <li>
+                Share, publish, upload, or forward assessment content
+                to any other person, platform, service, or AI system
+                not authorized by AeroESP.
+            </li>
+            <li>
+                Use assessment content to train, prompt, or evaluate
+                any third-party AI model or service.
+            </li>
+            <li>
+                Distribute your account credentials or otherwise allow
+                someone else to access AeroESP under your identity.
+            </li>
+        </ul>
+
+        <p>
+            Expert reviewers are granted access to unpublished,
+            AI-generated question drafts specifically to evaluate their
+            technical and linguistic accuracy. This access is a trust
+            granted for that purpose only, and does not extend to any
+            other use of the material.
+        </p>
+
+
+        <h2>2. Ownership</h2>
+
+        <p>
+            AeroESP's source code, question content, review data,
+            educational workflows, and related materials are
+            proprietary works of the AeroESP project. Nothing in these
+            terms transfers ownership of any AeroESP content to you.
+            See the project's COPYRIGHT and LICENSE files for the
+            terms governing the underlying software.
+        </p>
+
+
+        <h2>3. Accurate registration</h2>
+
+        <p>
+            You agree to register with your real name and an email
+            address you control, and to accurately represent your role
+            (student, teacher, or reviewer) when creating an account.
+        </p>
+
+
+        <h2>4. Consequences of violation</h2>
+
+        <p>
+            A breach of these terms - in particular, leaking,
+            redistributing, or misusing confidential assessment
+            content - is treated as a serious violation. AeroESP
+            reserves the right to suspend or terminate the responsible
+            account immediately, and to pursue any available legal
+            remedy. Account creation is logged together with the time
+            you accepted these terms, which may be used as evidence in
+            such a case.
+        </p>
+
+
+        <h2>5. Changes to these terms</h2>
+
+        <p>
+            These terms may be updated as the platform evolves.
+            Continued use of AeroESP after a change constitutes
+            acceptance of the updated terms.
+        </p>
+
+
+        <h2>6. Contact</h2>
+
+        <p>
+            Questions about these terms, or reports of a suspected
+            violation, can be sent to
+            {% if support_email %}
+                <a href="mailto:{{ support_email }}">{{ support_email }}</a>.
+            {% else %}
+                the AeroESP administrator.
+            {% endif %}
+        </p>
+
+    </div>
+
+
+    <div class="legal-back-link">
+        <a href="{% url 'accounts:register' %}">
+            ← Back to registration
+        </a>
+    </div>
+
+</section>
+
+
+{% endblock %}

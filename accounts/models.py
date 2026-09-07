@@ -36,6 +36,17 @@ class CustomUser(AbstractUser):
         default="STUDENT",
     )
 
+    # Set once, at registration, when the Terms of Use checkbox is
+    # accepted. A timestamp rather than a boolean so acceptance of a
+    # confidentiality agreement over exam content has evidence behind
+    # it, not just an unlogged checkbox - this is what makes a breach
+    # of the confidentiality terms something that can actually be
+    # pursued.
+    terms_accepted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
     def save(self, *args, **kwargs):
 
         # Store "no email" as NULL so the unique index stays satisfiable.

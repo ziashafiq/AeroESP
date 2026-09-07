@@ -3,6 +3,8 @@ import secrets
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
+from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 
 from .captcha_fields import CaptchaField
@@ -57,6 +59,22 @@ class RegistrationForm(UserCreationForm):
     # Image drawn by this server, no third-party script to load.
     captcha = CaptchaField()
 
+    agree_terms = forms.BooleanField(
+        required=True,
+        label=mark_safe(
+            "I have read and agree to the "
+            '<a href="/terms/" target="_blank" rel="noopener">'
+            "Terms of Use</a>, including the confidentiality of "
+            "assessment content."
+        ),
+        error_messages={
+            "required": (
+                "You must accept the Terms of Use to create an "
+                "account."
+            ),
+        },
+    )
+
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -91,6 +109,7 @@ class RegistrationForm(UserCreationForm):
                     "password1",
                     "password2",
                     "captcha",
+                    "agree_terms",
                 ]
             )
 
@@ -204,6 +223,10 @@ class RegistrationForm(UserCreationForm):
         user.selected_role = (
             self.cleaned_data["role"]
         )
+
+        # Recorded so acceptance of the confidentiality terms has a
+        # timestamp behind it, not just a checkbox that leaves no trace.
+        user.terms_accepted_at = timezone.now()
 
         if commit:
             user.save()

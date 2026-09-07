@@ -40,6 +40,16 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
+def terms(request):
+    return render(
+        request,
+        "registration/terms.html",
+        {
+            "support_email": settings.AEROESP_SUPPORT_EMAIL,
+        },
+    )
+
+
 def error_403(request, exception=None):
     return render(request, "403.html", status=403)
 

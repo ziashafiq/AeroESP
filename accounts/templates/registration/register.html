@@ -86,11 +86,29 @@ Register · AeroESP
 
             {% for field in form %}
 
-                <div class="auth-field">
+                <div class="auth-field{% if field.name == 'agree_terms' %} auth-field-checkbox{% endif %}">
 
-                    {{ field.label_tag }}
+                    {% if field.name == 'agree_terms' %}
 
-                    {{ field }}
+                        <label class="auth-checkbox-label">
+                            {{ field }}
+                            <span>{{ field.label|safe }}</span>
+                        </label>
+
+                    {% else %}
+
+                        {{ field.label_tag }}
+
+                        {{ field }}
+
+                    {% endif %}
+
+
+                    {% if field.help_text %}
+                        <div class="auth-help">
+                            {{ field.help_text }}
+                        </div>
+                    {% endif %}
 
 
                     {% if field.errors %}
