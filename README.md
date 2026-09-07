@@ -148,7 +148,7 @@ AeroESP includes automated tests covering major platform components.
 Current beta baseline:
 
 ```text
-75 automated tests
+219 automated tests
 ```
 
 Run the isolated test suite with:
@@ -158,6 +158,8 @@ python manage.py test --settings=config.test_settings
 ```
 
 The isolated test configuration uses an in-memory test database and is independent of the development PostgreSQL database.
+
+The `--settings=config.test_settings` flag is required, not optional. Without it `manage.py test` falls back to `config/settings.py`, which reads `.env` and points at the PostgreSQL database — and since that role has no `CREATEDB` privilege, the run fails immediately with `permission denied to create database`.
 
 ---
 
