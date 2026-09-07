@@ -12,6 +12,14 @@ SCORE_CHOICES = [
 ]
 
 
+CONSTRUCT_RELEVANCE_CHOICES = [
+    (1, "1 - Not relevant"),
+    (2, "2 - Somewhat relevant, needs major revision"),
+    (3, "3 - Relevant, needs minor revision"),
+    (4, "4 - Highly relevant"),
+]
+
+
 ERROR_CODE_CHOICES = [
     ("T1", "T1 - Incorrect technical fact"),
     ("T2", "T2 - Unsupported technical claim"),
@@ -51,6 +59,10 @@ class ExpertReviewForm(forms.ModelForm):
         model = ExpertReview
 
         fields = [
+            # First, so it renders above the EVAL_V1 quality
+            # dimensions - see review_item.html.
+            "construct_relevance",
+
             "technical_correctness",
             "linguistic_accuracy",
             "clarity_answerability",
@@ -74,6 +86,10 @@ class ExpertReviewForm(forms.ModelForm):
         ]
 
         labels = {
+            "construct_relevance":
+                "Construct Relevance (English for Aerospace "
+                "Engineering)",
+
             "technical_correctness":
                 "Technical Correctness (TC)",
 
@@ -121,6 +137,11 @@ class ExpertReviewForm(forms.ModelForm):
         }
 
         widgets = {
+            "construct_relevance":
+                forms.RadioSelect(
+                    choices=CONSTRUCT_RELEVANCE_CHOICES
+                ),
+
             "technical_correctness":
                 forms.RadioSelect(
                     choices=SCORE_CHOICES

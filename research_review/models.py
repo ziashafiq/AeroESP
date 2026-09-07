@@ -354,6 +354,37 @@ class ExpertReview(models.Model):
     )
 
     # =====================================================
+    # Content validity (Polit & Beck, 2006)
+    # Rendered above the EVAL_V1 quality dimensions - see
+    # research_review/templates/research_review/review_item.html.
+    #
+    # A 4-point relevance scale, deliberately separate from the 5-point
+    # EVAL_V1 dimensions below: this is the field a CVI computation
+    # (I-CVI / S-CVI/Ave) is actually run on, since none of the
+    # EVAL_V1 dimensions measure "relevance to the construct" as such.
+    #
+    # null=True/blank=True here, like every EVAL_V1 field, so draft
+    # autosave still works with it unanswered; ExpertReview.clean()
+    # is what makes it mandatory before a review can be finalized.
+    # =====================================================
+
+    construct_relevance = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(4),
+        ],
+        help_text=(
+            "How relevant is this item to the construct of English "
+            "language proficiency in the aerospace engineering "
+            "domain? "
+            "1=Not relevant, 2=Somewhat relevant (major revision), "
+            "3=Relevant (minor revision), 4=Highly relevant"
+        ),
+    )
+
+    # =====================================================
     # EVAL_V1 scores
     # Draft reviews may leave these blank.
     # =====================================================
@@ -516,6 +547,7 @@ class ExpertReview(models.Model):
             return
 
         required_fields = [
+            "construct_relevance",
             "technical_correctness",
             "linguistic_accuracy",
             "clarity_answerability",
