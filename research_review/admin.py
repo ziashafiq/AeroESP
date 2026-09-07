@@ -133,6 +133,7 @@ class ResearchQuestionAdmin(admin.ModelAdmin):
         "item_number",
         "skill",
         "correct_answer",
+        "question_provenance",
         "is_validated",
         "promoted_to_operational_bank",
     )
@@ -142,6 +143,7 @@ class ResearchQuestionAdmin(admin.ModelAdmin):
         "run__provider",
         "skill",
         "correct_answer",
+        "question_provenance",
         "is_validated",
         "promoted_to_operational_bank",
     )

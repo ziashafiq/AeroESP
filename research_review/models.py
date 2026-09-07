@@ -200,6 +200,27 @@ class ResearchQuestion(models.Model):
         default=False,
     )
 
+    PROVENANCE_CHOICES = [
+        ("AI_GENERATED", "AI Generated"),
+        ("HUMAN_WRITTEN", "Human Written"),
+        ("EXISTING_SOURCE", "Existing Source"),
+    ]
+
+    # Research metadata only - never rendered to a reviewer. The whole
+    # point of blinded review is that this stays invisible: showing it
+    # would let a reviewer's judgment be coloured by "this is
+    # AI-generated" before they have actually evaluated the item.
+    # review_item.html builds its context from `question` and
+    # `experiment` alone (see reviewer_dashboard()/review_item() in
+    # views.py) and neither template nor view ever names this field;
+    # ReviewFieldBlindingTests.test_provenance_never_appears_on_the_
+    # review_page in tests.py asserts this against the rendered HTML.
+    question_provenance = models.CharField(
+        max_length=20,
+        choices=PROVENANCE_CHOICES,
+        default="AI_GENERATED",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -340,3 +340,125 @@ class ReviewerConfidenceAndTimeSpentTests(ReviewFixtureMixin, TestCase):
         self.assertIn('id="id_time_spent_seconds"', body)
         self.assertIn('id="review-form"', body)
         self.assertIn("loadedAt", body)
+
+
+class QuestionProvenanceBlindingTests(ReviewFixtureMixin, TestCase):
+    """
+    Part (C): question_provenance is research metadata that must never
+    reach a reviewer - the entire point of blinded review is that a
+    rater's judgment is not coloured by knowing an item is
+    AI-generated before they evaluate it.
+    """
+
+    # Every string that could leak the field, its value, or its
+    # human-readable choice labels into rendered HTML.
+    LEAK_SIGNATURES = [
+        "question_provenance",
+        "AI_GENERATED",
+        "AI Generated",
+        "HUMAN_WRITTEN",
+        "Human Written",
+        "EXISTING_SOURCE",
+        "Existing Source",
+    ]
+
+    def test_model_default_and_choices(self):
+
+        self.assertEqual(
+            self.question.question_provenance,
+            "AI_GENERATED",
+        )
+
+        self.assertEqual(
+            [c[0] for c in self.question.PROVENANCE_CHOICES],
+            ["AI_GENERATED", "HUMAN_WRITTEN", "EXISTING_SOURCE"],
+        )
+
+    def test_provenance_never_appears_on_the_review_page(self):
+        """
+        Checked for every possible value, not just the default - a
+        human-written or existing-source item must be exactly as
+        blinded as an AI-generated one.
+        """
+
+        self.client.force_login(self.reviewer_user)
+        url = reverse(
+            "research_review:review_item",
+            args=[self.assignment.pk],
+        )
+
+        for value, _ in self.question.PROVENANCE_CHOICES:
+
+            self.question.question_provenance = value
+            self.question.save(
+                update_fields=["question_provenance"]
+            )
+
+            body = self.client.get(url).content.decode()
+
+            for signature in self.LEAK_SIGNATURES:
+                self.assertNotIn(
+                    signature,
+                    body,
+                    f"{signature!r} leaked onto the review page "
+                    f"when question_provenance={value!r}",
+                )
+
+    def test_provenance_never_appears_on_the_dashboard(self):
+
+        self.client.force_login(self.reviewer_user)
+
+        body = self.client.get(
+            reverse("research_review:dashboard")
+        ).content.decode()
+
+        for signature in self.LEAK_SIGNATURES:
+            self.assertNotIn(signature, body)
+
+    def test_view_context_does_not_add_provenance_directly(self):
+        """
+        Belt and braces: even though `question` itself is passed to
+        the template (and templates can reach any attribute), the view
+        must not additionally hand provenance to the template under
+        its own context key, which would make an accidental
+        {{ provenance }} reference in a future template edit trivial.
+        """
+
+        self.client.force_login(self.reviewer_user)
+
+        response = self.client.get(
+            reverse(
+                "research_review:review_item",
+                args=[self.assignment.pk],
+            )
+        )
+
+        self.assertNotIn("provenance", response.context)
+        self.assertNotIn(
+            "question_provenance",
+            response.context,
+        )
+
+    def test_provenance_is_visible_to_researchers_in_the_admin(self):
+        """
+        The blinding requirement is specific to the reviewer-facing
+        review page - the researcher/admin still needs to see and
+        filter by provenance to run any provenance-stratified
+        analysis later.
+        """
+
+        admin_user = get_user_model().objects.create_superuser(
+            username="researcher_admin",
+            email="researcher_admin@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+        self.client.force_login(admin_user)
+
+        response = self.client.get(
+            reverse(
+                "admin:research_review_researchquestion_changelist"
+            )
+        )
+
+        self.assertContains(response, "AI Generated")
