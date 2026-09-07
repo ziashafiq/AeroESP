@@ -581,6 +581,19 @@ AEROESP_SUPPORT_EMAIL = _env(
     EMAIL_HOST_USER,
 )
 
+# Closes registration to invited testers without touching code.
+#
+# Left empty (the default), sign-up behaves exactly as before: no
+# invite code field appears at all. Set AEROESP_INVITE_CODE to require
+# it - this is a shared-secret gate for a short closed beta, not
+# per-user access control, so it stops casual sign-ups rather than a
+# determined attacker; do not rely on it once registration opens
+# publicly.
+AEROESP_INVITE_CODE = _env(
+    "AEROESP_INVITE_CODE",
+    "",
+)
+
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 # Authentication backends

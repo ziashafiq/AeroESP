@@ -1207,3 +1207,111 @@ class UsernameDisclosureTests(TestCase):
         )
 
         self.assertContains(response, "visibleuser")
+
+
+@override_settings(AEROESP_INVITE_CODE="AERO-BETA-2026")
+class InviteCodeTests(TestCase):
+    """
+    AEROESP_INVITE_CODE gates registration during the closed reviewer
+    beta. Left unset (the default, covered elsewhere), the field must
+    not exist at all.
+    """
+
+    DATA = {
+        "first_name": "Cody",
+        "last_name": "Tester",
+        "email": "cody.tester@example.com",
+        "role": "STUDENT",
+        "password1": "AeroESP-Strong-2026",
+        "password2": "AeroESP-Strong-2026",
+        "captcha_0": "x",
+        "captcha_1": "PASSED",
+    }
+
+    def _registered(self):
+        return get_user_model().objects.filter(
+            email="cody.tester@example.com"
+        ).exists()
+
+    def test_field_is_required_when_a_code_is_configured(self):
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            self.DATA,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self._registered())
+
+    def test_wrong_code_is_rejected(self):
+
+        data = dict(self.DATA, invite_code="wrong-code")
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            data,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self._registered())
+
+    def test_correct_code_allows_registration(self):
+
+        data = dict(
+            self.DATA,
+            invite_code="AERO-BETA-2026",
+        )
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            data,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(self._registered())
+
+    def test_the_field_is_rendered_on_the_form(self):
+
+        response = self.client.get(
+            reverse("accounts:register")
+        )
+
+        self.assertContains(response, "invite_code")
+
+
+class InviteCodeDisabledByDefaultTests(TestCase):
+    """
+    The default (no AEROESP_INVITE_CODE set) must not change existing
+    sign-up behaviour at all.
+    """
+
+    def test_no_invite_field_when_unconfigured(self):
+
+        response = self.client.get(
+            reverse("accounts:register")
+        )
+
+        self.assertNotContains(response, "invite_code")
+
+    def test_registration_succeeds_without_any_code(self):
+
+        response = self.client.post(
+            reverse("accounts:register"),
+            {
+                "first_name": "Dara",
+                "last_name": "Tester",
+                "email": "dara.tester@example.com",
+                "role": "STUDENT",
+                "password1": "AeroESP-Strong-2026",
+                "password2": "AeroESP-Strong-2026",
+                "captcha_0": "x",
+                "captcha_1": "PASSED",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            get_user_model().objects.filter(
+                email="dara.tester@example.com"
+            ).exists()
+        )

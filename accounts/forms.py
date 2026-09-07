@@ -1,4 +1,7 @@
+import secrets
+
 from django import forms
+from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
 from django.utils.text import slugify
 
@@ -53,6 +56,63 @@ class RegistrationForm(UserCreationForm):
 
     # Image drawn by this server, no third-party script to load.
     captcha = CaptchaField()
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        # Absent entirely when no code is configured, so a deployment
+        # that never sets AEROESP_INVITE_CODE sees no field at all and
+        # nothing about existing sign-up behaves differently.
+        if settings.AEROESP_INVITE_CODE:
+
+            self.fields["invite_code"] = forms.CharField(
+                required=True,
+                label="Invite code",
+                help_text=(
+                    "Provided by AeroESP - this beta is by invitation "
+                    "only."
+                ),
+                widget=forms.TextInput(
+                    attrs={
+                        "placeholder": "Enter your invite code",
+                        "autocomplete": "off",
+                    }
+                ),
+            )
+
+            self.order_fields(
+                [
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "role",
+                    "invite_code",
+                    "password1",
+                    "password2",
+                    "captcha",
+                ]
+            )
+
+    def clean_invite_code(self):
+
+        submitted = self.cleaned_data.get(
+            "invite_code",
+            "",
+        ).strip()
+
+        expected = settings.AEROESP_INVITE_CODE
+
+        if not expected:
+            return submitted
+
+        if not secrets.compare_digest(submitted, expected):
+
+            raise forms.ValidationError(
+                "That invite code is not valid."
+            )
+
+        return submitted
 
     class Meta:
 
