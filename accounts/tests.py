@@ -1114,3 +1114,96 @@ class ReviewerAccessSyncTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+
+
+class UsernameDisclosureTests(TestCase):
+    """
+    The username is generated from the email's local part and shown
+    nowhere unless the flow surfaces it explicitly - a returning user
+    who forgot it had no way to look it up.
+    """
+
+    def _messages(self, response):
+        return [
+            str(m)
+            for m in response.wsgi_request._messages
+        ]
+
+    def test_immediate_registration_shows_the_username(self):
+
+        with self.settings(REQUIRE_EMAIL_VERIFICATION=False):
+
+            response = self.client.post(
+                reverse("accounts:register"),
+                {
+                    "first_name": "Nora",
+                    "last_name": "Tester",
+                    "email": "nora.tester@example.com",
+                    "role": "STUDENT",
+                    "password1": "AeroESP-Strong-2026",
+                    "password2": "AeroESP-Strong-2026",
+                    "captcha_0": "x",
+                    "captcha_1": "PASSED",
+                },
+                follow=True,
+            )
+
+        user = get_user_model().objects.get(
+            email="nora.tester@example.com"
+        )
+
+        joined = " ".join(self._messages(response))
+
+        self.assertIn(user.username, joined)
+
+    def test_verification_success_shows_the_username(self):
+
+        self.client.post(
+            reverse("accounts:register"),
+            {
+                "first_name": "Omid",
+                "last_name": "Tester",
+                "email": "omid.tester@example.com",
+                "role": "STUDENT",
+                "password1": "AeroESP-Strong-2026",
+                "password2": "AeroESP-Strong-2026",
+                "captcha_0": "x",
+                "captcha_1": "PASSED",
+            },
+        )
+
+        user = get_user_model().objects.get(
+            email="omid.tester@example.com"
+        )
+
+        code = EmailVerificationCode.objects.get(
+            user=user
+        ).code
+
+        response = self.client.post(
+            reverse("accounts:verify_email"),
+            {"code": code},
+            follow=True,
+        )
+
+        joined = " ".join(self._messages(response))
+
+        self.assertIn(user.username, joined)
+
+    def test_account_center_always_shows_the_username(self):
+
+        user = get_user_model().objects.create_user(
+            username="visibleuser",
+            email="visible@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+        StudentProfile.objects.create(user=user)
+
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("accounts:account_center")
+        )
+
+        self.assertContains(response, "visibleuser")

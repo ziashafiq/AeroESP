@@ -6353,6 +6353,23 @@ html[data-theme="dark"] .exam-table-shell {
     font-size: 13px;
 }
 
+.account-info-value {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    gap: 2px;
+}
+
+.account-info-hint {
+    color: var(--theme-text-faint);
+
+    font-size: 10.5px;
+    font-style: normal;
+
+    text-align: right;
+}
+
 .account-info-list strong {
     color: var(--theme-text);
 

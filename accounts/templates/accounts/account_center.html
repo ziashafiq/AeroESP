@@ -51,7 +51,12 @@ Account Center
 
             <div>
                 <span>Username</span>
-                <strong>{{ request.user.username }}</strong>
+                <span class="account-info-value">
+                    <strong>{{ request.user.username }}</strong>
+                    <em class="account-info-hint">
+                        Use this (not your email) to sign in.
+                    </em>
+                </span>
             </div>
 
             <div>
@@ -71,8 +76,12 @@ Account Center
                 <strong>
                     {% if request.user.is_superuser %}
                         Administrator
+                    {% elif request.user.expert_reviewer_profile.is_active_reviewer %}
+                        Teacher · Expert Reviewer
                     {% elif request.user.teacher_profile.is_approved %}
                         Teacher
+                    {% elif request.user.teacher_profile %}
+                        Teacher (pending approval)
                     {% else %}
                         Student
                     {% endif %}

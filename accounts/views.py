@@ -275,7 +275,10 @@ def register(request):
 
                 messages.success(
                     request,
-                    "Welcome to AeroESP. Your account is ready.",
+                    "Welcome to AeroESP. Your account is ready. "
+                    f'Your username is "{user.username}" - '
+                    "you will need it (not your email) to sign in "
+                    "next time.",
                 )
 
                 return redirect(
@@ -308,7 +311,9 @@ def register(request):
                 messages.success(
                     request,
                     "Your account has been created. "
-                    "We sent a verification code to "
+                    f'Your username is "{user.username}" - '
+                    "you will need it (not your email) to sign in "
+                    "later. We sent a verification code to "
                     f"{user.email}.",
                 )
 
@@ -319,8 +324,9 @@ def register(request):
                 # never arrive.
                 messages.warning(
                     request,
-                    "Your account has been created, but we could not "
-                    "send the verification email. Please try "
+                    "Your account has been created "
+                    f'(username: "{user.username}"), but we could '
+                    "not send the verification email. Please try "
                     "'Resend code', or contact support if the problem "
                     "continues.",
                 )
@@ -451,7 +457,10 @@ def verify_email(request):
 
             messages.success(
                 request,
-                "Email verified successfully.",
+                "Email verified successfully. "
+                f'Your username is "{user.username}" - '
+                "you will need it (not your email) to sign in "
+                "next time.",
             )
 
             _log_in(request, user)
