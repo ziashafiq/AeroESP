@@ -206,6 +206,7 @@ class ResearchQuestionAdmin(admin.ModelAdmin):
 class ExpertReviewerProfileAdmin(admin.ModelAdmin):
 
     list_display = (
+        "reviewer_code",
         "user",
         "discipline",
         "institution",
@@ -221,6 +222,7 @@ class ExpertReviewerProfileAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
+        "reviewer_code",
         "user__username",
         "user__first_name",
         "user__last_name",

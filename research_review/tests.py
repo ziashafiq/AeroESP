@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.db import connection
+from django.db import connection, IntegrityError
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
@@ -1008,4 +1008,256 @@ class ErrorCodesMigrationTests(TransactionTestCase):
         self.assertEqual(
             migrated_without_codes.error_codes,
             [],
+        )
+
+
+class ReviewerCodeTests(TestCase):
+    """
+    Part (F), the anonymization half: reviewer_code is what an export
+    identifies a rater by, never their username.
+    """
+
+    def test_first_reviewer_gets_r01(self):
+
+        user = get_user_model().objects.create_user(
+            username="codetest1",
+            email="codetest1@example.com",
+        )
+
+        profile = ExpertReviewerProfile.objects.create(
+            user=user,
+            discipline="AEROSPACE",
+        )
+
+        self.assertEqual(profile.reviewer_code, "R01")
+
+    def test_codes_increment_and_do_not_collide(self):
+
+        codes = []
+
+        for i in range(3):
+
+            user = get_user_model().objects.create_user(
+                username=f"codetest_seq_{i}",
+                email=f"codetest_seq_{i}@example.com",
+            )
+
+            profile = ExpertReviewerProfile.objects.create(
+                user=user,
+                discipline="AEROSPACE",
+            )
+
+            codes.append(profile.reviewer_code)
+
+        self.assertEqual(codes, ["R01", "R02", "R03"])
+        self.assertEqual(len(set(codes)), 3)
+
+    def test_a_manually_assigned_code_is_not_overwritten(self):
+
+        user = get_user_model().objects.create_user(
+            username="codetest_manual",
+            email="codetest_manual@example.com",
+        )
+
+        profile = ExpertReviewerProfile.objects.create(
+            user=user,
+            discipline="AEROSPACE",
+            reviewer_code="R99",
+        )
+
+        self.assertEqual(profile.reviewer_code, "R99")
+
+        # Saving again (e.g. toggling is_active_reviewer) must not
+        # regenerate a code that was set on purpose.
+        profile.is_active_reviewer = False
+        profile.save()
+
+        profile.refresh_from_db()
+        self.assertEqual(profile.reviewer_code, "R99")
+
+    def test_reviewer_code_is_unique(self):
+
+        user1 = get_user_model().objects.create_user(
+            username="codetest_u1",
+            email="codetest_u1@example.com",
+        )
+        user2 = get_user_model().objects.create_user(
+            username="codetest_u2",
+            email="codetest_u2@example.com",
+        )
+
+        ExpertReviewerProfile.objects.create(
+            user=user1,
+            discipline="AEROSPACE",
+            reviewer_code="R05",
+        )
+
+        with self.assertRaises(IntegrityError):
+            ExpertReviewerProfile.objects.create(
+                user=user2,
+                discipline="AEROSPACE",
+                reviewer_code="R05",
+            )
+
+
+class ExportReviewMatrixCommandTests(ReviewFixtureMixin, TestCase):
+    """
+    Part (F), the export half.
+    """
+
+    def _finalize(self, error_codes=None, **overrides):
+
+        fields = dict(
+            self.VALID_EVAL_V1_SCORES,
+            construct_relevance=3,
+            error_codes=error_codes or [],
+            is_finalized=True,
+        )
+        fields.update(overrides)
+
+        return ExpertReview.objects.create(
+            assignment=self.assignment,
+            **fields,
+        )
+
+    def _rows(self, **options):
+
+        buffer = StringIO()
+
+        call_command(
+            "export_review_matrix",
+            stdout=buffer,
+            **options,
+        )
+
+        return list(
+            csv.reader(
+                buffer.getvalue().splitlines()
+            )
+        )
+
+    def test_header_matches_the_specified_column_order(self):
+
+        rows = self._rows()
+
+        self.assertEqual(
+            rows[0],
+            [
+                "blind_id",
+                "reviewer_code",
+                "construct_relevance",
+                "technical_correctness",
+                "linguistic_accuracy",
+                "clarity_answerability",
+                "source_fidelity",
+                "distractor_quality",
+                "cefr_alignment",
+                "difficulty_alignment",
+                "pedagogical_value",
+                "overall_decision",
+                "error_codes",
+                "reviewer_confidence",
+                "time_spent_seconds",
+                "question_provenance",
+                "display_order",
+            ],
+        )
+
+    def test_identifies_the_reviewer_by_code_not_username(self):
+
+        self._finalize()
+
+        rows = self._rows()
+        data_row = rows[1]
+
+        self.assertEqual(
+            data_row[1],
+            self.reviewer.reviewer_code,
+        )
+
+        joined = ",".join(data_row)
+        self.assertNotIn(self.reviewer_user.username, joined)
+
+    def test_error_codes_are_pipe_joined(self):
+
+        self._finalize(error_codes=["T1", "D2", "C1"])
+
+        rows = self._rows()
+
+        error_codes_column = rows[0].index("error_codes")
+
+        self.assertEqual(
+            rows[1][error_codes_column],
+            "T1|D2|C1",
+        )
+
+    def test_draft_reviews_are_excluded_by_default(self):
+
+        ExpertReview.objects.create(
+            assignment=self.assignment,
+            is_finalized=False,
+        )
+
+        rows = self._rows()
+
+        self.assertEqual(len(rows), 1)
+
+    def test_include_drafts_flag_includes_them(self):
+
+        ExpertReview.objects.create(
+            assignment=self.assignment,
+            is_finalized=False,
+        )
+
+        rows = self._rows(include_drafts=True)
+
+        self.assertEqual(len(rows), 2)
+
+    def test_question_provenance_is_included(self):
+
+        self.question.question_provenance = "HUMAN_WRITTEN"
+        self.question.save(
+            update_fields=["question_provenance"]
+        )
+
+        self._finalize()
+
+        rows = self._rows()
+
+        provenance_column = rows[0].index(
+            "question_provenance"
+        )
+
+        self.assertEqual(
+            rows[1][provenance_column],
+            "HUMAN_WRITTEN",
+        )
+
+    def test_writes_to_a_file_when_output_is_given(self):
+
+        review = self._finalize()
+
+        path = os.path.join(
+            tempfile.gettempdir(),
+            "aeroesp_test_export_matrix.csv",
+        )
+
+        try:
+
+            call_command(
+                "export_review_matrix",
+                output_path=path,
+            )
+
+            with open(path, newline="") as handle:
+                rows = list(csv.reader(handle))
+
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(
+            rows[1][0],
+            self.question.blind_id,
         )

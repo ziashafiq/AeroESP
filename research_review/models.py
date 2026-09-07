@@ -274,10 +274,61 @@ class ExpertReviewerProfile(models.Model):
         default=True,
     )
 
+    # An anonymized identifier (R01, R02, ...) for anything that
+    # leaves this system - a CSV export, a paper's appendix - so a
+    # reviewer's real name/username never has to appear there.
+    # Assigned automatically on first save; left editable in the admin
+    # in case a specific code needs to be corrected or reassigned by
+    # hand.
+    reviewer_code = models.CharField(
+        max_length=10,
+        unique=True,
+        blank=True,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+
+        if not self.reviewer_code:
+            self.reviewer_code = self._next_reviewer_code()
+
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def _next_reviewer_code():
+        """
+        One past the highest existing R<nn> suffix. A plain MAX()-plus-
+        one rather than row-locking: reviewer profiles are created by
+        an admin one at a time, not under concurrent write load, so
+        the race this could theoretically lose is not one this system
+        will realistically hit.
+        """
+
+        import re
+
+        highest = 0
+
+        existing_codes = (
+            ExpertReviewerProfile.objects
+            .exclude(reviewer_code="")
+            .values_list("reviewer_code", flat=True)
+        )
+
+        for code in existing_codes:
+
+            match = re.fullmatch(r"R(\d+)", code)
+
+            if match:
+                highest = max(highest, int(match.group(1)))
+
+        return f"R{highest + 1:02d}"
+
     def __str__(self):
-        return f"{self.user.username} — {self.discipline}"
+        return (
+            f"{self.reviewer_code} - "
+            f"{self.user.username} — {self.discipline}"
+        )
 
 
 class ReviewAssignment(models.Model):
