@@ -7,7 +7,9 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import TestCase
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
 from .forms import ExpertReviewForm
@@ -751,3 +753,259 @@ class CreateReviewAssignmentsCommandTests(TestCase):
 
         self.assertIn("123", output)
         self.assertIn("DRY RUN", output)
+
+
+class ErrorCodesFormRoundTripTests(ReviewFixtureMixin, TestCase):
+    """
+    Part (E), the form/view half: error_codes now stores a plain list
+    directly (no more manual split/join), submitted from the page as
+    a set of checkboxes.
+    """
+
+    def setUp(self):
+
+        super().setUp()
+
+        self.client.force_login(self.reviewer_user)
+
+    def _post(self, **overrides):
+
+        data = dict(
+            self.VALID_EVAL_V1_SCORES,
+            construct_relevance=3,
+            action="draft",
+        )
+        data.update(overrides)
+
+        return self.client.post(
+            reverse(
+                "research_review:review_item",
+                args=[self.assignment.pk],
+            ),
+            data,
+        )
+
+    def test_selected_checkboxes_are_saved_as_a_list(self):
+
+        self._post(error_codes=["T1", "D2", "C1"])
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertEqual(
+            review.error_codes,
+            ["T1", "D2", "C1"],
+        )
+
+    def test_no_codes_selected_saves_an_empty_list(self):
+
+        self._post()
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertEqual(review.error_codes, [])
+
+    def test_a_previously_saved_list_pre_checks_the_right_boxes(self):
+
+        review = ExpertReview.objects.create(
+            assignment=self.assignment,
+            error_codes=["Q1", "S1"],
+        )
+
+        form = ExpertReviewForm(instance=review)
+
+        self.assertEqual(
+            set(form.initial["error_codes"]),
+            {"Q1", "S1"},
+        )
+
+    def test_round_trip_through_two_saves_is_stable(self):
+        """
+        Save, reload, save again with one code removed - a regression
+        guard against any leftover string-splitting logic silently
+        turning a list back into "['T1', 'D2']"-as-a-string or similar.
+        """
+
+        self._post(error_codes=["T1", "D2"])
+        self._post(error_codes=["T1"])
+
+        review = ExpertReview.objects.get(
+            assignment=self.assignment
+        )
+
+        self.assertEqual(review.error_codes, ["T1"])
+        self.assertIsInstance(review.error_codes, list)
+
+
+class ErrorCodesMigrationTests(TransactionTestCase):
+    """
+    Part (E): error_codes CharField ("T1,D2,C1") -> JSONField
+    (["T1","D2","C1"]), migrated in place without losing data.
+
+    Runs the actual migrations (0005 -> 0008) against real rows via
+    MigrationExecutor, rather than asserting against the final model
+    state the way every other test in this file does - an ordinary
+    TestCase never executes RunPython migrations on existing data, so
+    it could not actually catch a copy_forward() bug.
+    """
+
+    # TransactionTestCase truncates tables after each test instead of
+    # wrapping it in a rolled-back transaction, which is what lets
+    # MigrationExecutor tear down and rebuild schema state mid-test.
+    serialized_rollback = True
+
+    def _migrate_to(self, target):
+
+        executor = MigrationExecutor(connection)
+
+        executor.migrate([
+            ("research_review", target)
+        ])
+
+        return executor
+
+    def tearDown(self):
+
+        # Leave the database on the latest migration for every test
+        # that runs after this one in the same process.
+        call_command(
+            "migrate",
+            "research_review",
+            verbosity=0,
+        )
+
+        super().tearDown()
+
+    def test_comma_separated_codes_become_a_json_list(self):
+
+        self._migrate_to("0005_researchquestion_question_provenance")
+
+        old_state = MigrationExecutor(connection).loader.project_state(
+            ("research_review", "0005_researchquestion_question_provenance")
+        )
+
+        OldExperiment = old_state.apps.get_model(
+            "research_review", "ResearchExperiment"
+        )
+        OldRun = old_state.apps.get_model(
+            "research_review", "ResearchRun"
+        )
+        OldQuestion = old_state.apps.get_model(
+            "research_review", "ResearchQuestion"
+        )
+        OldReviewerProfile = old_state.apps.get_model(
+            "research_review", "ExpertReviewerProfile"
+        )
+        OldAssignment = old_state.apps.get_model(
+            "research_review", "ReviewAssignment"
+        )
+        OldReview = old_state.apps.get_model(
+            "research_review", "ExpertReview"
+        )
+
+        # The real (current) user model, not a historical one: only
+        # research_review's schema is under test here, and
+        # project_state() for a research_review node resolves
+        # unrelated apps (accounts) to whatever point they last
+        # touched research_review's dependency graph - not to "latest
+        # applied in the database" - so accounts.CustomUser as seen
+        # through old_state can be missing columns the real, currently
+        # -migrated table actually has.
+        user = get_user_model().objects.create(
+            username="migration_test_reviewer",
+        )
+
+        experiment = OldExperiment.objects.create(
+            experiment_id="MIG1",
+            source_id="MIG1",
+            domain="D",
+            topic="T",
+            protocol="P",
+        )
+
+        run = OldRun.objects.create(
+            experiment=experiment,
+            run_id="MIG1-run",
+            provider="X",
+        )
+
+        question = OldQuestion.objects.create(
+            run=run,
+            blind_id="MIG1-Q001",
+            item_number=1,
+            skill="main_idea",
+            stem="s",
+            option_a="a",
+            option_b="b",
+            option_c="c",
+            option_d="d",
+            correct_answer="A",
+        )
+
+        # user_id=, not user=: historical ExpertReviewerProfile
+        # expects a historical CustomUser instance, and rejects the
+        # real one with a ValueError - the foreign key column itself
+        # is identical either way, so assigning the id sidesteps the
+        # type check without changing what gets written.
+        reviewer = OldReviewerProfile.objects.create(
+            user_id=user.pk,
+            discipline="AEROSPACE",
+        )
+
+        assignment = OldAssignment.objects.create(
+            reviewer=reviewer,
+            question=question,
+        )
+
+        review_with_codes = OldReview.objects.create(
+            assignment=assignment,
+            error_codes="T1,D2,C1",
+        )
+
+        empty_question = OldQuestion.objects.create(
+            run=run,
+            blind_id="MIG1-Q002",
+            item_number=2,
+            skill="main_idea",
+            stem="s",
+            option_a="a",
+            option_b="b",
+            option_c="c",
+            option_d="d",
+            correct_answer="A",
+        )
+
+        empty_assignment = OldAssignment.objects.create(
+            reviewer=reviewer,
+            question=empty_question,
+        )
+
+        review_without_codes = OldReview.objects.create(
+            assignment=empty_assignment,
+            error_codes="",
+        )
+
+        # Forward: 0005 -> 0008, including 0007's data copy.
+        self._migrate_to(
+            "0008_error_codes_json_to_error_codes"
+        )
+
+        migrated_with_codes = ExpertReview.objects.get(
+            pk=review_with_codes.pk
+        )
+        migrated_without_codes = ExpertReview.objects.get(
+            pk=review_without_codes.pk
+        )
+
+        self.assertEqual(
+            migrated_with_codes.error_codes,
+            ["T1", "D2", "C1"],
+        )
+
+        self.assertEqual(
+            migrated_without_codes.error_codes,
+            [],
+        )

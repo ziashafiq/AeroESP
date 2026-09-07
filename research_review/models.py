@@ -528,8 +528,12 @@ class ExpertReview(models.Model):
         default="",
     )
 
-    error_codes = models.CharField(
-        max_length=255,
+    # A list of ERROR_CODE_CHOICES values (research_review/forms.py
+    # used to store this as "T1,D2,C1" in a CharField and split/join
+    # by hand; see migrations 0006-0008 for the add/copy/remove/rename
+    # sequence that got it here without losing existing data).
+    error_codes = models.JSONField(
+        default=list,
         blank=True,
     )
 

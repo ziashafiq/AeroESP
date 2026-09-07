@@ -228,12 +228,12 @@ class ExpertReviewForm(forms.ModelForm):
             and self.instance.pk
             and self.instance.error_codes
         ):
-            self.initial["error_codes"] = [
-                code.strip()
-                for code
-                in self.instance.error_codes.split(",")
-                if code.strip()
-            ]
+            # error_codes is a JSONField holding a plain list of
+            # codes - no parsing needed, unlike the comma-joined
+            # CharField this used to be.
+            self.initial["error_codes"] = list(
+                self.instance.error_codes
+            )
 
     def save(self, commit=True):
 
@@ -241,11 +241,9 @@ class ExpertReviewForm(forms.ModelForm):
             commit=False
         )
 
-        instance.error_codes = ",".join(
-            self.cleaned_data.get(
-                "error_codes",
-                [],
-            )
+        instance.error_codes = self.cleaned_data.get(
+            "error_codes",
+            [],
         )
 
         if commit:
