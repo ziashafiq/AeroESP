@@ -27,6 +27,11 @@ env/
 !.env.example
 !.env.production.local.example
 
+# Scratch files holding freshly generated secrets on their way into a
+# password manager or a hosting panel. Never committed; delete once the
+# value has been copied where it belongs.
+NEW_SECRETS.txt
+
 # IDE / Editor
 .vscode/
 .idea/
