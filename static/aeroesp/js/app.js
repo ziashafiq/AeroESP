@@ -480,6 +480,84 @@
 
 
 
+    /* ==========================================================
+       Avatar picker
+
+       Signed-in users only - there is nowhere to put a guest's
+       choice, and nowhere it would be shown. The chosen mark appears
+       in three places, so the page is reloaded rather than patched:
+       swapping three DOM nodes by hand is how they drift apart.
+       ========================================================== */
+
+    const avatarControl =
+        document.querySelector("[data-avatar-control]");
+
+    if (avatarControl) {
+
+        const avatarButtons = Array.from(
+            avatarControl.querySelectorAll("[data-avatar-option]")
+        );
+
+        const markActive = (choice) => {
+            avatarButtons.forEach((button) => {
+                const active =
+                    button.dataset.avatarOption === choice;
+
+                button.classList.toggle("is-active", active);
+                button.setAttribute(
+                    "aria-checked",
+                    active ? "true" : "false"
+                );
+            });
+        };
+
+        markActive(avatarControl.dataset.avatarCurrent || "INITIAL");
+
+        avatarButtons.forEach((button) => {
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+
+                const choice = button.dataset.avatarOption;
+                const endpoint =
+                    avatarControl.dataset.avatarEndpoint;
+
+                markActive(choice);
+
+                if (!endpoint) {
+                    return;
+                }
+
+                const token = avatarControl.querySelector(
+                    "input[name=csrfmiddlewaretoken]"
+                );
+
+                const body = new FormData();
+                body.append("avatar", choice);
+
+                try {
+                    fetch(endpoint, {
+                        method: "POST",
+                        body: body,
+                        credentials: "same-origin",
+                        headers: token
+                            ? { "X-CSRFToken": token.value }
+                            : {},
+                    })
+                        .then((response) => {
+                            if (response.ok) {
+                                window.location.reload();
+                            }
+                        })
+                        .catch(() => undefined);
+                } catch (error) {
+                    /* No fetch here; the selection still shows. */
+                }
+            });
+        });
+    }
+
+
+
     /* ===============================================
        UI-08 Accessibility + responsive polish
        =============================================== */

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Delta avatar">
+  <circle cx="32" cy="32" r="32" fill="#0b2236"/>
+
+    <path d="M32 14 L46 46 L32 40 L18 46 Z"
+          fill="#63c8ef"/>
+</svg>

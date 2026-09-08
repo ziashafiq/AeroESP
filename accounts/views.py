@@ -193,6 +193,36 @@ def set_color_palette(request):
 
 @login_required
 @require_POST
+def set_avatar(request):
+    """
+    Persist the signed-in user's avatar choice.
+
+    Same shape as set_color_palette, and same reason for the closed
+    value set: the stored value names a file under static/, so
+    anything outside AVATAR_CHOICES is refused rather than stored.
+    """
+
+    User = get_user_model()
+
+    choice = (request.POST.get("avatar") or "").strip()
+
+    valid = {
+        value for value, _label in User.AVATAR_CHOICES
+    }
+
+    if choice not in valid:
+        return JsonResponse(
+            {"ok": False, "error": "unknown avatar"},
+            status=400,
+        )
+
+    User.objects.filter(pk=request.user.pk).update(avatar=choice)
+
+    return JsonResponse({"ok": True, "avatar": choice})
+
+
+@login_required
+@require_POST
 def user_logout(request):
     """
     Secure universal logout.

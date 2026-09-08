@@ -385,7 +385,7 @@ class ChartAssetTests(TestCase):
 
         vendored = (
             pathlib.Path(settings.BASE_DIR)
-            / "static" / "aeroesp" / "vendor" / "chart.umd.js"
+            / "static" / "aeroesp" / "vendor" / "chart.js"
         )
 
         self.assertTrue(vendored.exists())

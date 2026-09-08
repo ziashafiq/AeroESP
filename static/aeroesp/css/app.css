@@ -16342,6 +16342,114 @@ a.auth-submit {
 
 
 /* =========================================================
+   UI-11 - Avatars
+
+   Each container already has its own size and radius; the mark just
+   fills whichever it lands in. The gradient ground those containers
+   carry is for the initial - a chosen mark brings its own, so it is
+   painted over the top rather than blended with it.
+   ========================================================= */
+
+.avatar-mark {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: inherit;
+
+    object-fit: cover;
+}
+
+.user-avatar:has(.avatar-mark),
+.topbar-user-avatar:has(.avatar-mark),
+.account-avatar-large:has(.avatar-mark) {
+    padding: 0;
+    overflow: hidden;
+
+    /* :has() is well supported now, but a browser without it simply
+       shows the mark on the existing gradient - legible, just less
+       tidy. Nothing depends on this rule. */
+    background: transparent;
+}
+
+
+/* The picker */
+
+.account-avatar-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-top: 4px;
+    margin-bottom: 14px;
+}
+
+.avatar-choice {
+    width: 44px;
+    height: 44px;
+
+    padding: 3px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 15px;
+
+    background: var(--theme-surface);
+
+    cursor: pointer;
+
+    transition:
+        border-color 150ms ease,
+        transform 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.avatar-choice:hover {
+    transform: translateY(-1px);
+    border-color: var(--theme-border-strong);
+}
+
+.avatar-choice:active {
+    transform: scale(0.95);
+}
+
+.avatar-choice:focus-visible {
+    outline: 2px solid var(--theme-accent-strong);
+    outline-offset: 2px;
+}
+
+.avatar-choice.is-active {
+    border-color: var(--theme-accent-strong);
+
+    box-shadow:
+        0 0 0 1px var(--theme-surface),
+        0 0 0 3px var(--theme-accent-strong);
+}
+
+.avatar-choice-face {
+    display: grid;
+    place-items: center;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 12px;
+
+    object-fit: cover;
+}
+
+.avatar-choice-initial .avatar-choice-face {
+    color: var(--theme-text);
+
+    background: var(--theme-surface-soft);
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+
+
+/* =========================================================
    UI-10 - Charts
 
    A canvas has no intrinsic height, and Chart.js with

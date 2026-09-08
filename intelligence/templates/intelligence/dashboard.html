@@ -812,9 +812,11 @@ AI Intelligence
     const aiExperimentData = {{ experiment_chart_data|safe }};
 </script>
 
-{# Was an unpinned CDN tag: it fails outright on a network that
-   cannot reach jsdelivr, and changed major version underneath
-   the page whenever upstream published. #}
+{% comment %}
+Was an unpinned CDN tag: it fails outright on a network that cannot
+reach jsdelivr, and changed major version underneath the page whenever
+upstream published.
+{% endcomment %}
 {% include "aeroesp/_charts.html" %}
 
 <script>

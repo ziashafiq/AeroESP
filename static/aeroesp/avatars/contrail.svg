@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Contrail avatar">
+  <circle cx="32" cy="32" r="32" fill="#0b2236"/>
+
+    <path d="M13 47 C24 45 34 38 44 20"
+          fill="none" stroke="#c7e9f8" stroke-width="3"
+          stroke-linecap="round" opacity=".55"/>
+    <path d="M40 18 L48 16 L46 24 Z" fill="#c7e9f8"/>
+</svg>

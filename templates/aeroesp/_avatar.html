@@ -1,0 +1,43 @@
+{% load static %}
+{% comment %}
+Renders a user's avatar: either a chosen mark or the initial.
+
+Takes `avatar_user` (defaults to request.user) and `avatar_class` for
+the wrapper, because the three places this appears are three different
+sizes with three different existing class names.
+
+One implementation on purpose. The initial was previously written out
+by hand in three templates, which is exactly how two of them end up
+disagreeing later.
+{% endcomment %}
+
+{% with u=avatar_user|default:request.user %}
+<span class="{{ avatar_class|default:'user-avatar' }}">
+
+    {% if u.avatar and u.avatar != "INITIAL" %}
+
+        {% comment %}
+        The whole path is built inside the static tag - passing the
+        directory alone and appending the filename in HTML would
+        yield an unhashed URL and lose cache busting entirely.
+
+        Referenced as a file rather than inlined because the marks are
+        self-contained badges carrying their own ground, so they need
+        no theming, and an img element could not be styled anyway.
+        {% endcomment %}
+        <img
+            class="avatar-mark"
+            src="{% static 'aeroesp/avatars/'|add:u.avatar|add:'.svg' %}"
+            alt=""
+            width="64"
+            height="64"
+        >
+
+    {% else %}
+
+        {{ u.username|slice:":1"|upper }}
+
+    {% endif %}
+
+</span>
+{% endwith %}

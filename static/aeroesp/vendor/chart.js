@@ -4,6 +4,10 @@
    outright on a network that cannot reach the CDN and changes
    under us when upstream publishes. Fetched from
    https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.js
+   Named chart.js rather than chart.umd.js: WhiteNoise strips the
+   content hash from a collected filename to decide whether to
+   send an immutable cache header, and a double extension defeats
+   that - the file would have been served without it.
    sha256 ecc3cd1eeb8c34d2178e3f59fd63ec5a3d84358c11730af0b9958dc886d7652a */
 /*!
  * Chart.js v4.5.1

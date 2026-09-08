@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Turbine avatar">
+  <circle cx="32" cy="32" r="32" fill="#0b2236"/>
+
+    <g fill="#a3d9ef">
+      <path d="M32 12 L36 29 L28 29 Z"/>
+      <path d="M52 32 L35 36 L35 28 Z"/>
+      <path d="M32 52 L28 35 L36 35 Z"/>
+      <path d="M12 32 L29 28 L29 36 Z"/>
+    </g>
+    <circle cx="32" cy="32" r="4.2" fill="#a3d9ef"/>
+</svg>

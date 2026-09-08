@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Lattice avatar">
+  <circle cx="32" cy="32" r="32" fill="#0b2236"/>
+
+    <path d="M32 12 L49 22 L49 42 L32 52 L15 42 L15 22 Z"
+          fill="none" stroke="#9ecfe6" stroke-width="2.6"
+          stroke-linejoin="round"/>
+    <path d="M32 12 L32 32 L49 42 M32 32 L15 42"
+          fill="none" stroke="#9ecfe6" stroke-width="2"
+          stroke-linejoin="round" opacity=".55"/>
+</svg>

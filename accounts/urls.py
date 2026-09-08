@@ -42,6 +42,12 @@ urlpatterns = [
     ),
 
     path(
+        "preferences/avatar/",
+        views.set_avatar,
+        name="set_avatar",
+    ),
+
+    path(
         "redirect/",
         views.role_redirect,
         name="role_redirect",

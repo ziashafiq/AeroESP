@@ -54,6 +54,32 @@ class CustomUser(AbstractUser):
         default="skyline",
     )
 
+    # A chosen avatar, not an uploaded one. Deliberate: an upload
+    # needs file validation, storage, and a content-safety story, and
+    # none of that is worth taking on for a profile picture. INITIAL
+    # is a real choice rather than a null - the first letter of the
+    # username, which is what every account had before this and what
+    # most will keep.
+    AVATAR_INITIAL = "INITIAL"
+
+    AVATAR_CHOICES = [
+        (AVATAR_INITIAL, "Initial"),
+        ("delta", "Delta wing"),
+        ("orbit", "Orbit"),
+        ("vector", "Ascent"),
+        ("turbine", "Turbine"),
+        ("radar", "Radar"),
+        ("contrail", "Contrail"),
+        ("lattice", "Lattice"),
+        ("polaris", "Polaris"),
+    ]
+
+    avatar = models.CharField(
+        max_length=20,
+        choices=AVATAR_CHOICES,
+        default=AVATAR_INITIAL,
+    )
+
     # Set once, at registration, when the Terms of Use checkbox is
     # accepted. A timestamp rather than a boolean so acceptance of a
     # confidentiality agreement over exam content has evidence behind

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64" width="64" height="64"
+     role="img" aria-label="Radar avatar">
+  <circle cx="32" cy="32" r="32" fill="#0b2236"/>
+
+    <circle cx="32" cy="32" r="18" fill="none"
+            stroke="#6ed7f5" stroke-width="2" opacity=".45"/>
+    <circle cx="32" cy="32" r="11" fill="none"
+            stroke="#6ed7f5" stroke-width="2" opacity=".7"/>
+    <circle cx="32" cy="32" r="3" fill="#6ed7f5"/>
+    <path d="M32 32 L47 22" stroke="#6ed7f5" stroke-width="2.8"
+          stroke-linecap="round"/>
+</svg>
