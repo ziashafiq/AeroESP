@@ -177,6 +177,10 @@ MIDDLEWARE = [
     'axes.middleware.AxesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Last, and after AuthenticationMiddleware: it decides whether a
+    # response may be stored by the service worker, which it can only
+    # do once request.user is known.
+    'config.pwa.PublicPageCacheHeaderMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -195,6 +199,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.support_email',
                 'accounts.context_processors.canonical_url',
+                'config.pwa.context',
             ],
         },
     },

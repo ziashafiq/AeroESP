@@ -1,0 +1,92 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#071926">
+
+<title>Offline · AeroESP</title>
+
+<link
+    rel="icon"
+    type="image/png"
+    href="{% static 'aeroesp/brand/pwa/icon-192.png' %}"
+>
+
+<style>
+/* Deliberately self-contained. This page is the last thing standing
+   when the network is gone, so it may not depend on a stylesheet
+   having survived in the cache. It also renders nothing about the
+   signed-in user: the service worker stores it once, at install, and
+   that single copy is shown to whoever opens the app next. */
+:root { color-scheme: light dark; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    background: #f5f8fb;
+    color: #10243a;
+}
+
+@media (prefers-color-scheme: dark) {
+    body { background: #06111f; color: #eef6fc; }
+    .card { background: #0b1b2d; border-color: rgba(255,255,255,.10); }
+    .muted { color: #a9bac9; }
+}
+
+.card {
+    max-width: 30rem;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid rgba(15,42,67,.11);
+    border-radius: 18px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 14px 36px rgba(7,24,45,.10);
+}
+
+img { width: 64px; height: 64px; }
+
+h1 { font-size: 1.35rem; margin: 1.25rem 0 .75rem; }
+
+.muted { color: #68798b; line-height: 1.65; margin: 0 0 1.75rem; }
+
+a {
+    display: inline-block;
+    padding: .7rem 1.6rem;
+    border-radius: 999px;
+    background: #1878f2;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+}
+</style>
+
+</head>
+<body>
+
+<div class="card">
+
+    <img
+        src="{% static 'aeroesp/brand/pwa/icon-192.png' %}"
+        alt=""
+    >
+
+    <h1>You are offline</h1>
+
+    <p class="muted">
+        AeroESP could not reach the network. Public pages you have
+        already opened are still available. Anything tied to your
+        account will come back as soon as you have a connection.
+    </p>
+
+    <a href="/">Try again</a>
+
+</div>
+
+</body>
+</html>

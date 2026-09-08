@@ -25,6 +25,8 @@
         href="{% static 'aeroesp/brand/final/aeroesp-app-icon.png' %}"
     >
 
+    {% include 'pwa/_head.html' %}
+
     <script>
         /* Runs before first paint so the page never flashes the wrong
            theme. Every step is guarded because this also runs inside
@@ -816,6 +818,8 @@
 {% block extra_js %}
 {% endblock %}
 
+
+{% include 'pwa/_register.html' %}
 
 </body>
 

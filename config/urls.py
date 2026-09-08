@@ -17,6 +17,7 @@ from .health import (
     health_live,
     health_ready,
 )
+from . import pwa
 from .seo_views import robots_txt
 from .sitemaps import sitemaps
 
@@ -58,6 +59,27 @@ urlpatterns = [
         "robots.txt",
         robots_txt,
         name="robots_txt",
+    ),
+
+    # Served from the root: a service worker may only control the
+    # directory it is served from, so one under /static/ would be
+    # confined to /static/. See config/pwa.py.
+    path(
+        "sw.js",
+        pwa.service_worker,
+        name="service_worker",
+    ),
+
+    path(
+        "manifest.webmanifest",
+        pwa.manifest,
+        name="manifest",
+    ),
+
+    path(
+        "offline/",
+        pwa.offline,
+        name="offline",
     ),
 
     path(

@@ -1,0 +1,26 @@
+{% if PWA_ENABLED %}
+<script>
+    /* Registration is deferred to load so it never competes with the
+       page's own requests, and every step is guarded: an in-app
+       WebView with site data blocked throws on serviceWorker access
+       rather than reporting it as absent, and an unguarded throw here
+       would take the rest of the page's scripts with it. */
+    (function () {
+        if (!("serviceWorker" in navigator)) {
+            return;
+        }
+
+        window.addEventListener("load", function () {
+            try {
+                navigator.serviceWorker
+                    .register("/sw.js", { scope: "/" })
+                    .catch(function () {
+                        /* Nothing to do: the site works without it. */
+                    });
+            } catch (error) {
+                /* Storage or workers unavailable in this context. */
+            }
+        });
+    })();
+</script>
+{% endif %}

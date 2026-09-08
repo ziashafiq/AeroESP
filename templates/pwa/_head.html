@@ -1,0 +1,15 @@
+{% load static %}
+<link rel="manifest" href="{% url 'manifest' %}">
+
+{# iOS ignores the manifest entirely and reads these instead. #}
+<link
+    rel="apple-touch-icon"
+    href="{% static 'aeroesp/brand/pwa/apple-touch-icon.png' %}"
+>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AeroESP">
+<meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+>
+<meta name="mobile-web-app-capable" content="yes">
