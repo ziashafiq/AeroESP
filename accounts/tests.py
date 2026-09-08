@@ -1888,3 +1888,149 @@ class RolePermissionAutoSyncTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+
+
+class OwnIdentityRenderingTests(TestCase):
+    """
+    Every page must take the displayed name from the viewer's own
+    record. The reported symptom was a pending teacher seeing the
+    administrator's name as their own: teacher_pending.html is the only
+    page a logged-in user reaches that extends public_base.html, which
+    credits the developer by name in its footer, and the page carried no
+    name of the signed-in user to contrast it with.
+    """
+
+    ADMIN_FULL_NAME = "Habib Ziashafiq"
+
+    def setUp(self):
+
+        self.admin = get_user_model().objects.create_superuser(
+            username="site_admin",
+            email="admin@example.com",
+            password="AeroESP-Strong-2026",
+            first_name="Habib",
+            last_name="Ziashafiq",
+        )
+
+        self.teacher = get_user_model().objects.create_user(
+            username="koshaarash",
+            email="koshaarash@example.com",
+            password="AeroESP-Strong-2026",
+            first_name="Arash",
+            last_name="Kosha",
+        )
+        self.teacher.selected_role = "TEACHER"
+        self.teacher.save()
+
+        self.teacher_profile = TeacherProfile.objects.create(
+            user=self.teacher,
+            university="Sharif University",
+        )
+
+        self.student = get_user_model().objects.create_user(
+            username="student_one",
+            email="student@example.com",
+            password="AeroESP-Strong-2026",
+            first_name="Sara",
+            last_name="Student",
+        )
+
+    def test_pending_teacher_page_names_the_signed_in_user(self):
+
+        self.client.force_login(self.teacher)
+
+        response = self.client.get(
+            reverse("accounts:teacher_pending")
+        )
+        body = response.content.decode()
+
+        self.assertContains(response, "koshaarash")
+        self.assertIn("Arash Kosha", body)
+
+    def test_pending_teacher_page_does_not_present_admin_as_the_user(self):
+        """
+        The developer credit may still appear in the footer, but the
+        page must also state whose account is signed in, so the credit
+        cannot be read as the viewer's own name.
+        """
+
+        self.client.force_login(self.teacher)
+
+        response = self.client.get(
+            reverse("accounts:teacher_pending")
+        )
+        body = response.content.decode()
+
+        signed_in_at = body.find("Signed in as")
+        credit_at = body.find("Designed &amp; Developed by")
+
+        self.assertNotEqual(
+            signed_in_at, -1,
+            "pending teacher page must say who is signed in",
+        )
+
+        if credit_at != -1:
+            self.assertLess(
+                signed_in_at,
+                credit_at,
+                "the viewer's own identity must appear before the "
+                "developer credit",
+            )
+
+    def test_account_center_shows_the_viewers_own_name(self):
+
+        for user, expected in (
+            (self.teacher, "Arash Kosha"),
+            (self.student, "Sara Student"),
+            (self.admin, self.ADMIN_FULL_NAME),
+        ):
+
+            with self.subTest(user=user.username):
+
+                self.client.force_login(user)
+
+                response = self.client.get(
+                    reverse("accounts:account_center")
+                )
+                body = response.content.decode()
+
+                self.assertIn(expected, body)
+
+                # Nobody but the admin should see the admin's name in
+                # the profile-information block.
+                if user is not self.admin:
+                    profile_block = body.split("Profile information")[1]
+                    profile_block = profile_block.split("Workspace")[0]
+                    self.assertNotIn(
+                        self.ADMIN_FULL_NAME,
+                        profile_block,
+                    )
+
+    def test_no_view_writes_another_users_name(self):
+        """
+        Guards the other half of the original hypothesis: that the
+        approve/promote flow wrote request.user onto the target. Names
+        must be untouched by an admin approving someone.
+        """
+
+        original = (
+            self.teacher.first_name,
+            self.teacher.last_name,
+        )
+
+        self.teacher_profile.approval_status = (
+            TeacherProfile.ApprovalStatus.APPROVED
+        )
+        self.teacher_profile.approved_by = self.admin
+        self.teacher_profile.save()
+
+        self.teacher.refresh_from_db()
+
+        self.assertEqual(
+            (self.teacher.first_name, self.teacher.last_name),
+            original,
+        )
+        self.assertNotEqual(
+            self.teacher.get_full_name(),
+            self.ADMIN_FULL_NAME,
+        )

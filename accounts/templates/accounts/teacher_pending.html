@@ -21,6 +21,20 @@ Teacher Approval · AeroESP
         Approval is pending.
     </h1>
 
+    {#
+        Whose account this is, stated plainly. Without it this page
+        carries no name of the signed-in user at all, while the shared
+        footer credits the developer by name - and pending teachers are
+        the only users who land on a public_base page while logged in,
+        so they were the only ones who could read that credit as their
+        own profile name.
+    #}
+    <p class="status-identity">
+        Signed in as
+        <strong>{{ request.user.username }}</strong>{% if request.user.get_full_name %}
+            &middot; {{ request.user.get_full_name }}{% endif %}
+    </p>
+
     <p>
         Your teacher profile exists,
         but teaching permissions are not
