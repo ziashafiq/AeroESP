@@ -2849,6 +2849,21 @@ tbody tr:hover {
     border-radius: 15px;
 }
 
+/* The two rules above are deliberately warm and light - that is the
+   intended look in day mode. They just had no night-mode counterpart,
+   so the fixed body colour went dark-on-dark and the cream panel stayed
+   bright behind themed text. Overriding here keeps the light design
+   exactly as designed and only supplies what was missing. */
+html[data-theme="dark"] .study-block p {
+    color: var(--theme-text-soft);
+}
+
+html[data-theme="dark"] .study-block-important {
+    background: rgba(194, 121, 52, .10);
+
+    border-color: rgba(232, 182, 106, .28);
+}
+
 .rtl-content {
     direction: rtl;
 
@@ -3687,16 +3702,19 @@ tbody tr:hover {
 
     padding: 23px;
 
-    background:
-        linear-gradient(
-            145deg,
-            #ffffff,
-            #f2f9fb
-        );
+    /* Themed tokens, not literals. This card used to hardcode a
+       white-to-pale-blue gradient and a fixed border, while its text
+       colour was inherited from the theme - so in dark mode light text
+       landed on a near-white card and the content read as detached
+       from the column behind it. Every other card in the design system
+       uses var(--theme-surface); this one now does too. */
+    background: var(--theme-surface);
+
+    color: var(--theme-text);
 
     border:
         1px solid
-        rgba(55,154,196,.12);
+        var(--theme-border);
 
     border-radius:
         24px 24px

@@ -2284,3 +2284,88 @@ class EmailLoginTests(TestCase):
             "accounts.backends.EmailOrUsernameModelBackend",
             s.AUTHENTICATION_BACKENDS,
         )
+
+
+class ThemeBootstrapRobustnessTests(SimpleTestCase):
+    """
+    The theme bootstrap also runs inside in-app WebViews (the Google
+    app), where blocked site data makes localStorage throw rather than
+    return null. Unguarded, that exception killed the script and left
+    the document with no data-theme - which is why the theme misbehaved
+    there while Chrome was fine.
+    """
+
+    def _sources(self):
+        import pathlib
+
+        base = pathlib.Path(__file__).resolve().parent.parent
+
+        return {
+            "base.html": (
+                base / "templates" / "aeroesp" / "base.html"
+            ).read_text(encoding="utf-8"),
+            "public_base.html": (
+                base / "templates" / "aeroesp" / "public_base.html"
+            ).read_text(encoding="utf-8"),
+            "app.js": (
+                base / "static" / "aeroesp" / "js" / "app.js"
+            ).read_text(encoding="utf-8"),
+        }
+
+    def test_every_localstorage_access_is_guarded(self):
+
+        for name, source in self._sources().items():
+
+            with self.subTest(source=name):
+
+                for index, line in enumerate(source.splitlines()):
+
+                    # Only real calls, not the prose in the comments
+                    # that explain why they are guarded.
+                    if not (
+                        "localStorage.getItem" in line
+                        or "localStorage.setItem" in line
+                    ):
+                        continue
+
+                    window = "\n".join(
+                        source.splitlines()[
+                            max(0, index - 12):index
+                        ]
+                    )
+
+                    self.assertIn(
+                        "try {",
+                        window,
+                        f"{name}: localStorage on line {index + 1} is "
+                        "not inside a try block",
+                    )
+
+    def test_media_listener_has_a_legacy_fallback(self):
+        """
+        Older WebViews expose only the deprecated addListener; calling
+        the missing addEventListener throws and takes the rest of the
+        script with it.
+        """
+
+        source = self._sources()["app.js"]
+
+        self.assertIn("media.addListener", source)
+        self.assertIn(
+            'typeof media.addEventListener === "function"',
+            source,
+        )
+
+    def test_bootstrap_always_sets_a_theme_attribute(self):
+
+        for name in ("base.html", "public_base.html"):
+
+            with self.subTest(source=name):
+
+                source = self._sources()[name]
+
+                self.assertIn('setAttribute("data-theme"', source)
+                self.assertIn(
+                    'setAttribute("data-theme-preference"',
+                    source,
+                )

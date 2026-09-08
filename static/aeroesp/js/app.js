@@ -219,8 +219,25 @@
         document.querySelectorAll("[data-theme-option]")
     );
 
+    /* In-app WebViews (the Google app among them) can have site data
+       blocked, and there localStorage does not return null - it
+       throws. Unguarded that exception killed this whole IIFE, so the
+       theme buttons stopped responding and the system-change listener
+       was never attached, while Chrome was unaffected. Every access is
+       wrapped, with an in-memory value so the toggle still works for
+       the current page even when nothing can be persisted. */
+    let memoryPreference = null;
+
     function getPreference() {
-        const value = localStorage.getItem(KEY);
+        let value = memoryPreference;
+
+        if (value === null) {
+            try {
+                value = localStorage.getItem(KEY);
+            } catch (error) {
+                value = null;
+            }
+        }
 
         if (
             value === "light" ||
@@ -270,7 +287,15 @@
     }
 
     function setPreference(preference) {
-        localStorage.setItem(KEY, preference);
+        memoryPreference = preference;
+
+        try {
+            localStorage.setItem(KEY, preference);
+        } catch (error) {
+            /* Not persistable here; the in-memory value still drives
+               this page, and the button stays responsive. */
+        }
+
         apply(preference);
     }
 
@@ -285,11 +310,20 @@
         });
     });
 
-    media.addEventListener("change", () => {
+    /* MediaQueryList.addEventListener is comparatively recent; older
+       WebViews only expose the deprecated addListener, and calling the
+       missing method throws - taking the rest of this script with it. */
+    const onSystemChange = () => {
         if (getPreference() === "system") {
             apply("system");
         }
-    });
+    };
+
+    if (typeof media.addEventListener === "function") {
+        media.addEventListener("change", onSystemChange);
+    } else if (typeof media.addListener === "function") {
+        media.addListener(onSystemChange);
+    }
 
     apply(getPreference());
 

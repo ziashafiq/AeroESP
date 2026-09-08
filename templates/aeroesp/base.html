@@ -26,15 +26,51 @@
     >
 
     <script>
+        /* Runs before first paint so the page never flashes the wrong
+           theme. Every step is guarded because this also runs inside
+           in-app WebViews (the Google app, for one), where
+           localStorage is not merely empty but THROWS when site data
+           is blocked. Unguarded, that exception killed this script and
+           left the document with no data-theme at all, which is why
+           the theme misbehaved there while working in Chrome. */
         (() => {
-            const saved = localStorage.getItem("aeroesp-theme") || "system";
-            const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            const resolved = saved === "system"
-                ? (dark ? "dark" : "light")
-                : saved;
+            var saved = "system";
 
-            document.documentElement.dataset.theme = resolved;
-            document.documentElement.dataset.themePreference = saved;
+            try {
+                var stored = window.localStorage.getItem(
+                    "aeroesp-theme"
+                );
+
+                if (
+                    stored === "light" ||
+                    stored === "dark" ||
+                    stored === "system"
+                ) {
+                    saved = stored;
+                }
+            } catch (e) {
+                /* Storage unavailable: fall back to system. */
+            }
+
+            var dark = false;
+
+            try {
+                dark = window.matchMedia(
+                    "(prefers-color-scheme: dark)"
+                ).matches;
+            } catch (e) {
+                /* No matchMedia: treat as light. */
+            }
+
+            var resolved =
+                saved === "system"
+                    ? (dark ? "dark" : "light")
+                    : saved;
+
+            var root = document.documentElement;
+
+            root.setAttribute("data-theme", resolved);
+            root.setAttribute("data-theme-preference", saved);
         })();
     </script>
 
