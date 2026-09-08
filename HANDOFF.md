@@ -5,6 +5,13 @@
 **Test suite:** 336 tests, all passing
 (`python manage.py test --settings=config.test_settings`)
 
+> **Standing rule, effective 2026-09-08:** Liara does not run
+> migrations on deploy - confirmed after the round-two push 500'd on a
+> missing column. After every push to `main`: shell into the live app
+> and run `python manage.py migrate --plan`, then `migrate --noinput`
+> if it lists anything. See "Migrations - MUST be run manually" below
+> for the full root cause.
+
 ---
 
 ## Deploy state
@@ -78,25 +85,54 @@ AEROESP_SUPPORT_EMAIL   = support@aeroesp.com
 `AEROESP_SUPPORT_EMAIL` is what the "Report a problem" footer link uses;
 it currently shows the personal Gmail.
 
-### 2. Migrations
+### 2. Migrations — MUST be run manually, confirmed 2026-09-08
 
-Two new migrations, both metadata-only:
+**Liara does not run `manage.py migrate` automatically. This is now
+confirmed, not a caveat.** The `color_palette` migration from the round-two
+push was not applied on deploy, and `/accounts/account/` (any page
+touching `CustomUser`) 500'd with `column accounts_customuser.color_palette
+does not exist` until it was run by hand.
+
+Root cause: `deploy.sh` — the script both previous HANDOFF versions
+pointed to — is never invoked by Liara at all. Nothing in this repo
+wires it in: no `Procfile`, no release-command key, no reference to it
+anywhere outside this file. It matches the systemd/nginx VPS deploy kit
+in `deployment/` in spirit, but even that kit's own unit file
+(`deployment/aeroesp.service`) calls `gunicorn` directly and skips
+`deploy.sh` too — so as far as this repo shows, `deploy.sh` has never
+been executed by anything, ever.
+
+Liara's own documented `liara.json` keys for the `django` platform are
+`mirror`, `pythonVersion`, `timezone`, `collectStatic`, `compileMessages`,
+`modifySettings`, `geospatial` — no `migrate`, no release command, no
+start-command override. `collectStatic: true` is why static files *do*
+show up correctly after a deploy; there is no equivalent flag for
+migrations, and the platform's own docs do not mention running them.
+
+**Standing process from now on — after every push to `main`:**
+
+1. Open a shell on the running app (`liara shell <app-name>`, or the
+   Liara panel's web shell).
+2. `python manage.py migrate --plan` — read-only, shows exactly what
+   would run without touching anything.
+3. If it lists anything, `python manage.py migrate --noinput`.
+
+Do this from inside the deployed container, not from a local checkout —
+`AEROESP_DB_HOST` in the local `.env` is a bare Liara-internal service
+name, so a local `migrate --plan` may silently check the wrong thing
+(or fail to connect at all) rather than reporting on the database the
+live site actually uses.
+
+This round's two migrations, for reference — both metadata-only:
 
 ```
 intelligence/0018_alter_aievaluationdataset_options_and_more.py
 learning/0011_alter_learningprogress_options.py
 ```
 
-`deploy.sh` runs `migrate --noinput`, so if Liara uses that script they
-apply themselves. **Worth verifying** — `liara.json` uses the django
-platform and does not explicitly name `deploy.sh`. If in doubt:
-
-```
-python manage.py migrate --noinput
-```
-
-Safe either way: `sqlmigrate` reports `(no-op)` for both. No schema
-change, no data change.
+`sqlmigrate` reports `(no-op)` for both, but that does not matter now:
+*any* migration needs this same manual step, schema-changing or not,
+since nothing applies it for you.
 
 ### 3. Seed the Guide Hub
 
@@ -195,8 +231,10 @@ accounts/0012_customuser_color_palette.py
 accounts/0013_customuser_avatar.py
 ```
 
-`deploy.sh` runs `migrate --noinput`. Same caveat as before: verify
-Liara actually uses that script.
+**This is what actually broke production on this push** — see the
+"MUST be run manually" section above. `deploy.sh` does not run;
+nothing does. Run `migrate --plan` then `migrate --noinput` from a
+shell on the live app after every push to `main`, no exceptions.
 
 ## Environment variables
 
