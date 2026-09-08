@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-08
 **Branch:** `main` (deployed) — `phase7-research-review` is identical
-**Test suite:** 247 tests, all passing
+**Test suite:** 336 tests, all passing
 (`python manage.py test --settings=config.test_settings`)
 
 ---
@@ -172,3 +172,150 @@ commit, the manifest is not.
 The `R01 / expert_test` reviewer profile was set
 `is_active_reviewer=False` on the local database only — **not on
 production.** If that account exists there, deactivate it in the admin.
+
+---
+
+# Round two — optional improvements
+
+Four features, four commits, on top of `eeb4d38`. All pushed to `main`.
+
+| Commit | What |
+|--------|------|
+| `e99dbe0` | Installable as a PWA |
+| `fb68b40` | User-selectable accent palettes |
+| `9d66495` | Charts for evaluation results |
+| `eecfd8b` | Choosable profile avatars |
+
+## Migrations
+
+Two, both additive with defaults — no backfill, no downtime:
+
+```
+accounts/0012_customuser_color_palette.py
+accounts/0013_customuser_avatar.py
+```
+
+`deploy.sh` runs `migrate --noinput`. Same caveat as before: verify
+Liara actually uses that script.
+
+## Environment variables
+
+**None.** Everything here is either static or a user preference stored
+in the database. `AEROESP_ENABLE_PWA=1` exists but is a local
+development switch only — the service worker registers automatically
+whenever `DEBUG` is off, and forcing it on in development would pin an
+edited stylesheet to its cached copy.
+
+## Manual steps
+
+**Nothing required.** Both new preferences default to today's
+behaviour: `color_palette` to the existing blue, and `avatar` to the
+initial letter every account already showed.
+
+Worth doing once after deploy: open the site on a phone in Chrome and
+confirm the install prompt appears. Chrome's own installability audit
+(`Page.getInstallabilityErrors`, persistent profile, running site)
+reports zero errors, so this is a confirmation rather than a check.
+
+## What the PWA caches, and what it refuses to
+
+The worker stores `/static/` (content-hashed, so never stale) and the
+four public pages — home, terms, and the help list and detail. Nothing
+else, ever.
+
+The rule lives on the server: `PublicPageCacheHeaderMiddleware` adds
+`X-AeroESP-Cacheable: 1` only to anonymous GETs of those four views,
+and the worker refuses to store any navigation without it. A service
+worker cache is shared by everyone using the browser profile, so a
+page stored while someone was signed in would be readable by whoever
+opened the app next. Verified in a real browser: after visiting the
+login page and the terms page, only `/` and `/terms/` were in the
+cache.
+
+Against staleness after deploy: cache names embed a build id derived
+from the content-hashed precache URLs, `activate` deletes every cache
+that is not current, `skipWaiting`/`clients.claim` hand over
+immediately, and navigations are network-first — the cache is only
+consulted when the network actually fails.
+
+## Palettes
+
+Five accents: Skyline (default, the existing blue, unchanged), Copper,
+Indigo, Verdigris, Slate. A signed-in user's choice is a field on the
+user and is rendered into `<html>` by the server, so it follows them
+to any device with no flash of the default. Guests keep theirs in
+`localStorage`.
+
+Only six custom properties change per palette; everything else derives.
+Contrast is solved numerically and asserted by parsing the shipped
+stylesheet, so a palette added later with an eyeballed colour fails the
+tests. `--theme-accent-strong` carries text and clears 4.5:1 in both
+schemes; the gradient stops carry white labels and clear 4.5:1 against
+white; `--theme-accent` is decorative only.
+
+## The analysis page
+
+New, at `/expert-review/analysis/`, **staff only**. Mean score across
+the nine EVAL_V1 dimensions, and the Accept/Minor/Major/Reject split,
+with the same numbers as a table underneath for the Methods section.
+
+Reviewers are deliberately locked out: an aggregate mean and a decision
+split are exactly the anchor that would pull their later judgements
+toward the panel's. Nothing on the page touches provenance — it never
+joins to `ResearchRun` or `ResearchExperiment`, and the tests assert
+that across all three provenance values, over the view context, and
+over the template source, since one `{{ ... .run.provider }}` would
+undo the rest.
+
+## Bugs found while building, all fixed
+
+1. **`app.js` threw on every page load.** Two top-level IIFEs, and the
+   sidebar handlers at the end of the second read `body`,
+   `menuButton`, `sidebar` and `closeSidebar` from the first.
+   `ReferenceError`, so Escape-to-close and the back/forward reset were
+   dead. Invisible because the theme had already applied by then.
+   Chrome confirmed it five times over; console is clean now.
+
+2. **Multi-line `{# #}` is not a comment.** Django's lexer pattern is
+   not DOTALL, so the text renders into the page. Two were live:
+   approved teachers had a paragraph of explanatory prose in their
+   sidebar, pending teachers another above "Signed in as". Both were
+   mine, from round one, and the admin-only screenshot review never
+   touched those pages.
+
+3. **`collectstatic` was failing silently.** Chart.js ships a
+   `sourceMappingURL` comment and the `.map` is not vendored;
+   `ManifestStaticFilesStorage` treats that as a hard error. On a
+   build/run split host that is a deploy where every stylesheet points
+   at the previous build.
+
+4. **The reviewer app never got the WebView fix.**
+   `research_review/base.html` still carried the original unguarded
+   theme bootstrap, so `0740fe0` never reached the reviewers. All
+   three shells now share one include.
+
+5. **A stylesheet link above the doctype** in `public_base.html`, which
+   puts the document into quirks mode — worst for mobile layout.
+
+6. **The AI comparison chart loaded Chart.js from an unpinned CDN.**
+   Now self-hosted, and a test walks every template to keep it so.
+
+7. **101 hardcoded accent literals** beyond the 64 found in the first
+   pass. `#087eae` sat one character from the `#087fae` being searched
+   for, inside a dark-mode `[class*="primary"]` catch-all with
+   `!important`, and repainted every primary button blue whatever the
+   palette was. The test is now a property, not a list.
+
+## Still open
+
+Everything in the previous "Known issues" section stands. Additionally:
+
+- `CustomUser.profile_image` (an `ImageField`) exists on the model and
+  is exposed nowhere — no form, no template, no admin. Avatar upload
+  was deliberately not built; the dormant field is worth either using
+  or removing.
+- The palette picker is hidden in the topbar below 760px. The account
+  centre carries the same controls at every width, which is the mobile
+  path.
+- Exam results (`exams/student/result.html`) still show a bare score
+  and percentage. Charting them was not in scope.
