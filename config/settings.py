@@ -1254,3 +1254,31 @@ if IS_PRODUCTION and EMAIL_BACKEND.endswith(
         "will not reach users. Set DJANGO_EMAIL_BACKEND to "
         "django.core.mail.backends.smtp.EmailBackend. ***\n\n"
     )
+
+
+# Setting DEFAULT_FROM_EMAIL to an address the SMTP account is not
+# authorised to send as is a silent failure, not a loud one: Gmail
+# rewrites the From header back to the authenticated mailbox and
+# delivers anyway, so outgoing mail keeps arriving from a personal
+# address while the setting insists otherwise. A forwarder such as
+# ImprovMX only routes mail INBOUND to the address - it grants no
+# right to send FROM it. Gmail needs the address registered under
+# "Send mail as" and confirmed before it will honour it.
+def _mail_domain(address):
+    return address.rsplit("@", 1)[-1].strip(" >").lower()
+
+
+if (
+    EMAIL_BACKEND.endswith("smtp.EmailBackend")
+    and EMAIL_HOST_USER
+    and "gmail" in EMAIL_HOST.lower()
+    and _mail_domain(DEFAULT_FROM_EMAIL)
+    != _mail_domain(EMAIL_HOST_USER)
+):
+    sys.stderr.write(
+        "\n*** FROM ADDRESS MAY BE REWRITTEN: "
+        f"DEFAULT_FROM_EMAIL is {DEFAULT_FROM_EMAIL} but SMTP "
+        f"authenticates as {EMAIL_HOST_USER}. Gmail only honours a "
+        "From address registered under 'Send mail as' and confirmed; "
+        "otherwise it silently substitutes the account address. ***\n\n"
+    )

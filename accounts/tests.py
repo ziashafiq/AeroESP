@@ -2034,3 +2034,59 @@ class OwnIdentityRenderingTests(TestCase):
             self.teacher.get_full_name(),
             self.ADMIN_FULL_NAME,
         )
+
+
+class OutgoingFromAddressTests(TestCase):
+    """
+    Outgoing mail must use DEFAULT_FROM_EMAIL, which is env-driven, so
+    production can send as support@aeroesp.com rather than the personal
+    Gmail account the SMTP session authenticates with.
+    """
+
+    @override_settings(
+        DEFAULT_FROM_EMAIL="AeroESP Support <support@aeroesp.com>"
+    )
+    def test_password_reset_uses_the_configured_from_address(self):
+
+        get_user_model().objects.create_user(
+            username="resetme",
+            email="resetme@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+        self.client.post(
+            reverse("password_reset"),
+            {"email": "resetme@example.com"},
+        )
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].from_email,
+            "AeroESP Support <support@aeroesp.com>",
+        )
+
+    @override_settings(
+        DEFAULT_FROM_EMAIL="AeroESP <support@aeroesp.com>"
+    )
+    def test_verification_email_uses_the_configured_from_address(self):
+
+        from accounts.utils import (
+            create_verification_code,
+            send_verification_email,
+        )
+
+        user = get_user_model().objects.create_user(
+            username="verifyme",
+            email="verifyme@example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+        verification = create_verification_code(user)
+
+        send_verification_email(user, verification.code)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].from_email,
+            "AeroESP <support@aeroesp.com>",
+        )
