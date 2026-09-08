@@ -2144,3 +2144,143 @@ class SidebarNavigationTests(TestCase):
             reverse("learning:teacher_learning_dashboard"),
             body,
         )
+
+
+class EmailLoginTests(TestCase):
+    """
+    Users forget the generated username but know their email, so the
+    login form accepts either - without becoming an oracle for which
+    addresses are registered.
+    """
+
+    LOGIN_FAILURE_TEXT = "you entered is incorrect"
+
+    def setUp(self):
+
+        self.user = get_user_model().objects.create_user(
+            username="alexsmith",
+            email="Alex.Smith@Example.com",
+            password="AeroESP-Strong-2026",
+        )
+
+    def _post(self, identifier, password="AeroESP-Strong-2026"):
+        return self.client.post(
+            reverse("accounts:login"),
+            {"username": identifier, "password": password},
+        )
+
+    def test_login_with_username_still_works(self):
+
+        self._post("alexsmith")
+
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]),
+            self.user.pk,
+        )
+
+    def test_login_with_email_works(self):
+
+        self._post("Alex.Smith@Example.com")
+
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]),
+            self.user.pk,
+        )
+
+    def test_login_with_email_is_case_insensitive(self):
+
+        self._post("alex.smith@example.com")
+
+        self.assertEqual(
+            int(self.client.session["_auth_user_id"]),
+            self.user.pk,
+        )
+
+    def test_wrong_password_with_a_real_email_fails(self):
+
+        self._post("alex.smith@example.com", password="wrong-password")
+
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_no_user_enumeration_via_email(self):
+        """
+        The security requirement: a registered address and an unknown
+        one must be indistinguishable from the outside. Same status,
+        same message, byte-identical rendered form.
+        """
+
+        known = self._post(
+            "alex.smith@example.com", password="wrong-password"
+        )
+        unknown = self._post(
+            "nobody.here@example.com", password="wrong-password"
+        )
+
+        self.assertEqual(known.status_code, unknown.status_code)
+
+        known_body = known.content.decode()
+        unknown_body = unknown.content.decode()
+
+        self.assertIn(self.LOGIN_FAILURE_TEXT, known_body)
+        self.assertIn(self.LOGIN_FAILURE_TEXT, unknown_body)
+
+        # Byte-identical once the submitted address and the per-request
+        # CSRF token are normalised away: no other difference may leak
+        # which address exists.
+        import re
+
+        def normalise(body, address):
+            body = body.replace(address, "SUBMITTED")
+            return re.sub(
+                r'name="csrfmiddlewaretoken" value="[^"]+"',
+                'name="csrfmiddlewaretoken" value="TOKEN"',
+                body,
+            )
+
+        self.assertEqual(
+            normalise(known_body, "alex.smith@example.com"),
+            normalise(unknown_body, "nobody.here@example.com"),
+        )
+
+    def test_registration_login_still_works_with_the_new_backend(self):
+        """
+        register() calls login() with an explicit backend path, which
+        must name a backend in AUTHENTICATION_BACKENDS or it raises.
+        """
+
+        with self.settings(REQUIRE_EMAIL_VERIFICATION=False):
+
+            response = self.client.post(
+                reverse("accounts:register"),
+                {
+                    "first_name": "New",
+                    "last_name": "Person",
+                    "email": "new.person@example.com",
+                    "role": "STUDENT",
+                    "password1": "AeroESP-Strong-2026",
+                    "password2": "AeroESP-Strong-2026",
+                    "agree_terms": "on",
+                    "captcha_0": "x",
+                    "captcha_1": "PASSED",
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("_auth_user_id", self.client.session)
+
+    def test_axes_backend_is_still_first(self):
+        """
+        Axes must refuse a locked-out attempt before any credential is
+        checked, so it has to stay ahead of the credential backend.
+        """
+
+        from django.conf import settings as s
+
+        self.assertEqual(
+            s.AUTHENTICATION_BACKENDS[0],
+            "axes.backends.AxesStandaloneBackend",
+        )
+        self.assertIn(
+            "accounts.backends.EmailOrUsernameModelBackend",
+            s.AUTHENTICATION_BACKENDS,
+        )

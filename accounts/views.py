@@ -238,11 +238,15 @@ def _log_in(request, user):
     authentication backend.
     """
 
+    # Must name a backend that is actually in AUTHENTICATION_BACKENDS,
+    # or login() raises. This is the credential backend (a ModelBackend
+    # subclass); the other entry is Axes, which is not one to log in
+    # through directly.
     login(
         request,
         user,
         backend=(
-            "django.contrib.auth.backends.ModelBackend"
+            "accounts.backends.EmailOrUsernameModelBackend"
         ),
     )
 

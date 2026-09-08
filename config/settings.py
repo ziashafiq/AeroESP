@@ -645,8 +645,14 @@ AUTH_USER_MODEL = "accounts.CustomUser"
 # AxesStandaloneBackend must come first so that django-axes
 # can block login attempts before they reach the model backend.
 AUTHENTICATION_BACKENDS = [
+    # Axes stays first so a locked-out attempt is refused before any
+    # credential is checked.
     "axes.backends.AxesStandaloneBackend",
-    "django.contrib.auth.backends.ModelBackend",
+    # Replaces plain ModelBackend, which it subclasses: same behaviour
+    # for a username, plus resolving an email address to its account
+    # first. Usernames are generated from the email's local part, so
+    # the email is the credential users actually remember.
+    "accounts.backends.EmailOrUsernameModelBackend",
 ]
 
 LOGIN_URL = "accounts:login"
