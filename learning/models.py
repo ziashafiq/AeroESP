@@ -721,6 +721,10 @@ class LearningProgress(models.Model):
     )
 
     class Meta:
+        # Django's pluraliser appends "s" to "progress", so the
+        # admin listed "Learning progresss".
+        verbose_name = "learning progress"
+        verbose_name_plural = "learning progress"
         constraints = [
             models.UniqueConstraint(
                 fields=[

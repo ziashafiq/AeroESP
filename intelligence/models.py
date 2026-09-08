@@ -102,6 +102,10 @@ class QuestionAISuggestion(models.Model):
     )
 
     class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "question AI suggestion"
+        verbose_name_plural = "question AI suggestions"
         ordering = ["-created_at"]
 
         indexes = [
@@ -380,6 +384,10 @@ class AIPromptVersion(models.Model):
     )
 
     class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI prompt version"
+        verbose_name_plural = "AI prompt versions"
 
         ordering = [
             "-created_at",
@@ -528,6 +536,10 @@ class AIInteractionEvent(models.Model):
     )
 
     class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI interaction event"
+        verbose_name_plural = "AI interaction events"
 
         ordering = [
             "-created_at",
@@ -597,6 +609,10 @@ class AIQualitySnapshot(models.Model):
     )
 
     class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI quality snapshot"
+        verbose_name_plural = "AI quality snapshots"
 
         ordering = [
             "-created_at"
@@ -677,6 +693,12 @@ class AIExperiment(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI experiment"
+        verbose_name_plural = "AI experiments"
+
 
 class AIExperimentResult(models.Model):
 
@@ -753,6 +775,12 @@ class AIExperimentResult(models.Model):
             f"{self.experiment.name}"
         )
 
+    class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI experiment result"
+        verbose_name_plural = "AI experiment results"
+
 
 class AIEvaluationDataset(models.Model):
 
@@ -786,6 +814,12 @@ class AIEvaluationDataset(models.Model):
             f"{self.name} "
             f"- {self.version}"
         )
+
+    class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI evaluation dataset"
+        verbose_name_plural = "AI evaluation datasets"
 
 
 class AIEvaluationProtocol(models.Model):
@@ -821,6 +855,12 @@ class AIEvaluationProtocol(models.Model):
 # =========================================================
 # AI Provider Configuration (per user)
 # =========================================================
+
+    class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI evaluation protocol"
+        verbose_name_plural = "AI evaluation protocols"
 
 class AIProviderConfiguration(models.Model):
 
@@ -873,6 +913,10 @@ class AIProviderConfiguration(models.Model):
     )
 
     class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI provider configuration"
+        verbose_name_plural = "AI provider configurations"
         unique_together = [
             "user",
             "provider_name",
@@ -956,3 +1000,8 @@ class AIGenerationLog(models.Model):
             f"{self.provider} - "
             f"{self.user}"
         )
+    class Meta:
+        # Django lowercases the class name for the admin label,
+        # which turned the acronym into "Ai".
+        verbose_name = "AI generation log"
+        verbose_name_plural = "AI generation logs"
