@@ -2090,3 +2090,57 @@ class OutgoingFromAddressTests(TestCase):
             mail.outbox[0].from_email,
             "AeroESP <support@aeroesp.com>",
         )
+
+
+class SidebarNavigationTests(TestCase):
+    """
+    accounts:teacher_dashboard is a redirect to
+    learning:teacher_learning_dashboard, so it must not appear in the
+    sidebar beside the link it redirects to.
+    """
+
+    def setUp(self):
+
+        self.teacher = get_user_model().objects.create_user(
+            username="nav_teacher",
+            email="nav@example.com",
+            password="AeroESP-Strong-2026",
+        )
+        TeacherProfile.objects.create(
+            user=self.teacher,
+            university="Sharif University",
+            approval_status=TeacherProfile.ApprovalStatus.APPROVED,
+        )
+
+    def test_teacher_dashboard_is_still_a_redirect(self):
+
+        self.client.force_login(self.teacher)
+
+        response = self.client.get(
+            reverse("accounts:teacher_dashboard")
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse("learning:teacher_learning_dashboard"),
+        )
+
+    def test_sidebar_does_not_link_to_the_redirecting_dashboard(self):
+
+        self.client.force_login(self.teacher)
+
+        response = self.client.get(
+            reverse("learning:teacher_learning_dashboard"),
+            follow=True,
+        )
+        body = response.content.decode()
+
+        self.assertNotIn(
+            f'href="{reverse("accounts:teacher_dashboard")}"',
+            body,
+        )
+        self.assertIn(
+            reverse("learning:teacher_learning_dashboard"),
+            body,
+        )

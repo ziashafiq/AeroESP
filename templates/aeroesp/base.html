@@ -114,21 +114,14 @@
                     </div>
 
 
-                    <a
-                        href="{% url 'accounts:teacher_dashboard' %}"
-                        class="app-nav-link"
-                        data-nav-link
-                    >
-
-                        <span class="app-nav-icon">
-                            H
-                        </span>
-
-                        Overview
-
-                    </a>
-
-
+                    {#
+                        No "Overview" link here. accounts:teacher_dashboard
+                        is a bare redirect to learning:teacher_learning_dashboard
+                        - the very next item - so the two sat next to each
+                        other pointing at one page, and whichever you clicked
+                        highlighted the other. The URL and view stay: the
+                        Account Center links to them as a stable entry point.
+                    #}
                     <a
                         href="{% url 'learning:teacher_learning_dashboard' %}"
                         class="app-nav-link"
