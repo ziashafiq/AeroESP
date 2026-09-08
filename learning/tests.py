@@ -137,3 +137,69 @@ class PlacementLevelMappingTests(SimpleTestCase):
             _course_level_from_cefr("UNKNOWN"),
             "",
         )
+
+class GuideResourceSeedTests(TestCase):
+    """
+    The Guide Hub shipped empty. seed_guide_resources fills it from a
+    vetted list; re-running it must refresh rather than duplicate.
+    """
+
+    def test_seeding_creates_public_resources(self):
+
+        from learning.models import GuideResource
+
+        call_command("seed_guide_resources", stdout=StringIO())
+
+        resources = GuideResource.objects.all()
+
+        self.assertGreaterEqual(resources.count(), 6)
+        self.assertTrue(
+            all(r.is_public for r in resources),
+            "every seeded resource must be public",
+        )
+        self.assertTrue(
+            all(r.description.strip() for r in resources),
+            "every resource needs a description",
+        )
+        self.assertTrue(
+            all(
+                r.website_url.startswith("https://")
+                for r in resources
+            ),
+            "every resource must link over https",
+        )
+
+    def test_seeding_is_idempotent(self):
+
+        from learning.models import GuideResource
+
+        call_command("seed_guide_resources", stdout=StringIO())
+        first = GuideResource.objects.count()
+
+        call_command("seed_guide_resources", stdout=StringIO())
+        second = GuideResource.objects.count()
+
+        self.assertEqual(first, second)
+
+    def test_categories_are_valid_choices(self):
+
+        from learning.models import GuideResource
+
+        call_command("seed_guide_resources", stdout=StringIO())
+
+        valid = {c[0] for c in GuideResource.CATEGORY_CHOICES}
+
+        for resource in GuideResource.objects.all():
+            self.assertIn(resource.category, valid)
+
+    def test_dry_run_writes_nothing(self):
+
+        from learning.models import GuideResource
+
+        call_command(
+            "seed_guide_resources",
+            "--dry-run",
+            stdout=StringIO(),
+        )
+
+        self.assertEqual(GuideResource.objects.count(), 0)
