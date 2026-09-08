@@ -1,5 +1,9 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.admin.views.decorators import (
+    staff_member_required,
+)
+from django.db.models import Avg, Count
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import (
@@ -337,5 +341,104 @@ def review_item(
             "review": review,
             "form": form,
             "locked": locked,
+        },
+    )
+
+# =========================================================
+# Study analysis
+#
+# Researcher-facing, and staff-only on purpose. Reviewers must not see
+# how the panel as a whole is scoring while they are still scoring:
+# aggregate means and a decision split are exactly the kind of anchor
+# that would pull later judgements toward the group.
+#
+# Nothing here touches provenance. The charts are built from
+# ExpertReview alone and never join to ResearchRun or
+# ResearchExperiment, so there is no path from this page to which
+# service or condition produced a question. See
+# research_review/tests.py for the assertions that hold that.
+# =========================================================
+
+DIMENSIONS = [
+    ("construct_relevance", "Construct relevance"),
+    ("technical_correctness", "Technical correctness"),
+    ("linguistic_accuracy", "Linguistic accuracy"),
+    ("clarity_answerability", "Clarity / answerability"),
+    ("source_fidelity", "Source fidelity"),
+    ("distractor_quality", "Distractor quality"),
+    ("cefr_alignment", "CEFR alignment"),
+    ("difficulty_alignment", "Difficulty alignment"),
+    ("pedagogical_value", "Pedagogical value"),
+]
+
+
+@staff_member_required
+def analysis(request):
+
+    finalized = ExpertReview.objects.filter(is_finalized=True)
+
+    total = finalized.count()
+
+    # One aggregate query for all nine means rather than nine queries.
+    averages = finalized.aggregate(
+        **{
+            name: Avg(name)
+            for name, _label in DIMENSIONS
+        }
+    )
+
+    dimension_series = [
+        {
+            "label": label,
+            "mean": (
+                round(float(averages[name]), 2)
+                if averages[name] is not None
+                else None
+            ),
+        }
+        for name, label in DIMENSIONS
+    ]
+
+    counts = dict(
+        finalized
+        .exclude(overall_decision="")
+        .values_list("overall_decision")
+        .annotate(n=Count("id"))
+    )
+
+    # Built from the model's own choices so a decision nobody picked
+    # still shows as a zero rather than vanishing from the chart.
+    decision_series = [
+        {
+            "label": label,
+            "value": counts.get(value, 0),
+        }
+        for value, label in ExpertReview.DECISION_CHOICES
+    ]
+
+    reviewers_reporting = (
+        finalized
+        .values("assignment__reviewer")
+        .distinct()
+        .count()
+    )
+
+    confidence = finalized.aggregate(
+        mean=Avg("reviewer_confidence")
+    )["mean"]
+
+    return render(
+        request,
+        "research_review/analysis.html",
+        {
+            "total": total,
+            "reviewers_reporting": reviewers_reporting,
+            "dimension_series": dimension_series,
+            "decision_series": decision_series,
+            "mean_confidence": (
+                round(float(confidence), 2)
+                if confidence is not None
+                else None
+            ),
         },
     )

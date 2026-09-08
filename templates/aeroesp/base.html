@@ -238,6 +238,7 @@
 
                     {% endif %}
 
+
                 </div>
 
 
@@ -462,6 +463,41 @@
 
             {% endif %}
 
+
+
+            {% comment %}
+            Outside the role branch on purpose: a researcher may be
+            staff without holding a teacher profile, and would
+            otherwise render the student navigation and have no way
+            to reach this at all. Staff only - aggregate scores are
+            exactly the anchor that would pull a reviewer's later
+            judgements toward the panel's.
+            {% endcomment %}
+            {% if request.user.is_staff %}
+
+                <div class="app-nav-group">
+
+                    <div class="app-nav-label">
+                        Research
+                    </div>
+
+                    <a
+                        href="{% url 'research_review:analysis' %}"
+                        class="app-nav-link"
+                        data-nav-link
+                    >
+
+                        <span class="app-nav-icon">
+                            RA
+                        </span>
+
+                        Review Analysis
+
+                    </a>
+
+                </div>
+
+            {% endif %}
 
         </nav>
 

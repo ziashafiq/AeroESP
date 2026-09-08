@@ -100,6 +100,89 @@ Learning Analytics · AeroESP
         <div>
 
             <span class="adaptive-kicker">
+                Trend
+            </span>
+
+            <h2>
+                Progress over time
+            </h2>
+
+        </div>
+
+    </div>
+
+    {% if progress_series %}
+
+        <div class="chart-frame">
+            <canvas
+                id="progressChart"
+                role="img"
+                aria-label="Weekly practice accuracy over the last twelve weeks"
+            ></canvas>
+        </div>
+
+        {{ progress_series|json_script:"progress-series" }}
+
+    {% else %}
+
+        <div class="adaptive-empty">
+            Not enough practice yet to draw a trend. Answer a few
+            questions and this chart will fill in week by week.
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+<section class="analytics07-section">
+
+    <div class="analytics07-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
+                Breakdown
+            </span>
+
+            <h2>
+                Performance by skill
+            </h2>
+
+        </div>
+
+    </div>
+
+    {% if skill_series %}
+
+        <div class="chart-frame">
+            <canvas
+                id="skillChart"
+                role="img"
+                aria-label="Practice accuracy for each skill"
+            ></canvas>
+        </div>
+
+        {{ skill_series|json_script:"skill-series" }}
+
+    {% else %}
+
+        <div class="adaptive-empty">
+            No skill-tagged practice yet.
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+<section class="analytics07-section">
+
+    <div class="analytics07-heading">
+
+        <div>
+
+            <span class="adaptive-kicker">
                 Program Comparison
             </span>
 
@@ -495,4 +578,104 @@ Learning Analytics · AeroESP
 
 </section>
 
+{% endblock %}
+
+
+{% block extra_js %}
+{% include "aeroesp/_charts.html" %}
+
+<script>
+    (() => {
+        if (!window.AeroCharts) {
+            return;
+        }
+
+        const progress = window.AeroCharts.data("progress-series");
+
+        if (progress && progress.length) {
+            window.AeroCharts.build("progressChart", (c) => ({
+                type: "line",
+                data: {
+                    labels: progress.map((row) => row.label),
+                    datasets: [{
+                        label: "Accuracy %",
+                        data: progress.map((row) => row.accuracy),
+                        borderColor: c.strong,
+                        backgroundColor: c.accentWash,
+                        pointBackgroundColor: c.strong,
+                        pointBorderColor: c.surface,
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                    }],
+                },
+                options: {
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => {
+                                    const row = progress[item.dataIndex];
+                                    return `${row.accuracy}% of `
+                                        + `${row.attempts} answers`;
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { callback: (v) => `${v}%` },
+                        },
+                    },
+                },
+            }));
+        }
+
+        const skills = window.AeroCharts.data("skill-series");
+
+        if (skills && skills.length) {
+            window.AeroCharts.build("skillChart", (c) => ({
+                type: "bar",
+                data: {
+                    labels: skills.map((row) => row.label),
+                    datasets: [{
+                        label: "Accuracy %",
+                        data: skills.map((row) => row.accuracy),
+                        backgroundColor: c.accent,
+                        hoverBackgroundColor: c.strong,
+                        borderColor: c.strong,
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        maxBarThickness: 54,
+                    }],
+                },
+                options: {
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => {
+                                    const row = skills[item.dataIndex];
+                                    return `${row.accuracy}% of `
+                                        + `${row.attempts} answers`;
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { callback: (v) => `${v}%` },
+                        },
+                    },
+                },
+            }));
+        }
+    })();
+</script>
 {% endblock %}

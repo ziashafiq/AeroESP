@@ -1,0 +1,294 @@
+{% extends "aeroesp/base.html" %}
+{% load static %}
+
+{% comment %}
+Study analysis, for the researcher.
+
+Nothing on this page may say where a question came from. The context
+handed to it holds only aggregate scores and decision counts - no
+service, no condition, no provenance, no run or experiment - and
+research_review/tests.py asserts that none of those words can reach
+this template even if the model changes underneath it.
+{% endcomment %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{% static 'research_review/review.css' %}"
+>
+{% endblock %}
+
+{% block title %}
+Review Analysis · AeroESP
+{% endblock %}
+
+{% block workspace_name %}
+Expert Review
+{% endblock %}
+
+{% block content %}
+
+
+<section class="review-hero">
+
+    <div class="page-eyebrow">
+        Human Expert Validation
+    </div>
+
+    <h1>
+        Review Analysis
+    </h1>
+
+    <p>
+        Aggregate results across every finalised EVAL_V1 review.
+        Individual reviewers and individual items are not identified,
+        and neither is the origin of any question.
+    </p>
+
+</section>
+
+
+<section class="review-stat-grid">
+
+    <div class="card stat-card">
+        <div class="stat-label">Finalised reviews</div>
+        <div class="stat-number">{{ total }}</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-label">Reviewers reporting</div>
+        <div class="stat-number">{{ reviewers_reporting }}</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-label">Mean confidence</div>
+        <div class="stat-number">
+            {% if mean_confidence %}
+                {{ mean_confidence }}<small> / 5</small>
+            {% else %}
+                &mdash;
+            {% endif %}
+        </div>
+    </div>
+
+</section>
+
+
+{% if total %}
+
+    <section class="analytics07-section">
+
+        <div class="analytics07-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    EVAL_V1
+                </span>
+
+                <h2>
+                    Mean score by dimension
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div class="chart-frame chart-frame-tall">
+            <canvas
+                id="dimensionChart"
+                role="img"
+                aria-label="Mean reviewer score for each of the nine EVAL_V1 dimensions"
+            ></canvas>
+        </div>
+
+        {{ dimension_series|json_script:"dimension-series" }}
+
+    </section>
+
+
+    <section class="analytics07-section">
+
+        <div class="analytics07-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Verdicts
+                </span>
+
+                <h2>
+                    Overall decision
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div class="chart-frame">
+            <canvas
+                id="decisionChart"
+                role="img"
+                aria-label="How many reviews ended in each overall decision"
+            ></canvas>
+        </div>
+
+        {{ decision_series|json_script:"decision-series" }}
+
+    </section>
+
+
+    {% comment %}
+    The same numbers as text. A canvas is unreadable to a screen
+    reader and unusable in a paper, and this table is what a Results
+    section actually gets copied from.
+    {% endcomment %}
+
+    <section class="analytics07-section">
+
+        <div class="analytics07-heading">
+
+            <div>
+
+                <span class="adaptive-kicker">
+                    Same data
+                </span>
+
+                <h2>
+                    Dimension means, as a table
+                </h2>
+
+            </div>
+
+        </div>
+
+        <div class="table-scroll">
+
+            <table class="review-table">
+
+                <thead>
+                    <tr>
+                        <th scope="col">Dimension</th>
+                        <th scope="col">Mean</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in dimension_series %}
+                        <tr>
+                            <th scope="row">{{ row.label }}</th>
+                            <td>
+                                {% if row.mean %}
+                                    {{ row.mean }}
+                                {% else %}
+                                    &mdash;
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+{% else %}
+
+    <div class="adaptive-empty">
+        No finalised reviews yet. This page fills in as reviewers
+        submit and lock their assessments.
+    </div>
+
+{% endif %}
+
+
+{% endblock %}
+
+
+{% block extra_js %}
+{% include "aeroesp/_charts.html" %}
+
+<script>
+    (() => {
+        if (!window.AeroCharts) {
+            return;
+        }
+
+        const dimensions = window.AeroCharts.data("dimension-series");
+
+        if (dimensions && dimensions.length) {
+            window.AeroCharts.build("dimensionChart", (c) => ({
+                type: "bar",
+                data: {
+                    labels: dimensions.map((row) => row.label),
+                    datasets: [{
+                        label: "Mean score",
+                        data: dimensions.map((row) => row.mean),
+                        backgroundColor: c.accent,
+                        hoverBackgroundColor: c.strong,
+                        borderColor: c.strong,
+                        borderWidth: 1,
+                        borderRadius: 6,
+                    }],
+                },
+                options: {
+                    indexAxis: "y",
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 5,
+                            grid: { color: c.grid },
+                            border: { display: false },
+                        },
+                        y: {
+                            grid: { display: false },
+                            border: { color: c.grid },
+                        },
+                    },
+                },
+            }));
+        }
+
+        const decisions = window.AeroCharts.data("decision-series");
+
+        if (decisions && decisions.length) {
+            window.AeroCharts.build("decisionChart", (c) => ({
+                type: "bar",
+                data: {
+                    labels: decisions.map((row) => row.label),
+                    datasets: [{
+                        label: "Reviews",
+                        data: decisions.map((row) => row.value),
+                        /* Accept through Reject is an ordered scale,
+                           so it is drawn as one accent ramp rather
+                           than four unrelated hues - and it follows
+                           the palette like everything else. */
+                        backgroundColor: [
+                            c.at(1),
+                            c.at(0.78),
+                            c.at(0.56),
+                            c.at(0.34),
+                        ],
+                        borderColor: c.strong,
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        maxBarThickness: 72,
+                    }],
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            min: 0,
+                            ticks: { precision: 0 },
+                        },
+                    },
+                },
+            }));
+        }
+    })();
+</script>
+{% endblock %}

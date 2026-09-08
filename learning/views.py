@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import (
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, Q
+from django.db.models.functions import TruncWeek
 from django.http import Http404, JsonResponse
 from django.shortcuts import (
     get_object_or_404,
@@ -3590,6 +3591,70 @@ def learning_analytics(request):
         .first()
     )
 
+    # ==========================================
+    # Chart series
+    #
+    # Drawn from LearningEvent rather than from LearningProgress: the
+    # progress rows hold running totals with no history, so they can
+    # say how accurate a learner is now but not how that changed. The
+    # events carry occurred_at and are indexed on (student,
+    # occurred_at), which is what makes both of these cheap.
+    # ==========================================
+
+    practice_events = LearningEvent.objects.filter(
+        student=request.user,
+        event_type=LearningEvent.EventType.PRACTICE_ANSWER,
+    )
+
+    twelve_weeks_ago = now - timedelta(weeks=12)
+
+    weekly = (
+        practice_events
+        .filter(occurred_at__gte=twelve_weeks_ago)
+        .annotate(week=TruncWeek("occurred_at"))
+        .values("week")
+        .annotate(
+            attempts=Count("id"),
+            correct=Count("id", filter=Q(is_correct=True)),
+        )
+        .order_by("week")
+    )
+
+    progress_series = [
+        {
+            "label": row["week"].strftime("%d %b"),
+            "accuracy": round(
+                row["correct"] / row["attempts"] * 100, 1
+            ),
+            "attempts": row["attempts"],
+        }
+        for row in weekly
+        if row["week"] and row["attempts"]
+    ]
+
+    by_skill = (
+        practice_events
+        .exclude(skill="")
+        .values("skill")
+        .annotate(
+            attempts=Count("id"),
+            correct=Count("id", filter=Q(is_correct=True)),
+        )
+        .order_by("skill")
+    )
+
+    skill_series = [
+        {
+            "label": row["skill"].replace("_", " ").title(),
+            "accuracy": round(
+                row["correct"] / row["attempts"] * 100, 1
+            ),
+            "attempts": row["attempts"],
+        }
+        for row in by_skill
+        if row["attempts"]
+    ]
+
     return render(
         request,
         "learning/analytics.html",
@@ -3632,6 +3697,12 @@ def learning_analytics(request):
             ),
             "latest_placement": (
                 latest_placement
+            ),
+            "progress_series": (
+                progress_series
+            ),
+            "skill_series": (
+                skill_series
             ),
         },
     )

@@ -6,6 +6,7 @@ The contrast tests parse the real stylesheet rather than a copy of the
 numbers. A palette added later with an eyeballed colour fails here.
 """
 
+import colorsys
 import pathlib
 import re
 
@@ -253,41 +254,125 @@ class PaletteTokenTests(TestCase):
 
     def test_no_accent_colour_is_left_hardcoded_in_the_stylesheet(self):
         """
-        This is what makes a palette switch reach the whole interface.
-        Sixty-four literals - mostly rgba(72,185,232,...) - used to sit
-        outside the token system; a palette change repainted the other
-        eighty-two places and left these on the old blue.
+        What makes a palette switch reach the whole interface.
+
+        Written as a property rather than a list of known literals,
+        because a list is exactly what let #087eae survive the first
+        pass: it sat one character away from the #087fae that was
+        being searched for, inside a dark-mode [class*="primary"]
+        catch-all with !important, and repainted every primary button
+        blue no matter which palette was chosen.
+
+        The property: no saturated mid-tone blue may appear outside
+        the token definitions. Pale tints and near-navy darks are left
+        alone - those belong to the surface system, not the accent.
         """
 
         body = CSS
 
-        # Drop the token blocks and the swatch rules: those are where
-        # the literals legitimately live.
+        # Where literals legitimately live.
         body = re.sub(
-            r"html\[data-palette=[^{]*\{[^}]*\}", "", body, flags=re.S
+            r'html\[data-palette=[^{]*\{[^}]*\}', "", body, flags=re.S
         )
         body = re.sub(
             r"\.palette-[a-z]+ \.palette-swatch \{[^}]*\}", "", body
         )
-
-        for literal in (
-            r"#48b9e8", r"#55c7ef", r"#7bd8f5", r"#159bd4",
-            r"#087fae", r"#18a5d5",
-            r"rgba\(\s*72,\s*185,\s*232",
-            r"rgba\(\s*85,\s*199,\s*239",
-            r"rgba\(\s*16,\s*157,\s*207",
+        for token_block in (
+            r":root \{[^}]*--theme-accent-rgb[^}]*\}",
+            r'html\[data-theme="dark"\] \{[^}]*--theme-accent-rgb[^}]*\}',
         ):
-            with self.subTest(literal=literal):
-                found = re.findall(literal, body)
+            body = re.sub(token_block, "", body, flags=re.S)
 
-                # The two base token blocks are the only legitimate
-                # remaining home for the default's own values.
-                self.assertLessEqual(
-                    len(found),
-                    1,
-                    f"{literal} still appears {len(found)} times "
-                    f"outside the palette definitions",
+        offenders = []
+
+        def check(rgb, literal):
+            hue, lum, sat = colorsys.rgb_to_hls(
+                *[c / 255 for c in rgb]
+            )
+
+            if (
+                188 <= hue * 360 <= 216
+                and sat >= 0.60
+                and 0.30 <= lum <= 0.80
+            ):
+                offenders.append(literal)
+
+        for match in re.finditer(r"#([0-9a-fA-F]{6})", body):
+            value = match.group(1).lower()
+            check(
+                tuple(int(value[i:i + 2], 16) for i in (0, 2, 4)),
+                match.group(0),
+            )
+
+        for match in re.finditer(
+            r"rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,",
+            body,
+        ):
+            check(
+                tuple(int(g) for g in match.groups()),
+                match.group(0),
+            )
+
+        self.assertEqual(
+            sorted(set(offenders)),
+            [],
+            "these blues would stay put while the palette moved",
+        )
+
+
+class WhiteLabelContrastTests(TestCase):
+    """
+    A guard against a mistake made while converting the hardcoded
+    literals: --theme-accent-strong is solved for reading as text *on*
+    a surface, which in dark mode makes it bright. Filling a button
+    with it and putting a white label on top inverts the requirement
+    and fails outright. Only the gradient pair is solved for
+    white-on-fill, and it is the only accent role a white label may
+    sit on.
+    """
+
+    def test_no_rule_puts_a_white_label_on_a_bare_accent_fill(self):
+
+        offenders = []
+
+        for block in re.split(r"(?<=\})", CSS):
+
+            if "{" not in block:
+                continue
+
+            body = block.split("{", 1)[1]
+
+            if not re.search(
+                r"color:\s*#(?:fff|ffffff)", body, re.I
+            ):
+                continue
+
+            if re.search(
+                r"(?:background|background-color|background-image)"
+                r"\s*:[^;]*var\(--theme-accent(?:-strong)?\)",
+                body,
+                re.S,
+            ):
+                offenders.append(
+                    " ".join(block.split("{")[0].split())[:80]
                 )
+
+        self.assertEqual(offenders, [])
+
+    def test_no_gradient_repeats_one_accent_role_for_both_stops(self):
+        """
+        Two identical stops mean a real gradient was flattened during
+        conversion - and flattened onto the wrong role at that.
+        """
+
+        collapsed = re.findall(
+            r"linear-gradient\([^)]*var\(--theme-accent(?:-strong)?\)"
+            r"[^)]*var\(--theme-accent(?:-strong)?\)[^)]*\)",
+            CSS,
+            re.S,
+        )
+
+        self.assertEqual(collapsed, [])
 
 
 class PaletteStorageTests(TestCase):

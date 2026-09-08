@@ -1,0 +1,14 @@
+{% load static %}
+{% comment %}
+Chart.js plus the AeroESP theming layer.
+
+Self-hosted, not from a CDN: the network this runs on may not be able
+to reach one, and the unpinned CDN tag this replaces would also have
+changed version underneath the site without warning.
+
+charts.js must come second - it checks for window.Chart and does
+nothing if the library is missing.
+{% endcomment %}
+
+<script src="{% static 'aeroesp/vendor/chart.umd.js' %}"></script>
+<script src="{% static 'aeroesp/js/charts.js' %}"></script>
