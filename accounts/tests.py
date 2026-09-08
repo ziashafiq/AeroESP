@@ -2301,15 +2301,34 @@ class ThemeBootstrapRobustnessTests(SimpleTestCase):
         base = pathlib.Path(__file__).resolve().parent.parent
 
         return {
-            "base.html": (
-                base / "templates" / "aeroesp" / "base.html"
-            ).read_text(encoding="utf-8"),
-            "public_base.html": (
-                base / "templates" / "aeroesp" / "public_base.html"
+            # One shared bootstrap now, included by all three shells.
+            # It used to be copy-pasted into each, and the reviewer
+            # app's copy was still the original unguarded version -
+            # exactly the drift a single include prevents.
+            "_theme_bootstrap.html": (
+                base / "templates" / "aeroesp" / "_theme_bootstrap.html"
             ).read_text(encoding="utf-8"),
             "app.js": (
                 base / "static" / "aeroesp" / "js" / "app.js"
             ).read_text(encoding="utf-8"),
+        }
+
+    def _shells(self):
+        import pathlib
+
+        base = pathlib.Path(__file__).resolve().parent.parent
+
+        return {
+            "base.html": (
+                base / "templates" / "aeroesp" / "base.html"
+            ),
+            "public_base.html": (
+                base / "templates" / "aeroesp" / "public_base.html"
+            ),
+            "research_review/base.html": (
+                base / "research_review" / "templates"
+                / "research_review" / "base.html"
+            ),
         }
 
     def test_every_localstorage_access_is_guarded(self):
@@ -2358,14 +2377,28 @@ class ThemeBootstrapRobustnessTests(SimpleTestCase):
 
     def test_bootstrap_always_sets_a_theme_attribute(self):
 
-        for name in ("base.html", "public_base.html"):
+        source = self._sources()["_theme_bootstrap.html"]
 
-            with self.subTest(source=name):
+        self.assertIn('setAttribute("data-theme"', source)
+        self.assertIn('setAttribute("data-theme-preference"', source)
 
-                source = self._sources()[name]
+    def test_every_shell_uses_the_shared_bootstrap(self):
+        """
+        Each shell used to carry its own copy. research_review's was
+        never updated when the WebView guards were added, so reviewers
+        kept the broken version - the drift this include removes.
+        """
 
-                self.assertIn('setAttribute("data-theme"', source)
+        for name, path in self._shells().items():
+
+            with self.subTest(shell=name):
+
+                source = path.read_text(encoding="utf-8")
+
                 self.assertIn(
-                    'setAttribute("data-theme-preference"',
+                    'aeroesp/_theme_bootstrap.html',
                     source,
                 )
+
+                # No second, private copy left behind.
+                self.assertNotIn("localStorage", source)

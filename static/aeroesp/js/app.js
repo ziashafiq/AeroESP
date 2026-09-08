@@ -202,14 +202,18 @@
             }
         );
 
-})();
 
-/* ==========================================================
-   AeroESP Theme Engine
-   ========================================================== */
 
-(() => {
-    "use strict";
+    /* ==========================================================
+       AeroESP Theme Engine
+
+       Part of this same scope on purpose. The sidebar handlers at the
+       end of this file (Escape-to-close, the back/forward reset) read
+       body, menuButton, sidebar and closeSidebar, which are declared
+       above. While this lived in a second IIFE those were out of
+       scope, so it threw ReferenceError on every page load and both
+       handlers were silently dead.
+       ========================================================== */
 
     const KEY = "aeroesp-theme";
     const root = document.documentElement;
@@ -326,6 +330,153 @@
     }
 
     apply(getPreference());
+
+
+
+    /* ==========================================================
+       AeroESP Palette Engine
+
+       Light/dark and palette are independent axes: the theme decides
+       the surfaces, the palette decides the accent on top of them.
+       Both are stamped on <html> and the whole stylesheet follows
+       from six custom properties, so nothing here touches styling
+       directly.
+
+       Where the choice lives depends on who is asking. A signed-in
+       user's palette is rendered into the document by the server -
+       authoritative, follows them to any device, and no flash of the
+       default on first paint. A guest's lives in localStorage only.
+       ========================================================== */
+
+    const PALETTE_KEY = "aeroesp-palette";
+
+    const PALETTES = [
+        "skyline",
+        "copper",
+        "indigo",
+        "verdigris",
+        "slate",
+    ];
+
+    const paletteControl =
+        document.querySelector("[data-palette-control]");
+
+    const paletteButtons = Array.from(
+        document.querySelectorAll("[data-palette-option]")
+    );
+
+    let memoryPalette = null;
+
+    function storedPalette() {
+        let value = memoryPalette;
+
+        if (value === null) {
+            try {
+                value = localStorage.getItem(PALETTE_KEY);
+            } catch (error) {
+                /* Same WebView storage trap as the theme above. */
+                value = null;
+            }
+        }
+
+        return PALETTES.indexOf(value) === -1 ? "skyline" : value;
+    }
+
+    function rememberPalette(palette) {
+        memoryPalette = palette;
+
+        try {
+            localStorage.setItem(PALETTE_KEY, palette);
+        } catch (error) {
+            /* Unpersistable here; the in-memory value still applies. */
+        }
+    }
+
+    function applyPalette(palette) {
+        root.setAttribute("data-palette", palette);
+
+        paletteButtons.forEach((button) => {
+            const active =
+                button.dataset.paletteOption === palette;
+
+            button.classList.toggle("is-active", active);
+            button.setAttribute(
+                "aria-pressed",
+                active ? "true" : "false"
+            );
+        });
+    }
+
+    function savePaletteForUser(palette) {
+        if (!paletteControl) {
+            return;
+        }
+
+        const endpoint = paletteControl.dataset.paletteEndpoint;
+
+        if (!endpoint) {
+            /* Anonymous visitor: localStorage is the whole story. */
+            return;
+        }
+
+        const token = paletteControl.querySelector(
+            "input[name=csrfmiddlewaretoken]"
+        );
+
+        const body = new FormData();
+        body.append("palette", palette);
+
+        /* Fire and forget. The attribute is already applied, so a
+           failed write costs the user nothing on this device - it
+           only means the choice will not follow them to the next. */
+        try {
+            fetch(endpoint, {
+                method: "POST",
+                body: body,
+                credentials: "same-origin",
+                headers: token
+                    ? { "X-CSRFToken": token.value }
+                    : {},
+            }).catch(() => undefined);
+        } catch (error) {
+            /* No fetch, or blocked: nothing further to do. */
+        }
+    }
+
+    function setPalette(palette) {
+        if (PALETTES.indexOf(palette) === -1) {
+            return;
+        }
+
+        rememberPalette(palette);
+        applyPalette(palette);
+        savePaletteForUser(palette);
+    }
+
+    paletteButtons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            setPalette(button.dataset.paletteOption);
+        });
+    });
+
+    /* A server-rendered palette wins over whatever this browser has
+       stored: it is the account's setting, and the account is what
+       the user changed. Storage is then brought into line so the
+       pre-paint bootstrap agrees on the next load. */
+    const serverPalette =
+        root.dataset.paletteSource === "user"
+            ? root.dataset.palette
+            : null;
+
+    if (serverPalette && PALETTES.indexOf(serverPalette) !== -1) {
+        rememberPalette(serverPalette);
+        applyPalette(serverPalette);
+    } else {
+        applyPalette(storedPalette());
+    }
 
 
 

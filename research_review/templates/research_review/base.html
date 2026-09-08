@@ -2,7 +2,7 @@
 
 <!DOCTYPE html>
 
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light"{% if USER_PALETTE %} data-palette="{{ USER_PALETTE }}" data-palette-source="user"{% endif %}>
 
 <head>
 
@@ -19,31 +19,7 @@
         id="theme-color-meta"
     >
 
-    <script>
-        (() => {
-
-            const saved =
-                localStorage.getItem("aeroesp-theme")
-                || "system";
-
-            const dark =
-                window.matchMedia(
-                    "(prefers-color-scheme: dark)"
-                ).matches;
-
-            const resolved =
-                saved === "system"
-                    ? (dark ? "dark" : "light")
-                    : saved;
-
-            document.documentElement.dataset.theme =
-                resolved;
-
-            document.documentElement.dataset.themePreference =
-                saved;
-
-        })();
-    </script>
+    {% include "aeroesp/_theme_bootstrap.html" %}
 
 
     {% include 'pwa/_head.html' %}

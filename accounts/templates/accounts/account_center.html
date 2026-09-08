@@ -132,6 +132,72 @@ Account Center
     </section>
 
 
+    <section class="account-card account-appearance-card">
+
+        <span class="account-kicker">
+            Appearance
+        </span>
+
+        <h2>
+            Theme and accent
+        </h2>
+
+        <p class="account-card-copy">
+            Choose a light or dark interface and an accent colour.
+            Your accent is saved to your account, so it follows you to
+            any device you sign in on.
+        </p>
+
+        <div class="account-appearance-controls">
+
+            <div
+                class="theme-control"
+                data-theme-control
+                role="group"
+                aria-label="Appearance"
+            >
+
+                <button type="button"
+                        class="theme-choice"
+                        data-theme-option="light"
+                        aria-label="Light theme"
+                        title="Light">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"></path>
+                    </svg>
+                </button>
+
+                <button type="button"
+                        class="theme-choice"
+                        data-theme-option="system"
+                        aria-label="System theme"
+                        title="System">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+                        <path d="M8 21h8M12 17v4"></path>
+                    </svg>
+                </button>
+
+                <button type="button"
+                        class="theme-choice"
+                        data-theme-option="dark"
+                        aria-label="Dark theme"
+                        title="Dark">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2z"></path>
+                    </svg>
+                </button>
+
+            </div>
+
+            {% include "aeroesp/_palette_control.html" %}
+
+        </div>
+
+    </section>
+
+
     <section class="account-card account-security-card">
 
         <span class="account-kicker">

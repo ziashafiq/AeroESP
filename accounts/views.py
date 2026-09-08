@@ -11,6 +11,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordResetForm
 from django.core.mail import EmailMultiAlternatives
+from django.http import JsonResponse
 from django.template import loader
 from django.shortcuts import (
     get_object_or_404,
@@ -152,6 +153,42 @@ def account_center(request):
             "role": role,
         },
     )
+
+
+@login_required
+@require_POST
+def set_color_palette(request):
+    """
+    Persist the signed-in user's palette choice.
+
+    Deliberately narrow: it writes one field, only ever to the
+    requesting user's own row, and only a value that is already in
+    PALETTE_CHOICES - an unrecognised value is rejected rather than
+    stored, so nothing arbitrary can reach the data-palette attribute
+    this ends up rendering into the page.
+    """
+
+    User = get_user_model()
+
+    choice = (request.POST.get("palette") or "").strip()
+
+    valid = {
+        value for value, _label in User.PALETTE_CHOICES
+    }
+
+    if choice not in valid:
+        return JsonResponse(
+            {"ok": False, "error": "unknown palette"},
+            status=400,
+        )
+
+    # update() rather than save(): no signals, no chance of writing
+    # back a stale copy of any other field on the row.
+    User.objects.filter(pk=request.user.pk).update(
+        color_palette=choice,
+    )
+
+    return JsonResponse({"ok": True, "palette": choice})
 
 
 @login_required

@@ -36,6 +36,12 @@ urlpatterns = [
     ),
 
     path(
+        "preferences/palette/",
+        views.set_color_palette,
+        name="set_color_palette",
+    ),
+
+    path(
         "redirect/",
         views.role_redirect,
         name="role_redirect",

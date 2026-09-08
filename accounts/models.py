@@ -36,6 +36,24 @@ class CustomUser(AbstractUser):
         default="STUDENT",
     )
 
+    # Interface preference, not identity - but stored on the user
+    # rather than only in localStorage so it follows them to a new
+    # device or browser. Guests keep the same choice in localStorage;
+    # see static/aeroesp/js/app.js.
+    PALETTE_CHOICES = [
+        ("skyline", "Skyline"),
+        ("copper", "Copper"),
+        ("indigo", "Indigo"),
+        ("verdigris", "Verdigris"),
+        ("slate", "Slate"),
+    ]
+
+    color_palette = models.CharField(
+        max_length=20,
+        choices=PALETTE_CHOICES,
+        default="skyline",
+    )
+
     # Set once, at registration, when the Terms of Use checkbox is
     # accepted. A timestamp rather than a boolean so acceptance of a
     # confidentiality agreement over exam content has evidence behind

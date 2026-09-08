@@ -2,7 +2,7 @@
 
 <!DOCTYPE html>
 
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light"{% if USER_PALETTE %} data-palette="{{ USER_PALETTE }}" data-palette-source="user"{% endif %}>
 
 <head>
 
@@ -27,54 +27,7 @@
 
     {% include 'pwa/_head.html' %}
 
-    <script>
-        /* Runs before first paint so the page never flashes the wrong
-           theme. Every step is guarded because this also runs inside
-           in-app WebViews (the Google app, for one), where
-           localStorage is not merely empty but THROWS when site data
-           is blocked. Unguarded, that exception killed this script and
-           left the document with no data-theme at all, which is why
-           the theme misbehaved there while working in Chrome. */
-        (() => {
-            var saved = "system";
-
-            try {
-                var stored = window.localStorage.getItem(
-                    "aeroesp-theme"
-                );
-
-                if (
-                    stored === "light" ||
-                    stored === "dark" ||
-                    stored === "system"
-                ) {
-                    saved = stored;
-                }
-            } catch (e) {
-                /* Storage unavailable: fall back to system. */
-            }
-
-            var dark = false;
-
-            try {
-                dark = window.matchMedia(
-                    "(prefers-color-scheme: dark)"
-                ).matches;
-            } catch (e) {
-                /* No matchMedia: treat as light. */
-            }
-
-            var resolved =
-                saved === "system"
-                    ? (dark ? "dark" : "light")
-                    : saved;
-
-            var root = document.documentElement;
-
-            root.setAttribute("data-theme", resolved);
-            root.setAttribute("data-theme-preference", saved);
-        })();
-    </script>
+    {% include "aeroesp/_theme_bootstrap.html" %}
 
     <title>
         {% block title %}
@@ -733,6 +686,8 @@
 
                 </div>
 
+                {% include "aeroesp/_palette_control.html" %}
+
 
                 <a
                     href="{% url 'accounts:account_center' %}"
@@ -751,6 +706,7 @@
                 </a>
 
             </div>
+
 
         </header>
 

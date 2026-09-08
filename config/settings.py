@@ -199,6 +199,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.support_email',
                 'accounts.context_processors.canonical_url',
+                'accounts.context_processors.color_palette',
                 'config.pwa.context',
             ],
         },

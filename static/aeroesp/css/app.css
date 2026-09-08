@@ -157,7 +157,7 @@ svg {
 
 ::selection {
     color: #ffffff;
-    background: #1878f2;
+    background: var(--theme-accent-strong);
 }
 
 
@@ -421,8 +421,8 @@ svg {
     background:
         linear-gradient(
             90deg,
-            rgba(86, 197, 247, .18),
-            rgba(86, 197, 247, .06)
+            rgba(var(--theme-accent-rgb), .18),
+            rgba(var(--theme-accent-rgb), .06)
         );
 
     border-color:
@@ -3883,9 +3883,23 @@ html[data-theme="dark"] .study-block-important {
     --theme-navy: #07182d;
     --theme-navy-soft: #0b2340;
 
+    /* Decorative: washes, glows, hover tints. Never the sole
+       carrier of information, so it is chosen for appearance. */
     --theme-accent: #48b9e8;
-    --theme-accent-strong: #159bd4;
-    --theme-accent-soft: #dff4fc;
+    --theme-accent-rgb: 72, 185, 232;
+
+    /* Text and interactive affordances. Solved for 4.5:1 on the
+       light surface - the old #159bd4 managed only 3.15:1. */
+    --theme-accent-strong: #007eb4;
+    --theme-accent-strong-rgb: 0, 126, 180;
+
+    /* Gradient buttons carry white labels; the lighter stop clears
+       4.5:1 against white. */
+    --theme-accent-grad-a: #02618b;
+    --theme-accent-grad-b: #007baf;
+
+    /* Derived, so a palette only has to redefine the two above. */
+    --theme-accent-soft: rgba(var(--theme-accent-rgb), 0.13);
 
     --theme-warm: #e8b66a;
 
@@ -3919,8 +3933,18 @@ html[data-theme="dark"] {
     --theme-navy-soft: #0b1b2d;
 
     --theme-accent: #55c7ef;
+    --theme-accent-rgb: 85, 199, 239;
+
     --theme-accent-strong: #7bd8f5;
-    --theme-accent-soft: rgba(85, 199, 239, 0.13);
+    --theme-accent-strong-rgb: 123, 216, 245;
+
+    /* Same pair as light mode on purpose: these buttons carry a
+       white label in both schemes, so the 4.5:1 requirement is the
+       same and a brighter fill would fail it. */
+    --theme-accent-grad-a: #02618b;
+    --theme-accent-grad-b: #007baf;
+
+    --theme-accent-soft: rgba(var(--theme-accent-rgb), 0.13);
 
     --theme-warm: #efbd75;
 
@@ -3949,7 +3973,7 @@ body {
     background:
         radial-gradient(
             circle at 82% 5%,
-            rgba(72, 185, 232, 0.10),
+            rgba(var(--theme-accent-rgb), 0.10),
             transparent 28rem
         ),
         var(--theme-bg);
@@ -3964,7 +3988,7 @@ html[data-theme="dark"] body {
     background:
         radial-gradient(
             circle at 80% 3%,
-            rgba(85, 199, 239, 0.08),
+            rgba(var(--theme-accent-rgb), 0.08),
             transparent 30rem
         ),
         linear-gradient(
@@ -4096,7 +4120,7 @@ html[data-theme="dark"] table {
 
 html[data-theme="dark"] tbody tr:hover {
     background:
-        rgba(85, 199, 239, 0.06);
+        rgba(var(--theme-accent-rgb), 0.06);
 }
 
 
@@ -4494,7 +4518,7 @@ body,
 }
 
 html[data-theme="dark"] .theme-choice.is-active {
-    color: #7bd8f5;
+    color: var(--theme-accent-strong);
 }
 
 
@@ -4516,7 +4540,7 @@ html[data-theme="dark"] body {
     background:
         radial-gradient(
             circle at 78% 3%,
-            rgba(72, 185, 232, 0.10),
+            rgba(var(--theme-accent-rgb), 0.10),
             transparent 34rem
         ),
         #06111f !important;
@@ -4590,7 +4614,7 @@ html[data-theme="dark"] .app-content :where(
 /* Links */
 
 html[data-theme="dark"] .app-content a:not(.btn):not(.button) {
-    color: #7bd8f5;
+    color: var(--theme-accent-strong);
 }
 
 
@@ -4617,7 +4641,7 @@ html[data-theme="dark"] th {
 }
 
 html[data-theme="dark"] tbody tr:hover {
-    background: rgba(85,199,239,.06) !important;
+    background: rgba(var(--theme-accent-rgb),.06) !important;
 }
 
 
@@ -4629,7 +4653,7 @@ html[data-theme="light"] body {
     background:
         radial-gradient(
             circle at 82% 5%,
-            rgba(72,185,232,.10),
+            rgba(var(--theme-accent-rgb),.10),
             transparent 28rem
         ),
         #f5f8fb !important;
@@ -4695,7 +4719,7 @@ html[data-theme="dark"] .app-content :where(
     background:
         radial-gradient(
             circle at 88% 20%,
-            rgba(72,185,232,.15),
+            rgba(var(--theme-accent-rgb),.15),
             transparent 22rem
         ),
         linear-gradient(
@@ -4882,9 +4906,9 @@ html[data-theme="dark"] .app-content :where(
 ) {
     color: #70d5f5 !important;
 
-    border-color: rgba(72,185,232,.18) !important;
+    border-color: rgba(var(--theme-accent-rgb),.18) !important;
 
-    background: rgba(72,185,232,.10) !important;
+    background: rgba(var(--theme-accent-rgb),.10) !important;
 }
 
 
@@ -5094,7 +5118,7 @@ html[data-theme="dark"] .app-content table tbody td strong {
     background:
         radial-gradient(
             circle at 87% 8%,
-            rgba(72, 185, 232, .09),
+            rgba(var(--theme-accent-rgb), .09),
             transparent 28rem
         ),
         radial-gradient(
@@ -5108,12 +5132,12 @@ html[data-theme="dark"] .app-main::before {
     background:
         radial-gradient(
             circle at 88% 8%,
-            rgba(72, 185, 232, .08),
+            rgba(var(--theme-accent-rgb), .08),
             transparent 30rem
         ),
         radial-gradient(
             circle at 38% 62%,
-            rgba(85, 199, 239, .025),
+            rgba(var(--theme-accent-rgb), .025),
             transparent 36rem
         );
 }
@@ -5152,7 +5176,7 @@ html[data-theme="dark"] .app-main::before {
     background:
         radial-gradient(
             circle,
-            rgba(72, 185, 232, .15),
+            rgba(var(--theme-accent-rgb), .15),
             transparent 68%
         );
 }
@@ -5164,7 +5188,7 @@ html[data-theme="dark"] .app-content :where(
     background:
         radial-gradient(
             circle,
-            rgba(85, 199, 239, .15),
+            rgba(var(--theme-accent-rgb), .15),
             transparent 68%
         );
 }
@@ -5403,7 +5427,7 @@ html[data-theme="dark"] .app-content :where(
 
     box-shadow:
         0 0 0 4px
-        rgba(72, 185, 232, .12);
+        rgba(var(--theme-accent-rgb), .12);
 }
 
 
@@ -5520,7 +5544,7 @@ html[data-theme="dark"] .exam-empty-state {
     background:
         radial-gradient(
             circle at 88% 18%,
-            rgba(72,185,232,.18),
+            rgba(var(--theme-accent-rgb),.18),
             transparent 25rem
         ),
         linear-gradient(
@@ -5667,7 +5691,7 @@ html[data-theme="dark"] .exam-empty-state {
 
     box-shadow:
         0 0 0 4px
-        rgba(72,185,232,.12);
+        rgba(var(--theme-accent-rgb),.12);
 }
 
 
@@ -5690,13 +5714,13 @@ html[data-theme="dark"] .exam-empty-state {
     background:
         linear-gradient(
             135deg,
-            #087fae,
-            #18a5d5
+            var(--theme-accent-grad-a),
+            var(--theme-accent-grad-b)
         ) !important;
 
     box-shadow:
         0 9px 22px
-        rgba(16,157,207,.20);
+        rgba(var(--theme-accent-strong-rgb),.20);
 
     cursor: pointer;
 
@@ -5715,7 +5739,7 @@ html[data-theme="dark"] .exam-empty-state {
 
     box-shadow:
         0 13px 28px
-        rgba(16,157,207,.28);
+        rgba(var(--theme-accent-strong-rgb),.28);
 }
 
 
@@ -6253,7 +6277,7 @@ html[data-theme="dark"] .exam-table-shell {
     background:
         radial-gradient(
             circle at 90% 10%,
-            rgba(72,185,232,.16),
+            rgba(var(--theme-accent-rgb),.16),
             transparent 24rem
         ),
         var(--theme-surface);
@@ -6425,13 +6449,13 @@ html[data-theme="dark"] .exam-table-shell {
     background:
         linear-gradient(
             135deg,
-            #087fae,
-            #18a5d5
+            var(--theme-accent-grad-a),
+            var(--theme-accent-grad-b)
         );
 
     box-shadow:
         0 8px 22px
-        rgba(16,157,207,.20);
+        rgba(var(--theme-accent-strong-rgb),.20);
 }
 
 .account-secondary-action {
@@ -6510,7 +6534,7 @@ html[data-theme="dark"] .account-card {
     background:
         radial-gradient(
             circle at 88% 12%,
-            rgba(72,185,232,.17),
+            rgba(var(--theme-accent-rgb),.17),
             transparent 24rem
         ),
         var(--theme-surface);
@@ -6989,7 +7013,7 @@ html[data-theme="dark"] .account-card {
 .exam-nav-question.is-answered {
     color: #087faa;
 
-    border-color: rgba(72,185,232,.30);
+    border-color: rgba(var(--theme-accent-rgb),.30);
 
     background: var(--theme-accent-soft);
 }
@@ -7081,7 +7105,7 @@ html[data-theme="dark"] .account-card {
     background:
         linear-gradient(
             135deg,
-            #087fae,
+            var(--theme-accent-grad-a),
             #19a7d6
         );
 
@@ -7178,7 +7202,7 @@ html[data-theme="dark"] .account-card {
     background:
         radial-gradient(
             circle at 90% 10%,
-            rgba(72,185,232,.17),
+            rgba(var(--theme-accent-rgb),.17),
             transparent 26rem
         ),
         var(--theme-surface);
@@ -7932,7 +7956,7 @@ html[data-theme="dark"] .exam-flag-note {
     background:
         radial-gradient(
             circle at 88% 10%,
-            rgba(72,185,232,.16),
+            rgba(var(--theme-accent-rgb),.16),
             transparent 25rem
         ),
         var(--theme-surface);
@@ -8286,8 +8310,8 @@ html[data-theme="dark"] .exam-flag-note {
     background:
         linear-gradient(
             135deg,
-            #087fae,
-            #18a5d5
+            var(--theme-accent-grad-a),
+            var(--theme-accent-grad-b)
         );
 }
 
@@ -8650,7 +8674,7 @@ html[data-theme="dark"] .exam-flag-note {
     background:
         radial-gradient(
             circle at 90% 20%,
-            rgba(72,185,232,.15),
+            rgba(var(--theme-accent-rgb),.15),
             transparent 24rem
         ),
         var(--theme-surface);
@@ -9270,7 +9294,7 @@ html[data-theme="dark"]
     background:
         radial-gradient(
             circle at 90% 10%,
-            rgba(72,185,232,.15),
+            rgba(var(--theme-accent-rgb),.15),
             transparent 24rem
         ),
         var(--theme-surface);
@@ -10135,7 +10159,7 @@ html[data-theme="dark"] :where(
     border-radius: 10px;
 
     color: #ffffff !important;
-    background: #087fae;
+    background: var(--theme-accent-grad-a);
 
     font-size: 12px;
     font-weight: 800;
@@ -10177,7 +10201,7 @@ select:focus-visible,
 textarea:focus-visible {
     outline:
         3px solid
-        rgba(72,185,232,.35);
+        rgba(var(--theme-accent-rgb),.35);
 
     outline-offset: 3px;
 }
@@ -10200,7 +10224,7 @@ textarea:focus-visible {
     background:
         radial-gradient(
             circle at 82% 4%,
-            rgba(72,185,232,.13),
+            rgba(var(--theme-accent-rgb),.13),
             transparent 34rem
         ),
         radial-gradient(
@@ -10425,19 +10449,19 @@ textarea:focus-visible {
     background:
         linear-gradient(
             135deg,
-            #087fae,
-            #18a5d5
+            var(--theme-accent-grad-a),
+            var(--theme-accent-grad-b)
         );
 
     box-shadow:
         0 8px 22px
-        rgba(16,157,207,.17);
+        rgba(var(--theme-accent-strong-rgb),.17);
 }
 
 .public-button-primary:hover {
     box-shadow:
         0 13px 30px
-        rgba(16,157,207,.25);
+        rgba(var(--theme-accent-strong-rgb),.25);
 }
 
 .public-button-secondary {
@@ -10965,7 +10989,7 @@ textarea:focus-visible {
         translateY(-4px);
 
     border-color:
-        rgba(72,185,232,.25);
+        rgba(var(--theme-accent-rgb),.25);
 
     box-shadow:
         var(--theme-shadow-md);
@@ -11401,8 +11425,8 @@ textarea:focus-visible {
     background:
         linear-gradient(
             135deg,
-            #087fae,
-            #18a5d5
+            var(--theme-accent-grad-a),
+            var(--theme-accent-grad-b)
         );
 
     cursor: pointer;
@@ -11413,7 +11437,7 @@ textarea:focus-visible {
 
     box-shadow:
         0 9px 23px
-        rgba(16,157,207,.19);
+        rgba(var(--theme-accent-strong-rgb),.19);
 }
 
 .auth-submit:hover {
@@ -11622,7 +11646,7 @@ textarea:focus-visible {
     background:
         radial-gradient(
             circle at 88% 10%,
-            rgba(72,185,232,.14),
+            rgba(var(--theme-accent-rgb),.14),
             transparent 23rem
         ),
         var(--theme-surface);
@@ -12327,7 +12351,7 @@ html[data-theme="dark"]
         #70d5f5 !important;
 
     background:
-        rgba(72,185,232,.10) !important;
+        rgba(var(--theme-accent-rgb),.10) !important;
 }
 
 
@@ -12343,7 +12367,7 @@ html[data-theme="dark"]
     background:
         radial-gradient(
             circle at 88% 20%,
-            rgba(72,185,232,.14),
+            rgba(var(--theme-accent-rgb),.14),
             transparent 24rem
         ),
         linear-gradient(
@@ -12451,7 +12475,7 @@ html[data-theme="dark"]
 
     border:
         1px solid
-        rgba(72,185,232,.13) !important;
+        rgba(var(--theme-accent-rgb),.13) !important;
 
     background:
         #10283c !important;
@@ -12784,7 +12808,7 @@ body.sidebar-open
 
         border:
             1px solid
-            rgba(72,185,232,.24);
+            rgba(var(--theme-accent-rgb),.24);
 
         border-left: 0;
 
@@ -13886,10 +13910,10 @@ html[data-theme="dark"]
 .adaptive-scope-switch a.is-active {
 
     color:
-        #7bd8f5 !important;
+        var(--theme-accent-strong) !important;
 
     background:
-        rgba(85,199,239,.13) !important;
+        rgba(var(--theme-accent-rgb),.13) !important;
 }
 
 
@@ -14309,7 +14333,7 @@ html[data-theme="dark"]
         translateX(3px);
 
     border-color:
-        rgba(72,185,232,.28);
+        rgba(var(--theme-accent-rgb),.28);
 
     background:
         color-mix(
@@ -14596,7 +14620,7 @@ html[data-theme="light"] .app-sidebar {
     background:
         radial-gradient(
             circle at 15% 0%,
-            rgba(72,185,232,.10),
+            rgba(var(--theme-accent-rgb),.10),
             transparent 18rem
         ),
         linear-gradient(
@@ -14696,7 +14720,7 @@ html[data-theme="light"]
         #102f43 !important;
 
     background:
-        rgba(72,185,232,.09) !important;
+        rgba(var(--theme-accent-rgb),.09) !important;
 }
 
 
@@ -14713,8 +14737,8 @@ html[data-theme="light"]
     background:
         linear-gradient(
             90deg,
-            rgba(72,185,232,.17),
-            rgba(72,185,232,.05)
+            rgba(var(--theme-accent-rgb),.17),
+            rgba(var(--theme-accent-rgb),.05)
         ) !important;
 }
 
@@ -14724,7 +14748,7 @@ html[data-theme="light"]
 .app-nav-link.is-active::after {
 
     background:
-        #159bd4 !important;
+        var(--theme-accent-strong) !important;
 
     box-shadow:
         0 0 0 5px
@@ -15868,7 +15892,7 @@ html[data-theme="dark"]
 html[data-theme="dark"]
 .result17-explanation {
     background:
-        rgba(72,185,232,.09);
+        rgba(var(--theme-accent-rgb),.09);
 }
 
 
@@ -16309,4 +16333,244 @@ a.auth-submit {
     color: var(--theme-text-soft);
 
     font-size: 12px;
+}
+
+
+/* =========================================================
+   UI-09 - Palette picker
+
+   Deliberately mirrors .theme-control: same height, same border,
+   same radius, so the two controls read as one pair of settings
+   rather than two unrelated widgets.
+   ========================================================= */
+
+.palette-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+
+    padding: 4px;
+
+    border: 1px solid var(--theme-border);
+    border-radius: 14px;
+
+    background: var(--theme-surface);
+    box-shadow: var(--theme-shadow-sm);
+}
+
+.palette-choice {
+    display: grid;
+    place-items: center;
+
+    width: 34px;
+    height: 34px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    transition:
+        background 150ms ease,
+        transform 150ms ease;
+}
+
+.palette-choice:hover {
+    background: var(--theme-surface-soft);
+}
+
+.palette-choice:active {
+    transform: scale(0.94);
+}
+
+.palette-choice:focus-visible {
+    outline: 2px solid var(--theme-accent-strong);
+    outline-offset: 2px;
+}
+
+.palette-swatch {
+    width: 16px;
+    height: 16px;
+
+    border-radius: 999px;
+
+    /* A ring rather than a border, so the swatch keeps its full
+       diameter and the five dots stay the same visual weight. */
+    box-shadow:
+        0 0 0 1px rgba(15, 42, 67, 0.16) inset;
+
+    transition:
+        box-shadow 150ms ease,
+        transform 150ms ease;
+}
+
+html[data-theme="dark"] .palette-swatch {
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.22) inset;
+}
+
+.palette-choice.is-active .palette-swatch {
+    transform: scale(1.12);
+
+    box-shadow:
+        0 0 0 2px var(--theme-surface),
+        0 0 0 4px var(--theme-accent-strong);
+}
+
+/* On a narrow screen the topbar has no room for the picker, so the
+   account centre carries the same controls - which is also where a
+   preference belongs. There it stays visible at every width. */
+
+.account-appearance-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+
+    margin-top: 4px;
+}
+
+@media (max-width: 760px) {
+
+    .account-appearance-controls .palette-control {
+        display: inline-flex;
+    }
+}
+
+/* The swatches show each palette's own colour, so they cannot use
+   the accent tokens - those follow whatever is currently selected. */
+
+.palette-skyline .palette-swatch { background: #48b9e8; }
+.palette-copper .palette-swatch { background: #df9a5b; }
+.palette-indigo .palette-swatch { background: #a49ef9; }
+.palette-verdigris .palette-swatch { background: #5dc0a9; }
+.palette-slate .palette-swatch { background: #97aec7; }
+
+/* Below the sidebar breakpoint the topbar is tight; the picker is a
+   preference, not a task, so it steps aside before anything else. */
+@media (max-width: 760px) {
+
+    .palette-control {
+        display: none;
+    }
+}
+
+
+
+/* =========================================================
+   UI-09 - Selectable colour palettes
+
+   Only six tokens are redefined per palette. Everything else in
+   this stylesheet derives from them, which is why a palette is a
+   handful of declarations rather than a second stylesheet.
+
+   Two roles, two accessibility rules:
+
+     --theme-accent is decorative - low-alpha washes, glows, hover
+     tints. Nothing is legible only because of it, so it is chosen
+     for appearance and pinned to the same perceptual lightness as
+     the default blue.
+
+     --theme-accent-strong carries text and interactive state, and
+     is solved numerically against the surface it sits on: at least
+     4.5:1 (WCAG AA) in light mode, and matched to the existing
+     design's brightness in dark mode, which is well beyond AA.
+
+   Placed at the end of the file deliberately. The palette
+   selectors and html[data-theme="dark"] have equal specificity in
+   the light case, so source order decides.
+   ========================================================= */
+
+/* Skyline */
+html[data-palette="skyline"] {
+    --theme-accent: #48b9e8;
+    --theme-accent-rgb: 72, 185, 232;
+    --theme-accent-strong: #007eb4;
+    --theme-accent-strong-rgb: 0, 126, 180;
+    --theme-accent-grad-a: #02618b;
+    --theme-accent-grad-b: #007baf;
+}
+html[data-palette="skyline"][data-theme="dark"] {
+    --theme-accent: #55c7ef;
+    --theme-accent-rgb: 85, 199, 239;
+    --theme-accent-strong: #49baf9;
+    --theme-accent-strong-rgb: 73, 186, 249;
+    --theme-accent-grad-a: #02618b;
+    --theme-accent-grad-b: #007baf;
+}
+
+/* Copper */
+html[data-palette="copper"] {
+    --theme-accent: #df9a5b;
+    --theme-accent-rgb: 223, 154, 91;
+    --theme-accent-strong: #af6400;
+    --theme-accent-strong-rgb: 175, 100, 0;
+    --theme-accent-grad-a: #884c00;
+    --theme-accent-grad-b: #ab6100;
+}
+html[data-palette="copper"][data-theme="dark"] {
+    --theme-accent: #eca667;
+    --theme-accent-rgb: 236, 166, 103;
+    --theme-accent-strong: #f09e50;
+    --theme-accent-strong-rgb: 240, 158, 80;
+    --theme-accent-grad-a: #884c00;
+    --theme-accent-grad-b: #ab6100;
+}
+
+/* Indigo */
+html[data-palette="indigo"] {
+    --theme-accent: #a49ef9;
+    --theme-accent-rgb: 164, 158, 249;
+    --theme-accent-strong: #7469cd;
+    --theme-accent-strong-rgb: 116, 105, 205;
+    --theme-accent-grad-a: #5a4cae;
+    --theme-accent-grad-b: #7165ca;
+}
+html[data-palette="indigo"][data-theme="dark"] {
+    --theme-accent: #b1acfe;
+    --theme-accent-rgb: 177, 172, 254;
+    --theme-accent-strong: #aca7fe;
+    --theme-accent-strong-rgb: 172, 167, 254;
+    --theme-accent-grad-a: #5a4cae;
+    --theme-accent-grad-b: #7165ca;
+}
+
+/* Verdigris */
+html[data-palette="verdigris"] {
+    --theme-accent: #5dc0a9;
+    --theme-accent-rgb: 93, 192, 169;
+    --theme-accent-strong: #008670;
+    --theme-accent-strong-rgb: 0, 134, 112;
+    --theme-accent-grad-a: #006756;
+    --theme-accent-grad-b: #00826d;
+}
+html[data-palette="verdigris"][data-theme="dark"] {
+    --theme-accent: #6acdb5;
+    --theme-accent-rgb: 106, 205, 181;
+    --theme-accent-strong: #41c4a9;
+    --theme-accent-strong-rgb: 65, 196, 169;
+    --theme-accent-grad-a: #006756;
+    --theme-accent-grad-b: #00826d;
+}
+
+/* Slate */
+html[data-palette="slate"] {
+    --theme-accent: #97aec7;
+    --theme-accent-rgb: 151, 174, 199;
+    --theme-accent-strong: #5b799c;
+    --theme-accent-strong-rgb: 91, 121, 156;
+    --theme-accent-grad-a: #3f5d7e;
+    --theme-accent-grad-b: #577699;
+}
+html[data-palette="slate"][data-theme="dark"] {
+    --theme-accent: #a3bad4;
+    --theme-accent-rgb: 163, 186, 212;
+    --theme-accent-strong: #92b3d9;
+    --theme-accent-strong-rgb: 146, 179, 217;
+    --theme-accent-grad-a: #3f5d7e;
+    --theme-accent-grad-b: #577699;
 }

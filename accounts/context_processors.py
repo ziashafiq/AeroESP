@@ -42,3 +42,25 @@ def canonical_url(request):
             f"https://{canonical_host}{request.path}"
         ),
     }
+
+
+def color_palette(request):
+    """
+    The palette to stamp on <html> before the first paint.
+
+    Rendered server-side for signed-in users so their choice follows
+    them to any device with no flash of the default blue. Anonymous
+    visitors get None here and the inline bootstrap fills it in from
+    localStorage instead.
+    """
+
+    user = getattr(request, "user", None)
+
+    if user is None or not user.is_authenticated:
+        return {"USER_PALETTE": None}
+
+    return {
+        "USER_PALETTE": (
+            getattr(user, "color_palette", None) or "skyline"
+        ),
+    }

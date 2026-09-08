@@ -1,0 +1,82 @@
+<script>
+    /* Runs before first paint so the page never flashes the wrong
+       theme or the wrong accent. Every step is guarded because this
+       also runs inside in-app WebViews (the Google app, for one),
+       where localStorage is not merely empty but THROWS when site
+       data is blocked. Unguarded, that exception killed this script
+       and left the document with no data-theme at all, which is why
+       the theme misbehaved there while working in Chrome. */
+    (() => {
+        var root = document.documentElement;
+
+        /* ---- light / dark ---- */
+
+        var saved = "system";
+
+        try {
+            var stored = window.localStorage.getItem(
+                "aeroesp-theme"
+            );
+
+            if (
+                stored === "light" ||
+                stored === "dark" ||
+                stored === "system"
+            ) {
+                saved = stored;
+            }
+        } catch (e) {
+            /* Storage unavailable: fall back to system. */
+        }
+
+        var dark = false;
+
+        try {
+            dark = window.matchMedia(
+                "(prefers-color-scheme: dark)"
+            ).matches;
+        } catch (e) {
+            /* No matchMedia: treat as light. */
+        }
+
+        var resolved =
+            saved === "system"
+                ? (dark ? "dark" : "light")
+                : saved;
+
+        root.setAttribute("data-theme", resolved);
+        root.setAttribute("data-theme-preference", saved);
+
+        /* ---- accent palette ----
+           Skipped entirely when the server already stamped the
+           attribute: that is the signed-in user's saved choice and it
+           outranks whatever this particular browser happens to hold. */
+
+        if (root.getAttribute("data-palette-source") !== "user") {
+
+            var palettes = [
+                "skyline",
+                "copper",
+                "indigo",
+                "verdigris",
+                "slate"
+            ];
+
+            var palette = "skyline";
+
+            try {
+                var storedPalette = window.localStorage.getItem(
+                    "aeroesp-palette"
+                );
+
+                if (palettes.indexOf(storedPalette) !== -1) {
+                    palette = storedPalette;
+                }
+            } catch (e) {
+                /* Storage unavailable: the default blue. */
+            }
+
+            root.setAttribute("data-palette", palette);
+        }
+    })();
+</script>

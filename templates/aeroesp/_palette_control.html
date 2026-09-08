@@ -1,0 +1,62 @@
+{% comment %}
+Accent palette picker, sitting alongside the light/dark control.
+
+The endpoint attribute is only rendered for signed-in users; its
+absence is what tells the script this is a guest whose choice lives in
+localStorage alone. The CSRF token rides along in the markup rather
+than being dug out of the cookie, so this keeps working if
+CSRF_USE_SESSIONS is ever turned on.
+{% endcomment %}
+
+<div
+    class="palette-control"
+    data-palette-control
+    {% if user.is_authenticated %}
+        data-palette-endpoint="{% url 'accounts:set_color_palette' %}"
+    {% endif %}
+    role="group"
+    aria-label="Accent colour"
+>
+    {% if user.is_authenticated %}{% csrf_token %}{% endif %}
+
+    <button type="button"
+            class="palette-choice palette-skyline"
+            data-palette-option="skyline"
+            aria-label="Skyline accent"
+            title="Skyline">
+        <span class="palette-swatch" aria-hidden="true"></span>
+    </button>
+
+    <button type="button"
+            class="palette-choice palette-copper"
+            data-palette-option="copper"
+            aria-label="Copper accent"
+            title="Copper">
+        <span class="palette-swatch" aria-hidden="true"></span>
+    </button>
+
+    <button type="button"
+            class="palette-choice palette-indigo"
+            data-palette-option="indigo"
+            aria-label="Indigo accent"
+            title="Indigo">
+        <span class="palette-swatch" aria-hidden="true"></span>
+    </button>
+
+    <button type="button"
+            class="palette-choice palette-verdigris"
+            data-palette-option="verdigris"
+            aria-label="Verdigris accent"
+            title="Verdigris">
+        <span class="palette-swatch" aria-hidden="true"></span>
+    </button>
+
+    <button type="button"
+            class="palette-choice palette-slate"
+            data-palette-option="slate"
+            aria-label="Slate accent"
+            title="Slate">
+        <span class="palette-swatch" aria-hidden="true"></span>
+    </button>
+
+</div>
